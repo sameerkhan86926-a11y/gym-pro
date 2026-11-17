@@ -1,15 +1,23 @@
-/* =====================================
-   GYM PRO - MEMBERS MANAGEMENT
-   Version 1.0.0
-===================================== */
-
 window.GymMembers = (function () {
+    const MODULE = "members";
 
-    let searchText = "";
-    let statusFilter = "all";
+    let currentMembers = [];
+    let editingMemberId = null;
 
     function getMembers() {
-        return GymDB.getAll("members");
+        return GymDB.getAll(MODULE) || [];
+    }
+
+    function getPlans() {
+        return GymDB.getAll("plans") || [];
+    }
+
+    function getActivePlans() {
+        return getPlans().filter(plan => plan.status === "active");
+    }
+
+    function currency(amount) {
+        return "₹" + Number(amount || 0).toLocaleString("en-IN");
     }
 
     function escapeHTML(value) {
@@ -25,234 +33,47 @@ window.GymMembers = (function () {
     }
 
     function today() {
-        return new Date().toISOString().split("T")[0];
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
     }
 
-    function money(amount) {
-        return "₹" + Number(amount || 0).toLocaleString("en-IN");
+    function calculateExpiry(joiningDate, durationDays) {
+        if (!joiningDate || !durationDays) return "";
+
+        const date = new Date(joiningDate + "T12:00:00");
+
+        if (isNaN(date.getTime())) return "";
+
+        date.setDate(date.getDate() + Number(durationDays) - 1);
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
     }
 
-    function status(member) {
-
-        if (member.status === "inactive") {
-            return "inactive";
+    function showMessage(message) {
+        if (typeof window.showToast === "function") {
+            window.showToast(message);
+        } else {
+            alert(message);
         }
-
-        if (member.expiryDate && member.expiryDate < today()) {
-            return "expired";
-        }
-
-        return "active";
     }
 
-    function render() {
-
-        const container = document.getElementById("modulePlaceholder");
-
-        if (!container) return;
-
-        container.innerHTML = `
-            <div class="members-module">
-
-                <div class="members-header">
-                    <div>
-                        <h2>Members Management</h2>
-                        <p>Register and manage your gym members.</p>
-                    </div>
-
-                    <button class="gym-primary-btn" id="addMemberBtn">
-                        + Add New Member
-                    </button>
-                </div>
-
-                <div class="members-stats">
-
-                    <div class="member-stat-card">
-                        <span>Total Members</span>
-                        <h2 id="memberTotal">0</h2>
-                    </div>
-
-                    <div class="member-stat-card">
-                        <span>Active Members</span>
-                        <h2 id="memberActive">0</h2>
-                    </div>
-
-                    <div class="member-stat-card">
-                        <span>Inactive Members</span>
-                        <h2 id="memberInactive">0</h2>
-                    </div>
-
-                </div>
-
-                <div class="members-toolbar">
-
-                    <input
-                        type="search"
-                        id="memberSearch"
-                        placeholder="Search name, phone or member ID..."
-                    >
-
-                    <select id="memberStatusFilter">
-                        <option value="all">All Members</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="expired">Expired</option>
-                    </select>
-
-                </div>
-
-                <div class="members-table-wrapper">
-
-                    <table class="members-table">
-
-                        <thead>
-                            <tr>
-                                <th>Member ID</th>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Plan</th>
-                                <th>Joining Date</th>
-                                <th>Expiry Date</th>
-                                <th>Fees</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="membersTableBody"></tbody>
-
-                    </table>
-
-                </div>
-
-                <div id="memberModal" class="member-modal" style="display:none;">
-
-                    <div class="member-modal-content">
-
-                        <div class="member-modal-header">
-                            <h2 id="memberFormTitle">Add New Member</h2>
-                            <button type="button" id="closeMemberModal">×</button>
-                        </div>
-
-                        <form id="memberForm">
-
-                            <input type="hidden" id="memberEditId">
-
-                            <div class="member-form-grid">
-
-                                <div class="member-field">
-                                    <label>Full Name *</label>
-                                    <input type="text" id="memberName" required>
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Mobile Number *</label>
-                                    <input type="tel" id="memberPhone"
-                                        maxlength="10" pattern="[0-9]{10}" required>
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Gender</label>
-                                    <select id="memberGender">
-                                        <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Date of Birth</label>
-                                    <input type="date" id="memberDOB">
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Joining Date *</label>
-                                    <input type="date" id="memberJoining" required>
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Membership Plan</label>
-                                    <input type="text" id="memberPlan"
-                                        placeholder="Monthly / 3 Months / Yearly">
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Membership Fees (₹)</label>
-                                    <input type="number" id="memberFees"
-                                        min="0" step="0.01" value="0">
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Expiry Date</label>
-                                    <input type="date" id="memberExpiry">
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Emergency Contact</label>
-                                    <input type="tel" id="memberEmergency"
-                                        maxlength="10">
-                                </div>
-
-                                <div class="member-field">
-                                    <label>Trainer Name</label>
-                                    <input type="text" id="memberTrainer">
-                                </div>
-
-                                <div class="member-field full-width">
-                                    <label>Address</label>
-                                    <textarea id="memberAddress" rows="2"></textarea>
-                                </div>
-
-                                <div class="member-field full-width">
-                                    <label>Notes</label>
-                                    <textarea id="memberNotes" rows="2"></textarea>
-                                </div>
-
-                            </div>
-
-                            <div class="member-form-actions">
-
-                                <button type="button"
-                                    class="gym-secondary-btn"
-                                    id="cancelMemberBtn">
-                                    Cancel
-                                </button>
-
-                                <button type="submit"
-                                    class="gym-primary-btn">
-                                    Save Member
-                                </button>
-
-                            </div>
-
-                        </form>
-
-                    </div>
-
-                </div>
-
-            </div>
-        `;
-
-        addStyles();
-        attachEvents();
-        renderTable();
-    }
-
-    function addStyles() {
-
-        if (document.getElementById("membersModuleStyles")) return;
+    function injectStyles() {
+        if (document.getElementById("gymMembersStyles")) return;
 
         const style = document.createElement("style");
-
-        style.id = "membersModuleStyles";
+        style.id = "gymMembersStyles";
 
         style.textContent = `
-
-            .members-module {
-                padding: 20px 0;
-                color: #fff;
+            .members-wrap {
+                padding: 5px 0 25px;
             }
 
             .members-header {
@@ -261,75 +82,57 @@ window.GymMembers = (function () {
                 align-items: center;
                 gap: 15px;
                 flex-wrap: wrap;
-                margin-bottom: 25px;
+                margin-bottom: 22px;
             }
 
             .members-header h2 {
-                margin: 0 0 7px;
+                margin: 0 0 6px;
             }
 
             .members-header p {
-                color: #aaa;
                 margin: 0;
-            }
-
-            .gym-primary-btn,
-            .gym-secondary-btn {
-                border: none;
-                padding: 12px 20px;
-                border-radius: 9px;
-                cursor: pointer;
-                font-weight: 600;
-            }
-
-            .gym-primary-btn {
-                background: linear-gradient(135deg,#ad8aff,#8154f7);
-                color: white;
-                box-shadow: 0 5px 15px #8154f744;
-            }
-
-            .gym-secondary-btn {
-                background: #30303d;
-                color: white;
+                opacity: .7;
             }
 
             .members-stats {
                 display: grid;
-                grid-template-columns: repeat(3,1fr);
+                grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
                 margin-bottom: 22px;
             }
 
-            .member-stat-card {
-                background: #1d1d29;
-                border: 1px solid #343445;
+            .members-stat {
                 padding: 20px;
-                border-radius: 13px;
+                border-radius: 14px;
+                background: rgba(255,255,255,.05);
+                border: 1px solid rgba(255,255,255,.08);
             }
 
-            .member-stat-card span {
-                color: #aaa;
+            .members-stat span {
+                display: block;
+                opacity: .7;
                 font-size: 13px;
+                margin-bottom: 9px;
             }
 
-            .member-stat-card h2 {
-                margin: 10px 0 0;
-                font-size: 26px;
+            .members-stat strong {
+                font-size: 25px;
             }
 
             .members-toolbar {
                 display: flex;
                 gap: 12px;
+                flex-wrap: wrap;
                 margin-bottom: 18px;
             }
 
             .members-toolbar input,
             .members-toolbar select {
-                background: #1d1d29;
-                color: white;
-                border: 1px solid #414154;
-                padding: 13px;
+                padding: 12px 14px;
                 border-radius: 9px;
+                border: 1px solid rgba(255,255,255,.13);
+                background: #171324;
+                color: #fff;
                 outline: none;
             }
 
@@ -338,460 +141,934 @@ window.GymMembers = (function () {
                 min-width: 180px;
             }
 
-            .members-table-wrapper {
+            .members-toolbar select {
+                min-width: 140px;
+            }
+
+            .members-table-wrap {
                 overflow-x: auto;
-                background: #1d1d29;
-                border-radius: 12px;
-                border: 1px solid #343445;
+                border-radius: 13px;
             }
 
             .members-table {
                 width: 100%;
-                min-width: 950px;
                 border-collapse: collapse;
+                min-width: 850px;
             }
 
             .members-table th,
             .members-table td {
                 padding: 14px;
                 text-align: left;
-                border-bottom: 1px solid #343445;
-                font-size: 13px;
+                border-bottom: 1px solid rgba(255,255,255,.08);
             }
 
             .members-table th {
-                color: #b99bff;
-                background: #252535;
+                font-size: 12px;
+                opacity: .7;
+                text-transform: uppercase;
             }
 
             .members-table td {
-                color: #eee;
-            }
-
-            .member-status {
-                padding: 5px 9px;
-                border-radius: 20px;
-                font-size: 11px;
-                font-weight: bold;
-            }
-
-            .member-status.active {
-                background: #164a35;
-                color: #70f0a8;
-            }
-
-            .member-status.inactive,
-            .member-status.expired {
-                background: #4b252b;
-                color: #ff969e;
-            }
-
-            .member-action-btn {
-                border: none;
-                padding: 7px 10px;
-                margin: 2px;
-                border-radius: 6px;
-                cursor: pointer;
-                color: white;
-                background: #554080;
-            }
-
-            .member-delete-btn {
-                background: #77333d;
-            }
-
-            .member-modal {
-                position: fixed;
-                inset: 0;
-                z-index: 9999;
-                background: #000b;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 15px;
-                overflow-y: auto;
-            }
-
-            .member-modal-content {
-                width: 100%;
-                max-width: 750px;
-                max-height: 92vh;
-                overflow-y: auto;
-                background: #1d1d29;
-                border: 1px solid #48405c;
-                padding: 22px;
-                border-radius: 15px;
-            }
-
-            .member-modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
-            }
-
-            .member-modal-header button {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 28px;
-                cursor: pointer;
-            }
-
-            .member-form-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-            }
-
-            .member-field {
-                display: flex;
-                flex-direction: column;
-                gap: 7px;
-            }
-
-            .member-field label {
-                color: #ccc;
                 font-size: 13px;
             }
 
-            .member-field input,
-            .member-field select,
-            .member-field textarea {
+            .member-status {
+                display: inline-block;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                background: rgba(46,204,113,.13);
+                color: #6ee7a0;
+            }
+
+            .member-status.inactive {
+                background: rgba(255,255,255,.1);
+                color: #aaa;
+            }
+
+            .member-status.expired {
+                background: rgba(231,76,60,.15);
+                color: #ff8d8d;
+            }
+
+            .member-action {
+                padding: 7px 10px;
+                border: 0;
+                border-radius: 7px;
+                margin: 2px;
+                cursor: pointer;
+                color: white;
+                background: #6845b8;
+            }
+
+            .member-action.delete {
+                background: #a93650;
+            }
+
+            .member-action.toggle {
+                background: #287c68;
+            }
+
+            .members-empty {
+                text-align: center;
+                padding: 35px 15px;
+                opacity: .65;
+            }
+
+            .members-modal {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 15px;
+                background: rgba(0,0,0,.78);
+            }
+
+            .members-modal-box {
+                width: 100%;
+                max-width: 650px;
+                max-height: 92vh;
+                overflow-y: auto;
+                padding: 24px;
+                border-radius: 16px;
+                background: #211a32;
+                border: 1px solid rgba(255,255,255,.12);
+            }
+
+            .members-modal-box h3 {
+                margin-top: 0;
+                margin-bottom: 20px;
+            }
+
+            .members-form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 15px;
+            }
+
+            .members-form label {
+                display: block;
+                font-size: 13px;
+                margin: 13px 0 7px;
+            }
+
+            .members-form input,
+            .members-form select,
+            .members-form textarea {
                 width: 100%;
                 box-sizing: border-box;
-                padding: 12px;
-                background: #292938;
-                color: white;
-                border: 1px solid #45455b;
-                border-radius: 8px;
+                padding: 12px 14px;
+                border-radius: 9px;
+                border: 1px solid rgba(255,255,255,.13);
+                background: #171324;
+                color: #fff;
                 outline: none;
             }
 
-            .full-width {
+            .members-form textarea {
+                min-height: 75px;
+                resize: vertical;
+            }
+
+            .members-full {
                 grid-column: 1 / -1;
             }
 
-            .member-form-actions {
+            .members-plan-info {
+                margin-top: 12px;
+                padding: 12px;
+                border-radius: 9px;
+                background: rgba(128,85,217,.13);
+                border: 1px solid rgba(128,85,217,.25);
+                font-size: 12px;
+                line-height: 1.7;
+            }
+
+            .members-plan-warning {
+                color: #ffc56d;
+                margin-top: 8px;
+                font-size: 12px;
+            }
+
+            .members-form-actions {
                 display: flex;
-                justify-content: flex-end;
                 gap: 10px;
                 margin-top: 22px;
             }
 
-            .member-empty {
-                text-align: center !important;
-                padding: 35px !important;
-                color: #aaa !important;
+            .members-form-actions button {
+                flex: 1;
+                padding: 12px;
+                border: 0;
+                border-radius: 9px;
+                cursor: pointer;
+                color: white;
+                background: #8055d9;
+                font-weight: 600;
+            }
+
+            .members-form-actions .cancel {
+                background: #494253;
             }
 
             @media(max-width:650px) {
-
                 .members-stats {
                     grid-template-columns: 1fr;
                 }
 
-                .members-toolbar {
-                    flex-direction: column;
-                }
-
-                .member-form-grid {
+                .members-form-grid {
                     grid-template-columns: 1fr;
                 }
 
-                .full-width {
+                .members-full {
                     grid-column: auto;
                 }
 
-                .member-modal-content {
-                    padding: 15px;
+                .members-header .btn {
+                    width: 100%;
                 }
 
+                .members-modal-box {
+                    padding: 18px;
+                }
             }
-
         `;
 
         document.head.appendChild(style);
     }
 
-    function attachEvents() {
+    function render() {
+        injectStyles();
 
-        document.getElementById("addMemberBtn")
+        const container = document.getElementById("modulePlaceholder");
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="members-wrap">
+
+                <div class="members-header">
+                    <div>
+                        <h2>Gym Members</h2>
+                        <p>Manage your gym members and memberships.</p>
+                    </div>
+
+                    <button class="btn btn-primary" id="addGymMemberBtn">
+                        + Add New Member
+                    </button>
+                </div>
+
+                <div class="members-stats">
+                    <div class="members-stat">
+                        <span>Total Members</span>
+                        <strong id="membersTotal">0</strong>
+                    </div>
+
+                    <div class="members-stat">
+                        <span>Active Members</span>
+                        <strong id="membersActive">0</strong>
+                    </div>
+
+                    <div class="members-stat">
+                        <span>Inactive Members</span>
+                        <strong id="membersInactive">0</strong>
+                    </div>
+                </div>
+
+                <div class="members-toolbar">
+                    <input
+                        type="search"
+                        id="searchGymMembers"
+                        placeholder="Search name, phone or member ID..."
+                    >
+
+                    <select id="filterGymMembers">
+                        <option value="all">All Members</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+
+                <div class="members-table-wrap">
+                    <table class="members-table">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Phone</th>
+                                <th>Membership Plan</th>
+                                <th>Joining Date</th>
+                                <th>Expiry Date</th>
+                                <th>Fees</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="gymMembersTable"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="members-modal" id="gymMemberModal">
+                <div class="members-modal-box">
+                    <h3 id="gymMemberFormTitle">Add New Member</h3>
+
+                    <form class="members-form" id="gymMemberForm">
+
+                        <div class="members-form-grid">
+
+                            <div>
+                                <label>Member Name *</label>
+                                <input
+                                    type="text"
+                                    id="memberName"
+                                    placeholder="Enter full name"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label>Phone Number *</label>
+                                <input
+                                    type="tel"
+                                    id="memberPhone"
+                                    placeholder="Enter phone number"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label>Gender</label>
+                                <select id="memberGender">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Date of Birth</label>
+                                <input type="date" id="memberDob">
+                            </div>
+
+                            <div>
+                                <label>Joining Date *</label>
+                                <input type="date" id="memberJoiningDate" required>
+                            </div>
+
+                            <div>
+                                <label>Membership Plan *</label>
+                                <select id="memberPlan" required>
+                                    <option value="">Loading plans...</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Membership Fees (₹)</label>
+                                <input
+                                    type="number"
+                                    id="memberFees"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Plan fees"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label>Expiry Date</label>
+                                <input type="date" id="memberExpiry" required>
+                            </div>
+
+                            <div class="members-full">
+                                <div class="members-plan-info" id="memberPlanInfo">
+                                    Select a membership plan to see its details.
+                                </div>
+                                <div class="members-plan-warning" id="memberPlanWarning"></div>
+                            </div>
+
+                            <div>
+                                <label>Emergency Contact</label>
+                                <input
+                                    type="tel"
+                                    id="memberEmergency"
+                                    placeholder="Emergency phone number"
+                                >
+                            </div>
+
+                            <div>
+                                <label>Trainer Name</label>
+                                <input
+                                    type="text"
+                                    id="memberTrainer"
+                                    placeholder="Enter trainer name"
+                                >
+                            </div>
+
+                            <div class="members-full">
+                                <label>Address</label>
+                                <textarea
+                                    id="memberAddress"
+                                    placeholder="Enter member address"
+                                ></textarea>
+                            </div>
+
+                            <div class="members-full">
+                                <label>Notes</label>
+                                <textarea
+                                    id="memberNotes"
+                                    placeholder="Additional information"
+                                ></textarea>
+                            </div>
+
+                        </div>
+
+                        <div class="members-form-actions">
+                            <button type="submit">Save Member</button>
+
+                            <button
+                                type="button"
+                                class="cancel"
+                                id="cancelGymMember"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("addGymMemberBtn")
             .addEventListener("click", function () {
                 openForm();
             });
 
-        document.getElementById("closeMemberModal")
+        document.getElementById("cancelGymMember")
             .addEventListener("click", closeForm);
 
-        document.getElementById("cancelMemberBtn")
-            .addEventListener("click", closeForm);
-
-        document.getElementById("memberSearch")
-            .addEventListener("input", function (event) {
-                searchText = event.target.value.toLowerCase();
-                renderTable();
-            });
-
-        document.getElementById("memberStatusFilter")
-            .addEventListener("change", function (event) {
-                statusFilter = event.target.value;
-                renderTable();
-            });
-
-        document.getElementById("memberForm")
+        document.getElementById("gymMemberForm")
             .addEventListener("submit", saveMember);
+
+        document.getElementById("searchGymMembers")
+            .addEventListener("input", renderTable);
+
+        document.getElementById("filterGymMembers")
+            .addEventListener("change", renderTable);
+
+        document.getElementById("memberPlan")
+            .addEventListener("change", handlePlanChange);
+
+        document.getElementById("memberJoiningDate")
+            .addEventListener("change", handleJoiningDateChange);
+
+        renderTable();
     }
 
-    function openForm(member = null) {
+    function fillPlanDropdown(member) {
+        const select = document.getElementById("memberPlan");
+        const info = document.getElementById("memberPlanInfo");
+        const warning = document.getElementById("memberPlanWarning");
 
-        const modal = document.getElementById("memberModal");
+        if (!select) return;
 
-        document.getElementById("memberForm").reset();
+        const plans = getActivePlans();
 
-        document.getElementById("memberEditId").value = "";
+        let html = `<option value="">Select Membership Plan</option>`;
 
-        document.getElementById("memberJoining").value = today();
+        plans.forEach(plan => {
+            html += `
+                <option value="${escapeHTML(plan.id)}">
+                    ${escapeHTML(plan.name)} - ${currency(plan.fees)}
+                    (${Number(plan.durationDays || 0)} Days)
+                </option>
+            `;
+        });
 
-        document.getElementById("memberFormTitle").textContent =
-            member ? "Edit Member" : "Add New Member";
+        let legacyPlan = null;
+
+        if (member && member.planName) {
+            const matchingPlan = plans.find(plan =>
+                plan.id === member.planId ||
+                plan.name.toLowerCase() === String(member.planName).toLowerCase()
+            );
+
+            if (!matchingPlan) {
+                legacyPlan = member;
+                html += `
+                    <option value="__legacy__">
+                        Existing Plan - ${escapeHTML(member.planName)}
+                    </option>
+                `;
+            }
+        }
+
+        select.innerHTML = html;
 
         if (member) {
+            const matchingPlan = plans.find(plan =>
+                plan.id === member.planId ||
+                (
+                    !member.planId &&
+                    plan.name.toLowerCase() === String(member.planName || "").toLowerCase()
+                )
+            );
 
-            document.getElementById("memberEditId").value = member.id;
+            if (matchingPlan) {
+                select.value = matchingPlan.id;
+                updatePlanInformation(matchingPlan);
+            } else if (legacyPlan) {
+                select.value = "__legacy__";
 
+                info.textContent =
+                    "This member has an existing custom or inactive plan. Its saved details will be preserved.";
+
+                warning.textContent =
+                    "Choose another active plan if you want to change this membership.";
+            } else {
+                select.value = "";
+            }
+        } else {
+            select.value = "";
+
+            if (!plans.length) {
+                info.textContent = "No active membership plans found.";
+                warning.textContent = "Please create an active plan in Membership Plans first.";
+            } else {
+                info.textContent = "Select a plan to automatically fill fees and expiry date.";
+                warning.textContent = "";
+            }
+        }
+    }
+
+    function updatePlanInformation(plan) {
+        const info = document.getElementById("memberPlanInfo");
+        const warning = document.getElementById("memberPlanWarning");
+
+        if (!info || !plan) return;
+
+        info.innerHTML = `
+            <strong>Selected Plan:</strong> ${escapeHTML(plan.name)}
+            <br>
+            <strong>Duration:</strong> ${Number(plan.durationDays || 0)} Days
+            <br>
+            <strong>Plan Fees:</strong> ${currency(plan.fees)}
+        `;
+
+        if (warning) warning.textContent = "";
+    }
+
+    function handlePlanChange() {
+        const select = document.getElementById("memberPlan");
+        const planId = select.value;
+
+        if (!planId) return;
+
+        if (planId === "__legacy__") {
+            return;
+        }
+
+        const plan = GymDB.find("plans", planId);
+
+        if (!plan) return;
+
+        document.getElementById("memberFees").value = Number(plan.fees || 0);
+
+        const joiningDate = document.getElementById("memberJoiningDate").value;
+
+        document.getElementById("memberExpiry").value =
+            calculateExpiry(joiningDate, plan.durationDays);
+
+        updatePlanInformation(plan);
+    }
+
+    function handleJoiningDateChange() {
+        const planId = document.getElementById("memberPlan").value;
+
+        if (!planId || planId === "__legacy__") return;
+
+        const plan = GymDB.find("plans", planId);
+
+        if (!plan) return;
+
+        document.getElementById("memberExpiry").value =
+            calculateExpiry(
+                document.getElementById("memberJoiningDate").value,
+                plan.durationDays
+            );
+    }
+
+    function openForm(member) {
+        const modal = document.getElementById("gymMemberModal");
+        const form = document.getElementById("gymMemberForm");
+
+        if (!modal || !form) return;
+
+        form.reset();
+
+        editingMemberId = member ? member.id : null;
+
+        document.getElementById("gymMemberFormTitle").textContent =
+            member ? "Edit Member" : "Add New Member";
+
+        document.getElementById("memberJoiningDate").value =
+            member?.joiningDate || today();
+
+        fillPlanDropdown(member);
+
+        if (member) {
             document.getElementById("memberName").value = member.name || "";
             document.getElementById("memberPhone").value = member.phone || "";
             document.getElementById("memberGender").value = member.gender || "";
-            document.getElementById("memberDOB").value = member.dob || "";
-            document.getElementById("memberJoining").value = member.joiningDate || "";
-            document.getElementById("memberPlan").value = member.planName || "";
-            document.getElementById("memberFees").value = member.fees || 0;
+            document.getElementById("memberDob").value = member.dob || "";
+            document.getElementById("memberFees").value = member.fees ?? "";
             document.getElementById("memberExpiry").value = member.expiryDate || "";
             document.getElementById("memberEmergency").value = member.emergencyContact || "";
             document.getElementById("memberTrainer").value = member.trainer || "";
             document.getElementById("memberAddress").value = member.address || "";
             document.getElementById("memberNotes").value = member.notes || "";
 
+            const selectedPlan = document.getElementById("memberPlan").value;
+
+            if (selectedPlan && selectedPlan !== "__legacy__") {
+                const plan = GymDB.find("plans", selectedPlan);
+
+                if (plan) updatePlanInformation(plan);
+            }
         }
 
         modal.style.display = "flex";
     }
 
     function closeForm() {
-        document.getElementById("memberModal").style.display = "none";
+        const modal = document.getElementById("gymMemberModal");
+
+        if (modal) modal.style.display = "none";
+
+        editingMemberId = null;
     }
 
     function saveMember(event) {
-
         event.preventDefault();
 
-        const editId = document.getElementById("memberEditId").value;
-
         const name = document.getElementById("memberName").value.trim();
-
         const phone = document.getElementById("memberPhone").value.trim();
 
-        if (!name || !/^[0-9]{10}$/.test(phone)) {
-            alert("Please enter a valid name and 10-digit mobile number.");
+        const joiningDate = document.getElementById("memberJoiningDate").value;
+        const selectedPlanId = document.getElementById("memberPlan").value;
+
+        if (!name || !phone || !joiningDate || !selectedPlanId) {
+            alert("Please fill all required fields and select a membership plan.");
             return;
         }
 
-        const existing = editId ? GymDB.find("members", editId) : null;
+        if (joiningDate > today()) {
+            alert("Joining date cannot be in the future.");
+            return;
+        }
+
+        let planName = "";
+        let planId = "";
+        let durationDays = null;
+        let fees = Number(document.getElementById("memberFees").value || 0);
+        let expiryDate = document.getElementById("memberExpiry").value;
+
+        if (selectedPlanId === "__legacy__") {
+            const existing = GymDB.find(MODULE, editingMemberId);
+
+            if (!existing) {
+                alert("Please select an active membership plan.");
+                return;
+            }
+
+            planName = existing.planName || "";
+            planId = existing.planId || "";
+            durationDays = existing.durationDays || null;
+        } else {
+            const plan = GymDB.find("plans", selectedPlanId);
+
+            if (!plan || plan.status !== "active") {
+                alert("Selected plan is not active. Please select another plan.");
+                return;
+            }
+
+            planName = plan.name;
+            planId = plan.id;
+            durationDays = Number(plan.durationDays || 0);
+
+            fees = Number(plan.fees || 0);
+            expiryDate = calculateExpiry(joiningDate, durationDays);
+        }
+
+        if (!Number.isFinite(fees) || fees < 0) {
+            alert("Please enter valid membership fees.");
+            return;
+        }
+
+        if (!expiryDate) {
+            alert("Please select a valid membership expiry date.");
+            return;
+        }
+
+        if (expiryDate < joiningDate) {
+            alert("Expiry date cannot be before joining date.");
+            return;
+        }
+
+        const existing = editingMemberId
+            ? GymDB.find(MODULE, editingMemberId)
+            : null;
 
         const memberData = {
+            ...(existing || {}),
 
             name: name,
-
             phone: phone,
-
             gender: document.getElementById("memberGender").value,
+            dob: document.getElementById("memberDob").value,
 
-            dob: document.getElementById("memberDOB").value,
+            joiningDate: joiningDate,
 
-            joiningDate: document.getElementById("memberJoining").value,
+            planId: planId,
+            planName: planName,
+            durationDays: durationDays,
 
-            planName: document.getElementById("memberPlan").value.trim(),
-
-            fees: Number(document.getElementById("memberFees").value || 0),
-
-            expiryDate: document.getElementById("memberExpiry").value,
+            fees: fees,
+            expiryDate: expiryDate,
 
             emergencyContact: document.getElementById("memberEmergency").value.trim(),
-
             trainer: document.getElementById("memberTrainer").value.trim(),
-
             address: document.getElementById("memberAddress").value.trim(),
-
             notes: document.getElementById("memberNotes").value.trim(),
 
-            status: existing ? existing.status : "active"
-
+            status: existing ? existing.status : "active",
+            updatedAt: new Date().toISOString()
         };
 
-        let result;
-
-        if (editId) {
-
-            result = GymDB.update("members", editId, memberData);
-
+        if (editingMemberId && existing) {
+            GymDB.update(MODULE, editingMemberId, memberData);
         } else {
+            memberData.id = GymDB.generateID("MEM");
+            memberData.createdAt = new Date().toISOString();
 
-            result = GymDB.add("members", memberData);
-
-        }
-
-        if (!result) {
-            alert("Member save nahi hua. Storage check karein.");
-            return;
+            GymDB.add(MODULE, memberData);
         }
 
         closeForm();
-
         renderTable();
 
-        if (typeof updateGymDashboard === "function") {
-            updateGymDashboard();
+        if (typeof window.updateGymDashboard === "function") {
+            window.updateGymDashboard();
         }
 
-        alert(editId ? "Member updated successfully!" : "New member registered successfully!");
+        showMessage(
+            editingMemberId
+                ? "Member updated successfully."
+                : "Member added successfully."
+        );
+    }
+
+    function getMemberStatus(member) {
+        if (member.status === "inactive") return "inactive";
+
+        if (member.expiryDate && member.expiryDate < today()) {
+            return "expired";
+        }
+
+        return "active";
     }
 
     function renderTable() {
+        const table = document.getElementById("gymMembersTable");
 
-        const tbody = document.getElementById("membersTableBody");
+        if (!table) return;
 
-        if (!tbody) return;
+        currentMembers = getMembers();
 
-        const members = getMembers();
+        const search = (
+            document.getElementById("searchGymMembers")?.value || ""
+        ).toLowerCase();
 
-        const filtered = members.filter(function (member) {
+        const filter = document.getElementById("filterGymMembers")?.value || "all";
 
-            const currentStatus = status(member);
+        const active = currentMembers.filter(member =>
+            getMemberStatus(member) === "active"
+        );
 
-            const text = [
-                member.id,
-                member.name,
-                member.phone,
-                member.planName
-            ].join(" ").toLowerCase();
+        const inactive = currentMembers.filter(member =>
+            getMemberStatus(member) !== "active"
+        );
 
-            const matchesSearch = text.includes(searchText);
+        document.getElementById("membersTotal").textContent = currentMembers.length;
+        document.getElementById("membersActive").textContent = active.length;
+        document.getElementById("membersInactive").textContent = inactive.length;
 
-            const matchesStatus =
-                statusFilter === "all" ||
-                currentStatus === statusFilter;
+        const filtered = currentMembers.filter(member => {
+            const status = getMemberStatus(member);
 
-            return matchesSearch && matchesStatus;
+            const matchesSearch =
+                String(member.name || "").toLowerCase().includes(search) ||
+                String(member.phone || "").toLowerCase().includes(search) ||
+                String(member.id || "").toLowerCase().includes(search) ||
+                String(member.planName || "").toLowerCase().includes(search);
 
+            const matchesFilter =
+                filter === "all" ||
+                filter === status;
+
+            return matchesSearch && matchesFilter;
         });
 
-        const active = members.filter(m => status(m) === "active").length;
-
-        const inactive = members.length - active;
-
-        document.getElementById("memberTotal").textContent = members.length;
-
-        document.getElementById("memberActive").textContent = active;
-
-        document.getElementById("memberInactive").textContent = inactive;
-
         if (!filtered.length) {
-
-            tbody.innerHTML = `
+            table.innerHTML = `
                 <tr>
-                    <td colspan="9" class="member-empty">
+                    <td colspan="8" class="members-empty">
                         No members found.
                     </td>
                 </tr>
             `;
-
             return;
         }
 
-        tbody.innerHTML = filtered.map(function (member) {
+        table.innerHTML = filtered.map(member => {
+            const status = getMemberStatus(member);
 
-            const memberStatus = status(member);
+            const statusText =
+                status === "active" ? "Active" :
+                status === "expired" ? "Expired" : "Inactive";
 
             return `
                 <tr>
+                    <td>
+                        <strong>${escapeHTML(member.name)}</strong>
+                        <br>
+                        <small>${escapeHTML(member.id || "")}</small>
+                    </td>
 
-                    <td>${escapeHTML(member.id)}</td>
+                    <td>${escapeHTML(member.phone || "")}</td>
 
-                    <td>${escapeHTML(member.name)}</td>
-
-                    <td>${escapeHTML(member.phone)}</td>
-
-                    <td>${escapeHTML(member.planName || "-")}</td>
+                    <td>${escapeHTML(member.planName || "Not Assigned")}</td>
 
                     <td>${escapeHTML(member.joiningDate || "-")}</td>
 
                     <td>${escapeHTML(member.expiryDate || "-")}</td>
 
-                    <td>${money(member.fees)}</td>
+                    <td><strong>${currency(member.fees)}</strong></td>
 
                     <td>
-                        <span class="member-status ${memberStatus}">
-                            ${memberStatus.toUpperCase()}
+                        <span class="member-status ${status}">
+                            ${statusText}
                         </span>
                     </td>
 
                     <td>
-
-                        <button class="member-action-btn"
-                            data-edit="${escapeHTML(member.id)}">
+                        <button
+                            class="member-action"
+                            data-edit-member="${escapeHTML(member.id)}"
+                        >
                             Edit
                         </button>
 
-                        <button class="member-action-btn member-delete-btn"
-                            data-delete="${escapeHTML(member.id)}">
-                            Delete
+                        <button
+                            class="member-action toggle"
+                            data-toggle-member="${escapeHTML(member.id)}"
+                        >
+                            ${member.status === "inactive" ? "Activate" : "Deactivate"}
                         </button>
 
+                        <button
+                            class="member-action delete"
+                            data-delete-member="${escapeHTML(member.id)}"
+                        >
+                            Delete
+                        </button>
                     </td>
-
                 </tr>
             `;
-
         }).join("");
 
-        tbody.querySelectorAll("[data-edit]").forEach(function (button) {
-
+        table.querySelectorAll("[data-edit-member]").forEach(button => {
             button.addEventListener("click", function () {
-
-                const member = GymDB.find("members", button.dataset.edit);
+                const member = GymDB.find(MODULE, this.dataset.editMember);
 
                 if (member) openForm(member);
-
             });
-
         });
 
-        tbody.querySelectorAll("[data-delete]").forEach(function (button) {
-
+        table.querySelectorAll("[data-toggle-member]").forEach(button => {
             button.addEventListener("click", function () {
-
-                const id = button.dataset.delete;
-
-                if (!confirm("Are you sure you want to delete this member?")) {
-                    return;
-                }
-
-                GymDB.delete("members", id);
-
-                renderTable();
-
-                alert("Member deleted successfully.");
-
+                toggleMember(this.dataset.toggleMember);
             });
-
         });
 
+        table.querySelectorAll("[data-delete-member]").forEach(button => {
+            button.addEventListener("click", function () {
+                deleteMember(this.dataset.deleteMember);
+            });
+        });
+    }
+
+    function toggleMember(id) {
+        const member = GymDB.find(MODULE, id);
+
+        if (!member) return;
+
+        const newStatus = member.status === "inactive" ? "active" : "inactive";
+
+        if (!confirm(
+            newStatus === "inactive"
+                ? "Are you sure you want to deactivate this member?"
+                : "Do you want to activate this member?"
+        )) {
+            return;
+        }
+
+        GymDB.update(MODULE, id, {
+            status: newStatus,
+            updatedAt: new Date().toISOString()
+        });
+
+        renderTable();
+
+        if (typeof window.updateGymDashboard === "function") {
+            window.updateGymDashboard();
+        }
+
+        showMessage("Member status updated.");
+    }
+
+    function deleteMember(id) {
+        const member = GymDB.find(MODULE, id);
+
+        if (!member) return;
+
+        if (!confirm(
+            "Are you sure you want to delete " +
+            member.name +
+            "? This action cannot be undone."
+        )) {
+            return;
+        }
+
+        GymDB.delete(MODULE, id);
+
+        renderTable();
+
+        if (typeof window.updateGymDashboard === "function") {
+            window.updateGymDashboard();
+        }
+
+        showMessage("Member deleted successfully.");
     }
 
     return {
         render: render,
         refresh: renderTable
     };
-
 })();
