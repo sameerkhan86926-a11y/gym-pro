@@ -1,21 +1,26 @@
 /* =====================================
    GYM PRO - MAIN JAVASCRIPT
-   Version 1.0.0
+   Version 1.0.1
 ===================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Check database
+    "use strict";
+
+    // DATABASE CHECK
     if (typeof GymDB === "undefined") {
-        alert("Database file load nahi hui. js/database.js check karein.");
+        alert("Database file not loaded. Check js/database.js");
         return;
     }
 
     GymDB.init();
 
-    const today = new Date();
+    // ELEMENTS
+    const dashboardContent = document.getElementById("dashboardContent");
+    const modulePlaceholder = document.getElementById("modulePlaceholder");
+    const sidebar = document.getElementById("sidebar");
 
-    // Page information
+    // PAGE INFORMATION
     const pages = {
         dashboard: {
             title: "Dashboard",
@@ -71,21 +76,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
-    // Date display
-    const dateElement = document.getElementById("currentDate");
-
-    if (dateElement) {
-        dateElement.textContent = today.toLocaleDateString("en-IN", {
-            weekday: "short",
-            day: "2-digit",
-            month: "short",
-            year: "numeric"
-        });
-    }
-
-    // Utility functions
+    // DATE
     function getToday() {
-        return new Date().toISOString().split("T")[0];
+        const date = new Date();
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
     }
 
     function getDate(value) {
@@ -94,22 +93,40 @@ document.addEventListener("DOMContentLoaded", function () {
         return String(value).split("T")[0];
     }
 
-    function formatCurrency(amount) {
-        return "₹" + Number(amount || 0).toLocaleString("en-IN");
+    const dateElement = document.getElementById("currentDate");
+
+    if (dateElement) {
+        dateElement.textContent = new Date().toLocaleDateString("en-IN", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+    // HELPERS
+    function setText(id, value) {
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.textContent = value;
+        }
     }
 
     function escapeHTML(value) {
         return String(value ?? "").replace(/[&<>"']/g, function (char) {
-            const entities = {
+            return {
                 "&": "&amp;",
                 "<": "&lt;",
                 ">": "&gt;",
                 '"': "&quot;",
                 "'": "&#039;"
-            };
-
-            return entities[char];
+            }[char];
         });
+    }
+
+    function formatCurrency(amount) {
+        return "₹" + Number(amount || 0).toLocaleString("en-IN");
     }
 
     function showToast(message) {
@@ -130,22 +147,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 3000);
     }
 
-    function getPaymentDate(payment) {
-        return getDate(
-            payment.paymentDate ||
-            payment.date ||
-            payment.createdAt
-        );
-    }
-
+    // MEMBER HELPERS
     function getMemberExpiry(member) {
-        return getDate(
-            member.expiryDate ||
-            member.endDate
-        );
+        return getDate(member.expiryDate || member.endDate);
     }
 
     function getMemberStatus(member) {
+
         const status = String(member.status || "active").toLowerCase();
 
         if (
@@ -166,52 +174,68 @@ document.addEventListener("DOMContentLoaded", function () {
         return "active";
     }
 
-    // Dashboard calculations
+    // DASHBOARD
     function updateDashboard() {
 
         const members = GymDB.getAll("members");
         const payments = GymDB.getAll("payments");
         const attendance = GymDB.getAll("attendance");
 
-        const todayDate = getToday();
+        const today = getToday();
+        const currentMonth = today.substring(0, 7);
 
-        const currentMonth = todayDate.substring(0, 7);
+        // TOTAL MEMBERS
+        const totalMembers = members.length;
 
+        // ACTIVE MEMBERS
         const activeMembers = members.filter(function (member) {
             return getMemberStatus(member) === "active";
-        });
+        }).length;
 
+        // TODAY ATTENDANCE
         const todayAttendance = attendance.filter(function (record) {
+
             const recordDate = getDate(
                 record.date ||
                 record.checkInDate ||
                 record.createdAt
             );
 
-            return recordDate === todayDate;
-        });
+            return recordDate === today;
 
-        const monthlyPayments = payments.filter(function (payment) {
-            return getPaymentDate(payment).startsWith(currentMonth);
-        });
+        }).length;
 
-        const monthlyRevenue = monthlyPayments.reduce(function (total, payment) {
+        // MONTHLY REVENUE
+        const monthlyRevenue = payments
+            .filter(function (payment) {
 
-            const amount = Number(
-                payment.paidAmount ??
-                payment.amount ??
-                payment.total ??
-                0
-            );
+                const paymentDate = getDate(
+                    payment.paymentDate ||
+                    payment.date ||
+                    payment.createdAt
+                );
 
-            if (String(payment.type || "").toLowerCase() === "refund") {
-                return total - amount;
-            }
+                return paymentDate.startsWith(currentMonth);
 
-            return total + amount;
+            })
+            .reduce(function (total, payment) {
 
-        }, 0);
+                const amount = Number(
+                    payment.paidAmount ??
+                    payment.amount ??
+                    payment.total ??
+                    0
+                );
 
+                if (String(payment.type || "").toLowerCase() === "refund") {
+                    return total - amount;
+                }
+
+                return total + amount;
+
+            }, 0);
+
+        // PENDING FEES
         const pendingFees = members.reduce(function (total, member) {
 
             return total + Number(
@@ -223,6 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }, 0);
 
+        // EXPIRING MEMBERS
         const expiringMembers = members.filter(function (member) {
 
             const expiry = getMemberExpiry(member);
@@ -231,36 +256,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 return false;
             }
 
+            const todayDate = new Date(today + "T00:00:00");
+            const expiryDate = new Date(expiry + "T00:00:00");
+
             const days = Math.ceil(
-                (new Date(expiry + "T00:00:00") -
-                new Date(todayDate + "T00:00:00")) / 86400000
+                (expiryDate - todayDate) / 86400000
             );
 
             return days >= 0 && days <= 7;
 
         });
 
-        // Update dashboard cards
-        setText("totalMembers", members.length);
-        setText("activeMembers", activeMembers.length);
-        setText("todayAttendance", todayAttendance.length);
+        // UPDATE CARDS
+        setText("totalMembers", totalMembers);
+        setText("activeMembers", activeMembers);
+        setText("todayAttendance", todayAttendance);
         setText("monthlyRevenue", formatCurrency(monthlyRevenue));
         setText("pendingFees", formatCurrency(pendingFees));
         setText("expiringMembers", expiringMembers.length);
 
+        // UPDATE TABLES
         renderRecentMembers(members);
         renderMembershipAlerts(expiringMembers);
     }
 
-    function setText(id, value) {
-        const element = document.getElementById(id);
-
-        if (element) {
-            element.textContent = value;
-        }
-    }
-
-    // Recent members
+    // RECENT MEMBERS
     function renderRecentMembers(members) {
 
         const table = document.getElementById("recentMembers");
@@ -268,9 +288,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!table) return;
 
         if (!members.length) {
+
             table.innerHTML = `
                 <tr>
-                    <td colspan="5" style="text-align:center;padding:25px;">
+                    <td colspan="4" style="text-align:center;padding:25px;">
                         No members registered yet.
                     </td>
                 </tr>
@@ -280,8 +301,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const sortedMembers = [...members].sort(function (a, b) {
+
             return new Date(b.createdAt || b.joiningDate || 0) -
                    new Date(a.createdAt || a.joiningDate || 0);
+
         });
 
         table.innerHTML = sortedMembers.slice(0, 5).map(function (member) {
@@ -308,7 +331,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }).join("");
     }
 
-    // Membership alerts
+    // MEMBERSHIP ALERTS
     function renderMembershipAlerts(members) {
 
         const container = document.getElementById("membershipAlerts");
@@ -316,6 +339,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!container) return;
 
         if (!members.length) {
+
             container.innerHTML = `
                 <div class="empty-state">
                     No memberships expiring in the next 7 days.
@@ -329,12 +353,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const expiry = getMemberExpiry(member);
 
+            const todayDate = new Date(getToday() + "T00:00:00");
+            const expiryDate = new Date(expiry + "T00:00:00");
+
             const days = Math.ceil(
-                (new Date(expiry + "T00:00:00") -
-                new Date(getToday() + "T00:00:00")) / 86400000
+                (expiryDate - todayDate) / 86400000
             );
 
-            let message = days === 0
+            const message = days === 0
                 ? "Expires today"
                 : "Expires in " + days + " days";
 
@@ -351,11 +377,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }).join("");
     }
 
-    // Navigation
-    function openPage(pageName) {
+    // DASHBOARD REFRESH FUNCTION
+    window.updateGymDashboard = updateDashboard;
+
+    // PAGE NAVIGATION
+    function openPage(pageName, options = {}) {
 
         if (!pages[pageName]) return;
 
+        // ACTIVE MENU
         document.querySelectorAll(".nav-item").forEach(function (item) {
             item.classList.remove("active");
         });
@@ -368,79 +398,134 @@ document.addEventListener("DOMContentLoaded", function () {
             activeItem.classList.add("active");
         }
 
+        // PAGE TITLE
         setText("pageTitle", pages[pageName].title);
         setText("pageSubtitle", pages[pageName].subtitle);
 
-        if (pageName === "dashboard") {
-            updateDashboard();
-        } else {
-            showComingSoon(pageName);
+        // DASHBOARD DISPLAY
+        if (dashboardContent) {
+            dashboardContent.style.display =
+                pageName === "dashboard" ? "" : "none";
         }
 
-        // Close mobile sidebar
-        const sidebar = document.querySelector(".sidebar");
+        // MODULE DISPLAY
+        if (modulePlaceholder) {
 
+            modulePlaceholder.style.display =
+                pageName === "dashboard" ? "none" : "block";
+
+        }
+
+        // LOAD SELECTED PAGE
+        if (pageName === "dashboard") {
+
+            updateDashboard();
+
+        } else if (pageName === "members") {
+
+            if (window.GymMembers) {
+
+                GymMembers.render();
+
+            } else {
+
+                showComingSoon(pageName);
+
+            }
+
+        } else {
+
+            showComingSoon(pageName);
+
+        }
+
+        // CLOSE MOBILE SIDEBAR
         if (sidebar) {
             sidebar.classList.remove("open");
         }
+
+        // QUICK ADD MEMBER
+        if (options.addMember && pageName === "members") {
+
+            setTimeout(function () {
+
+                const addButton = document.getElementById("addMemberBtn");
+
+                if (addButton) {
+                    addButton.click();
+                }
+
+            }, 50);
+
+        }
     }
 
-    // Temporary page content
+    // TEMPORARY MODULES
     function showComingSoon(pageName) {
 
-        const existing = document.getElementById("modulePlaceholder");
+        if (!modulePlaceholder) return;
 
-        if (existing) {
-            existing.remove();
-        }
+        modulePlaceholder.innerHTML = `
+            <div class="module-placeholder"
+                style="padding:40px 20px;text-align:center;">
 
-        const main = document.querySelector(".main-content");
+                <div style="
+                    font-size:35px;
+                    font-weight:bold;
+                    color:#ad8aff;
+                    margin-bottom:15px;">
+                    GYM PRO
+                </div>
 
-        if (!main) return;
-
-        const placeholder = document.createElement("div");
-
-        placeholder.id = "modulePlaceholder";
-
-        placeholder.innerHTML = `
-            <div class="module-placeholder">
-                <div class="module-icon">GP</div>
                 <h2>${escapeHTML(pages[pageName].title)}</h2>
-                <p>
-                    This module is being developed.
-                    It will be available in the next development phase.
+
+                <p style="color:#aaa;margin:15px 0;">
+                    This module is under development.
                 </p>
-                <button type="button" id="backToDashboard">
+
+                <button
+                    type="button"
+                    id="backToDashboard"
+                    style="
+                        padding:12px 22px;
+                        border:0;
+                        border-radius:8px;
+                        background:#8154f7;
+                        color:white;
+                        cursor:pointer;">
                     Back to Dashboard
                 </button>
+
             </div>
         `;
-
-        main.appendChild(placeholder);
 
         const backButton = document.getElementById("backToDashboard");
 
         if (backButton) {
+
             backButton.addEventListener("click", function () {
                 openPage("dashboard");
             });
+
         }
     }
 
-    // Navigation click events
-    document.querySelectorAll(".nav-item[data-page]").forEach(function (item) {
+    // ALL PAGE BUTTONS
+    document.querySelectorAll("[data-page]").forEach(function (item) {
 
         item.addEventListener("click", function (event) {
 
             event.preventDefault();
 
-            const page = item.dataset.page;
+            const pageName = item.dataset.page;
 
-            openPage(page);
+            openPage(pageName);
+
         });
+
     });
 
-    // Quick action buttons
+    // QUICK ACTION BUTTONS
     document.querySelectorAll("[data-action]").forEach(function (button) {
 
         button.addEventListener("click", function () {
@@ -454,39 +539,49 @@ document.addEventListener("DOMContentLoaded", function () {
                 "add-discount": "discounts"
             };
 
-            if (actionPages[action]) {
+            if (action === "add-member") {
+
+                openPage("members", {
+                    addMember: true
+                });
+
+            } else if (actionPages[action]) {
+
                 openPage(actionPages[action]);
+
             }
 
         });
+
     });
 
-    // Mobile sidebar toggle
+    // MOBILE MENU
     const menuToggle = document.getElementById("menuToggle");
 
-    if (menuToggle) {
+    if (menuToggle && sidebar) {
 
         menuToggle.addEventListener("click", function () {
 
-            const sidebar = document.querySelector(".sidebar");
-
-            if (sidebar) {
-                sidebar.classList.toggle("open");
-            }
+            sidebar.classList.toggle("open");
 
         });
+
     }
 
-    // Notification button
+    // NOTIFICATIONS
     const notificationButton = document.getElementById("notificationButton");
 
     if (notificationButton) {
+
         notificationButton.addEventListener("click", function () {
+
             showToast("Notification center will be available soon.");
+
         });
+
     }
 
-    // Initial dashboard load
+    // INITIALIZE DASHBOARD
     updateDashboard();
 
     console.log("GYM PRO initialized successfully.");
