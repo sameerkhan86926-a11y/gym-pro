@@ -12,6 +12,7 @@
 <div class="app">
 
     <aside class="sidebar" id="sidebar">
+
         <div class="brand">
             <div class="brand-icon">G</div>
             <div>
@@ -26,30 +27,39 @@
             <a href="#" class="nav-item active" data-page="dashboard">
                 <span>▦</span> Dashboard
             </a>
+
             <a href="#" class="nav-item" data-page="members">
                 <span>♙</span> Members
             </a>
+
             <a href="#" class="nav-item" data-page="membership">
                 <span>▣</span> Membership Plans
             </a>
+
             <a href="#" class="nav-item" data-page="discounts">
                 <span>%</span> Discounts
             </a>
+
             <a href="#" class="nav-item" data-page="payments">
                 <span>₹</span> Fees & Payments
             </a>
+
             <a href="#" class="nav-item" data-page="attendance">
                 <span>◷</span> Attendance
             </a>
+
             <a href="#" class="nav-item" data-page="expiry">
                 <span>◴</span> Expiry Management
             </a>
+
             <a href="#" class="nav-item" data-page="trainers">
                 <span>♟</span> Trainers
             </a>
+
             <a href="#" class="nav-item" data-page="expenses">
                 <span>↗</span> Expenses
             </a>
+
             <a href="#" class="nav-item" data-page="reports">
                 <span>▤</span> Reports
             </a>
@@ -61,9 +71,11 @@
             <a href="#" class="nav-item" data-page="biometric">
                 <span>▥</span> Biometric Device
             </a>
+
             <a href="#" class="nav-item" data-page="backup">
                 <span>☁</span> Backup & Restore
             </a>
+
             <a href="#" class="nav-item" data-page="settings">
                 <span>⚙</span> Settings
             </a>
@@ -73,11 +85,13 @@
             <div class="status-dot"></div>
             <span>Local Database Active</span>
         </div>
+
     </aside>
 
     <main class="main-content">
 
         <header class="topbar">
+
             <button class="menu-toggle" id="menuToggle">☰</button>
 
             <div class="page-heading">
@@ -86,8 +100,16 @@
             </div>
 
             <div class="top-actions">
+
                 <div class="date-display" id="currentDate"></div>
-                <button class="notification-btn" title="Notifications">♧</button>
+
+                <button
+                    class="notification-btn"
+                    id="notificationButton"
+                    title="Notifications">
+                    ♧
+                </button>
+
                 <div class="profile">
                     <div class="avatar">A</div>
                     <div>
@@ -95,157 +117,190 @@
                         <small>Gym Owner</small>
                     </div>
                 </div>
+
             </div>
+
         </header>
 
         <div class="content-area" id="contentArea">
 
-            <section class="welcome-banner">
-                <div>
-                    <span class="welcome-tag">GYM MANAGEMENT</span>
-                    <h2>Welcome Back, Admin!</h2>
-                    <p>Manage your gym, members and business from one place.</p>
-                </div>
-                <div class="welcome-icon">GYM</div>
-            </section>
+            <!-- DASHBOARD CONTENT START -->
 
-            <section class="stats-grid">
+            <div id="dashboardContent">
 
-                <div class="stat-card">
-                    <div class="stat-top">
-                        <span>Total Members</span>
-                        <div class="stat-icon purple">♙</div>
-                    </div>
-                    <h2 id="totalMembers">0</h2>
-                    <small>All registered members</small>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-top">
-                        <span>Active Members</span>
-                        <div class="stat-icon green">✓</div>
-                    </div>
-                    <h2 id="activeMembers">0</h2>
-                    <small>Currently active memberships</small>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-top">
-                        <span>Today's Attendance</span>
-                        <div class="stat-icon blue">◷</div>
-                    </div>
-                    <h2 id="todayAttendance">0</h2>
-                    <small>Members checked in today</small>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-top">
-                        <span>Monthly Revenue</span>
-                        <div class="stat-icon orange">₹</div>
-                    </div>
-                    <h2 id="monthlyRevenue">₹0</h2>
-                    <small>Payments received this month</small>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-top">
-                        <span>Pending Fees</span>
-                        <div class="stat-icon red">!</div>
-                    </div>
-                    <h2 id="pendingFees">₹0</h2>
-                    <small>Outstanding member payments</small>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-top">
-                        <span>Expiring Memberships</span>
-                        <div class="stat-icon yellow">◴</div>
-                    </div>
-                    <h2 id="expiringMembers">0</h2>
-                    <small>Expiring within 7 days</small>
-                </div>
-
-            </section>
-
-            <section class="quick-actions">
-                <div class="section-heading">
+                <section class="welcome-banner">
                     <div>
-                        <h2>Quick Actions</h2>
-                        <p>Frequently used operations</p>
+                        <span class="welcome-tag">GYM MANAGEMENT</span>
+                        <h2>Welcome Back, Admin!</h2>
+                        <p>Manage your gym, members and business from one place.</p>
                     </div>
-                </div>
 
-                <div class="action-grid">
-                    <button class="action-btn" data-action="add-member">
-                        <span>＋</span>
-                        <strong>Add Member</strong>
-                    </button>
+                    <div class="welcome-icon">GYM</div>
+                </section>
 
-                    <button class="action-btn" data-action="collect-payment">
-                        <span>₹</span>
-                        <strong>Collect Fees</strong>
-                    </button>
+                <section class="stats-grid">
 
-                    <button class="action-btn" data-action="mark-attendance">
-                        <span>✓</span>
-                        <strong>Attendance</strong>
-                    </button>
+                    <div class="stat-card">
+                        <div class="stat-top">
+                            <span>Total Members</span>
+                            <div class="stat-icon purple">♙</div>
+                        </div>
+                        <h2 id="totalMembers">0</h2>
+                        <small>All registered members</small>
+                    </div>
 
-                    <button class="action-btn" data-action="add-discount">
-                        <span>%</span>
-                        <strong>Give Discount</strong>
-                    </button>
-                </div>
-            </section>
+                    <div class="stat-card">
+                        <div class="stat-top">
+                            <span>Active Members</span>
+                            <div class="stat-icon green">✓</div>
+                        </div>
+                        <h2 id="activeMembers">0</h2>
+                        <small>Currently active memberships</small>
+                    </div>
 
-            <section class="bottom-grid">
+                    <div class="stat-card">
+                        <div class="stat-top">
+                            <span>Today's Attendance</span>
+                            <div class="stat-icon blue">◷</div>
+                        </div>
+                        <h2 id="todayAttendance">0</h2>
+                        <small>Members checked in today</small>
+                    </div>
 
-                <div class="panel">
+                    <div class="stat-card">
+                        <div class="stat-top">
+                            <span>Monthly Revenue</span>
+                            <div class="stat-icon orange">₹</div>
+                        </div>
+                        <h2 id="monthlyRevenue">₹0</h2>
+                        <small>Payments received this month</small>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-top">
+                            <span>Pending Fees</span>
+                            <div class="stat-icon red">!</div>
+                        </div>
+                        <h2 id="pendingFees">₹0</h2>
+                        <small>Outstanding member payments</small>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-top">
+                            <span>Expiring Memberships</span>
+                            <div class="stat-icon yellow">◴</div>
+                        </div>
+                        <h2 id="expiringMembers">0</h2>
+                        <small>Expiring within 7 days</small>
+                    </div>
+
+                </section>
+
+                <section class="quick-actions">
+
                     <div class="section-heading">
                         <div>
-                            <h2>Recent Members</h2>
-                            <p>Recently registered gym members</p>
-                        </div>
-                        <button class="text-btn" data-page="members">View All</button>
-                    </div>
-
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Member</th>
-                                    <th>Membership</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentMembers">
-                                <tr>
-                                    <td colspan="3" class="empty-state">
-                                        No members registered yet.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="section-heading">
-                        <div>
-                            <h2>Membership Alerts</h2>
-                            <p>Members requiring attention</p>
-                        </div>
-                        <button class="text-btn" data-page="expiry">View All</button>
-                    </div>
-
-                    <div id="membershipAlerts" class="alerts-list">
-                        <div class="empty-state">
-                            No membership alerts.
+                            <h2>Quick Actions</h2>
+                            <p>Frequently used operations</p>
                         </div>
                     </div>
-                </div>
 
-            </section>
+                    <div class="action-grid">
+
+                        <button class="action-btn" data-action="add-member">
+                            <span>＋</span>
+                            <strong>Add Member</strong>
+                        </button>
+
+                        <button class="action-btn" data-action="collect-payment">
+                            <span>₹</span>
+                            <strong>Collect Fees</strong>
+                        </button>
+
+                        <button class="action-btn" data-action="mark-attendance">
+                            <span>✓</span>
+                            <strong>Attendance</strong>
+                        </button>
+
+                        <button class="action-btn" data-action="add-discount">
+                            <span>%</span>
+                            <strong>Give Discount</strong>
+                        </button>
+
+                    </div>
+
+                </section>
+
+                <section class="bottom-grid">
+
+                    <div class="panel">
+
+                        <div class="section-heading">
+                            <div>
+                                <h2>Recent Members</h2>
+                                <p>Recently registered gym members</p>
+                            </div>
+
+                            <button class="text-btn" data-page="members">
+                                View All
+                            </button>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table>
+
+                                <thead>
+                                    <tr>
+                                        <th>Member</th>
+                                        <th>Phone</th>
+                                        <th>Membership</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="recentMembers">
+                                    <tr>
+                                        <td colspan="4" class="empty-state">
+                                            No members registered yet.
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+                        </div>
+
+                    </div>
+
+                    <div class="panel">
+
+                        <div class="section-heading">
+                            <div>
+                                <h2>Membership Alerts</h2>
+                                <p>Members requiring attention</p>
+                            </div>
+
+                            <button class="text-btn" data-page="expiry">
+                                View All
+                            </button>
+                        </div>
+
+                        <div id="membershipAlerts" class="alerts-list">
+                            <div class="empty-state">
+                                No membership alerts.
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <!-- DASHBOARD CONTENT END -->
+
+            <!-- OTHER MODULES LOAD HERE -->
+
+            <div id="modulePlaceholder" style="display:none;"></div>
 
             <footer class="footer">
                 <span>GYM PRO Management System</span>
@@ -253,12 +308,20 @@
             </footer>
 
         </div>
+
     </main>
+
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- DATABASE FIRST -->
 <script src="js/database.js"></script>
+
+<!-- MEMBERS MODULE SECOND -->
+<script src="js/members.js"></script>
+
+<!-- MAIN JAVASCRIPT LAST -->
 <script src="script.js"></script>
 
 </body>
