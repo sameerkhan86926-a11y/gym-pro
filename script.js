@@ -1,6 +1,6 @@
 /* =====================================
    GYM PRO - MAIN JAVASCRIPT
-   Version 1.0.1
+   Version 1.0.2
 ===================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -76,20 +76,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
-    // DATE
+    // DATE HELPERS
     function getToday() {
         const date = new Date();
 
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-
-        return `${year}-${month}-${day}`;
+        return [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
     }
 
     function getDate(value) {
         if (!value) return "";
-
         return String(value).split("T")[0];
     }
 
@@ -104,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // HELPERS
+    // GENERAL HELPERS
     function setText(id, value) {
         const element = document.getElementById(id);
 
@@ -153,7 +152,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getMemberStatus(member) {
-
         const status = String(member.status || "active").toLowerCase();
 
         if (
@@ -174,9 +172,34 @@ document.addEventListener("DOMContentLoaded", function () {
         return "active";
     }
 
+    // PAYMENT HELPERS
+    function getMemberPending(member, payments) {
+        const memberPayments = payments.filter(function (payment) {
+            return String(payment.memberId) === String(member.id);
+        });
+
+        const received = memberPayments.reduce(function (total, payment) {
+            const amount = Number(
+                payment.paidAmount ??
+                payment.amount ??
+                payment.total ??
+                0
+            );
+
+            if (String(payment.type || "").toLowerCase() === "refund") {
+                return total - amount;
+            }
+
+            return total + amount;
+        }, 0);
+
+        const fees = Number(member.fees || member.amount || 0);
+
+        return Math.max(0, fees - received);
+    }
+
     // DASHBOARD
     function updateDashboard() {
-
         const members = GymDB.getAll("members");
         const payments = GymDB.getAll("payments");
         const attendance = GymDB.getAll("attendance");
@@ -194,7 +217,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // TODAY ATTENDANCE
         const todayAttendance = attendance.filter(function (record) {
-
             const recordDate = getDate(
                 record.date ||
                 record.checkInDate ||
@@ -202,13 +224,11 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             return recordDate === today;
-
         }).length;
 
         // MONTHLY REVENUE
         const monthlyRevenue = payments
             .filter(function (payment) {
-
                 const paymentDate = getDate(
                     payment.paymentDate ||
                     payment.date ||
@@ -216,10 +236,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
                 return paymentDate.startsWith(currentMonth);
-
             })
             .reduce(function (total, payment) {
-
                 const amount = Number(
                     payment.paidAmount ??
                     payment.amount ??
@@ -232,24 +250,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 return total + amount;
-
             }, 0);
 
         // PENDING FEES
         const pendingFees = members.reduce(function (total, member) {
-
-            return total + Number(
-                member.pendingAmount ??
-                member.balance ??
-                member.dueAmount ??
-                0
-            );
-
+            return total + getMemberPending(member, payments);
         }, 0);
 
         // EXPIRING MEMBERS
         const expiringMembers = members.filter(function (member) {
-
             const expiry = getMemberExpiry(member);
 
             if (!expiry || getMemberStatus(member) !== "active") {
@@ -264,10 +273,9 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             return days >= 0 && days <= 7;
-
         });
 
-        // UPDATE CARDS
+        // UPDATE DASHBOARD CARDS
         setText("totalMembers", totalMembers);
         setText("activeMembers", activeMembers);
         setText("todayAttendance", todayAttendance);
@@ -275,44 +283,36 @@ document.addEventListener("DOMContentLoaded", function () {
         setText("pendingFees", formatCurrency(pendingFees));
         setText("expiringMembers", expiringMembers.length);
 
-        // UPDATE TABLES
         renderRecentMembers(members);
         renderMembershipAlerts(expiringMembers);
     }
 
     // RECENT MEMBERS
     function renderRecentMembers(members) {
-
         const table = document.getElementById("recentMembers");
 
         if (!table) return;
 
         if (!members.length) {
-
             table.innerHTML = `
                 <tr>
-                    <td colspan="4" style="text-align:center;padding:25px;">
+                    <td colspan="4" class="empty-state">
                         No members registered yet.
                     </td>
                 </tr>
             `;
-
             return;
         }
 
         const sortedMembers = [...members].sort(function (a, b) {
-
             return new Date(b.createdAt || b.joiningDate || 0) -
                    new Date(a.createdAt || a.joiningDate || 0);
-
         });
 
         table.innerHTML = sortedMembers.slice(0, 5).map(function (member) {
-
             const name = escapeHTML(member.name || "Unnamed");
             const phone = escapeHTML(member.phone || "-");
             const plan = escapeHTML(member.planName || member.plan || "-");
-
             const status = getMemberStatus(member);
 
             return `
@@ -327,30 +327,25 @@ document.addEventListener("DOMContentLoaded", function () {
                     </td>
                 </tr>
             `;
-
         }).join("");
     }
 
     // MEMBERSHIP ALERTS
     function renderMembershipAlerts(members) {
-
         const container = document.getElementById("membershipAlerts");
 
         if (!container) return;
 
         if (!members.length) {
-
             container.innerHTML = `
                 <div class="empty-state">
                     No memberships expiring in the next 7 days.
                 </div>
             `;
-
             return;
         }
 
         container.innerHTML = members.map(function (member) {
-
             const expiry = getMemberExpiry(member);
 
             const todayDate = new Date(getToday() + "T00:00:00");
@@ -373,16 +368,108 @@ document.addEventListener("DOMContentLoaded", function () {
                     <span>${message}</span>
                 </div>
             `;
-
         }).join("");
     }
 
-    // DASHBOARD REFRESH FUNCTION
+    // EXPOSE DASHBOARD REFRESH
     window.updateGymDashboard = updateDashboard;
+
+    // MODULE ROUTER
+    function loadModule(pageName) {
+        const modules = {
+            members: window.GymMembers,
+            membership: window.GymPlans,
+            discounts: window.GymDiscounts,
+            payments: window.GymPayments,
+            attendance: window.GymAttendance,
+            expiry: window.GymNotifications,
+            trainers: window.GymTrainers,
+            expenses: window.GymExpenses,
+            reports: window.GymReports,
+            settings: window.GymSettings,
+            backup: window.GymSettings
+        };
+
+        const module = modules[pageName];
+
+        if (module && typeof module.render === "function") {
+            module.render();
+            return true;
+        }
+
+        return false;
+    }
+
+    // BIOMETRIC PLACEHOLDER
+    function showBiometricPage() {
+        modulePlaceholder.innerHTML = `
+            <div class="module-placeholder" style="padding:35px 20px;text-align:center;">
+                <div style="font-size:42px;color:#ad8aff;margin-bottom:15px;">
+                    ♧
+                </div>
+
+                <h2>Biometric Device</h2>
+
+                <p style="color:#aaa;margin:15px auto;max-width:500px;line-height:1.7;">
+                    Fingerprint device integration is not connected yet.
+                    First, the device model and its supported software/API
+                    need to be identified.
+                </p>
+
+                <div style="padding:15px;border:1px solid #39304e;border-radius:12px;margin:20px auto;max-width:450px;">
+                    <strong>Current Status:</strong>
+                    <span style="color:#ffbd59;"> Not Connected</span>
+                </div>
+
+                <p style="color:#999;font-size:13px;">
+                    Manual attendance is available in the Attendance module.
+                </p>
+
+                <button type="button" id="biometricBack"
+                    style="padding:12px 22px;border:0;border-radius:8px;background:#8154f7;color:white;cursor:pointer;margin-top:15px;">
+                    Back to Dashboard
+                </button>
+            </div>
+        `;
+
+        const backButton = document.getElementById("biometricBack");
+
+        if (backButton) {
+            backButton.addEventListener("click", function () {
+                openPage("dashboard");
+            });
+        }
+    }
+
+    // MODULE NOT AVAILABLE
+    function showModuleError(pageName) {
+        modulePlaceholder.innerHTML = `
+            <div style="padding:35px 20px;text-align:center;">
+                <h2>${escapeHTML(pages[pageName].title)}</h2>
+                <p style="color:#aaa;margin:15px 0;">
+                    This module could not be loaded.
+                </p>
+                <p style="color:#999;font-size:13px;">
+                    Please check the JavaScript file and its connection.
+                </p>
+                <button type="button" id="moduleBack"
+                    style="padding:12px 22px;border:0;border-radius:8px;background:#8154f7;color:white;cursor:pointer;">
+                    Back to Dashboard
+                </button>
+            </div>
+        `;
+
+        const backButton = document.getElementById("moduleBack");
+
+        if (backButton) {
+            backButton.addEventListener("click", function () {
+                openPage("dashboard");
+            });
+        }
+    }
 
     // PAGE NAVIGATION
     function openPage(pageName, options = {}) {
-
         if (!pages[pageName]) return;
 
         // ACTIVE MENU
@@ -402,41 +489,28 @@ document.addEventListener("DOMContentLoaded", function () {
         setText("pageTitle", pages[pageName].title);
         setText("pageSubtitle", pages[pageName].subtitle);
 
-        // DASHBOARD DISPLAY
+        // CONTENT DISPLAY
         if (dashboardContent) {
             dashboardContent.style.display =
                 pageName === "dashboard" ? "" : "none";
         }
 
-        // MODULE DISPLAY
         if (modulePlaceholder) {
-
             modulePlaceholder.style.display =
                 pageName === "dashboard" ? "none" : "block";
-
         }
 
-        // LOAD SELECTED PAGE
+        // LOAD PAGE
         if (pageName === "dashboard") {
-
             updateDashboard();
-
-        } else if (pageName === "members") {
-
-            if (window.GymMembers) {
-
-                GymMembers.render();
-
-            } else {
-
-                showComingSoon(pageName);
-
-            }
-
+        } else if (pageName === "biometric") {
+            showBiometricPage();
         } else {
+            const loaded = loadModule(pageName);
 
-            showComingSoon(pageName);
-
+            if (!loaded) {
+                showModuleError(pageName);
+            }
         }
 
         // CLOSE MOBILE SIDEBAR
@@ -446,90 +520,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // QUICK ADD MEMBER
         if (options.addMember && pageName === "members") {
-
             setTimeout(function () {
-
                 const addButton = document.getElementById("addMemberBtn");
 
                 if (addButton) {
                     addButton.click();
+                } else {
+                    showToast("Members page opened. Use Add Member button.");
                 }
-
-            }, 50);
-
+            }, 100);
         }
     }
 
-    // TEMPORARY MODULES
-    function showComingSoon(pageName) {
+    // GLOBAL PAGE ACCESS
+    window.openGymPage = openPage;
 
-        if (!modulePlaceholder) return;
-
-        modulePlaceholder.innerHTML = `
-            <div class="module-placeholder"
-                style="padding:40px 20px;text-align:center;">
-
-                <div style="
-                    font-size:35px;
-                    font-weight:bold;
-                    color:#ad8aff;
-                    margin-bottom:15px;">
-                    GYM PRO
-                </div>
-
-                <h2>${escapeHTML(pages[pageName].title)}</h2>
-
-                <p style="color:#aaa;margin:15px 0;">
-                    This module is under development.
-                </p>
-
-                <button
-                    type="button"
-                    id="backToDashboard"
-                    style="
-                        padding:12px 22px;
-                        border:0;
-                        border-radius:8px;
-                        background:#8154f7;
-                        color:white;
-                        cursor:pointer;">
-                    Back to Dashboard
-                </button>
-
-            </div>
-        `;
-
-        const backButton = document.getElementById("backToDashboard");
-
-        if (backButton) {
-
-            backButton.addEventListener("click", function () {
-                openPage("dashboard");
-            });
-
-        }
-    }
-
-    // ALL PAGE BUTTONS
+    // SIDEBAR AND PAGE BUTTONS
     document.querySelectorAll("[data-page]").forEach(function (item) {
-
         item.addEventListener("click", function (event) {
-
             event.preventDefault();
-
-            const pageName = item.dataset.page;
-
-            openPage(pageName);
-
+            openPage(item.dataset.page);
         });
-
     });
 
-    // QUICK ACTION BUTTONS
+    // QUICK ACTIONS
     document.querySelectorAll("[data-action]").forEach(function (button) {
-
         button.addEventListener("click", function () {
-
             const action = button.dataset.action;
 
             const actionPages = {
@@ -540,50 +556,36 @@ document.addEventListener("DOMContentLoaded", function () {
             };
 
             if (action === "add-member") {
-
-                openPage("members", {
-                    addMember: true
-                });
-
+                openPage("members", { addMember: true });
             } else if (actionPages[action]) {
-
                 openPage(actionPages[action]);
-
             }
-
         });
-
     });
 
     // MOBILE MENU
     const menuToggle = document.getElementById("menuToggle");
 
     if (menuToggle && sidebar) {
-
         menuToggle.addEventListener("click", function () {
-
             sidebar.classList.toggle("open");
-
         });
-
     }
 
-    // NOTIFICATIONS
+    // NOTIFICATION BUTTON
     const notificationButton = document.getElementById("notificationButton");
 
     if (notificationButton) {
-
         notificationButton.addEventListener("click", function () {
-
-            showToast("Notification center will be available soon.");
-
+            openPage("expiry");
         });
-
     }
 
-    // INITIALIZE DASHBOARD
+    // INITIALIZE
     updateDashboard();
 
-    console.log("GYM PRO initialized successfully.");
+    openPage("dashboard");
+
+    console.log("GYM PRO v1.0.2 initialized successfully.");
 
 });
