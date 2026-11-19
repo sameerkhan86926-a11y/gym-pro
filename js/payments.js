@@ -45,11 +45,12 @@ window.GymPayments = (function () {
 
     function getMemberPayments(memberId) {
         return getPayments().filter(payment =>
-            payment.memberId === memberId
+            payment.memberId === memberId &&
+            payment.status !== "void"
         );
     }
 
-    function getActiveDiscount(memberId) {
+    function getActiveDiscounts(memberId) {
         const current = today();
 
         return getDiscounts()
@@ -62,7 +63,11 @@ window.GymPayments = (function () {
             .sort((a, b) => {
                 return String(b.createdAt || "")
                     .localeCompare(String(a.createdAt || ""));
-            })[0] || null;
+            });
+    }
+
+    function getActiveDiscount(memberId) {
+        return getActiveDiscounts(memberId)[0] || null;
     }
 
     function calculateDiscount(fees, discount) {
@@ -79,19 +84,21 @@ window.GymPayments = (function () {
         return Math.min(fees, Math.max(0, amount));
     }
 
-    function getBilling(member) {
+    function getBilling(member, selectedDiscountId) {
         const payments = getMemberPayments(member.id);
 
-        if (Number.isFinite(Number(member.billingFinalFees)) &&
+        if (
             member.billingFinalFees !== undefined &&
             member.billingFinalFees !== null &&
-            member.billingFinalFees !== "") {
-
+            member.billingFinalFees !== ""
+        ) {
             return {
                 fees: Number(member.billingOriginalFees ?? member.fees ?? 0),
                 discount: Number(member.billingDiscountAmount || 0),
                 finalFees: Number(member.billingFinalFees),
                 discountName: member.billingDiscountName || "",
+                discountReason: member.billingDiscountReason || "",
+                discountId: member.billingDiscountId || "",
                 locked: true
             };
         }
@@ -106,35 +113,54 @@ window.GymPayments = (function () {
                 discount: Number(oldPayment.billingDiscountAmount || 0),
                 finalFees: Number(oldPayment.billingFinalFees || member.fees || 0),
                 discountName: oldPayment.billingDiscountName || "",
+                discountReason: oldPayment.billingDiscountReason || "",
+                discountId: oldPayment.billingDiscountId || "",
                 locked: true
             };
         }
 
         const fees = Number(member.fees || 0);
 
-        // Purani payments par discount retroactively apply nahi hoga.
+        // Existing payment records ka purana billing change nahi hoga.
         if (payments.length > 0) {
             return {
                 fees,
                 discount: 0,
                 finalFees: fees,
                 discountName: "",
+                discountReason: "",
+                discountId: "",
                 locked: true
             };
         }
 
-        const discount = getActiveDiscount(member.id);
+        let discount = null;
+
+        if (selectedDiscountId) {
+            discount = getActiveDiscounts(member.id).find(item =>
+                item.id === selectedDiscountId
+            ) || null;
+        } else {
+            discount = getActiveDiscount(member.id);
+        }
+
         const discountAmount = calculateDiscount(fees, discount);
+
+        let discountName = "";
+
+        if (discount) {
+            discountName = discount.type === "percentage"
+                ? Number(discount.value) + "%"
+                : currency(discount.value);
+        }
 
         return {
             fees,
             discount: discountAmount,
             finalFees: Math.max(0, fees - discountAmount),
-            discountName: discount
-                ? (discount.type === "percentage"
-                    ? discount.value + "%"
-                    : currency(discount.value))
-                : "",
+            discountName,
+            discountReason: discount?.reason || "",
+            discountId: discount?.id || "",
             discountRecord: discount,
             locked: false
         };
@@ -146,8 +172,8 @@ window.GymPayments = (function () {
         }, 0);
     }
 
-    function getMemberBalance(member) {
-        const billing = getBilling(member);
+    function getMemberBalance(member, selectedDiscountId) {
+        const billing = getBilling(member, selectedDiscountId);
         const paid = getMemberPaid(member.id);
 
         return {
@@ -156,6 +182,7 @@ window.GymPayments = (function () {
             finalFees: billing.finalFees,
             paid,
             pending: Math.max(0, billing.finalFees - paid),
+            advance: Math.max(0, paid - billing.finalFees),
             billing
         };
     }
@@ -401,6 +428,17 @@ window.GymPayments = (function () {
                 border-color:#a855f7;
             }
 
+            .payment-discount-note {
+                margin-top:7px;
+                font-size:12px;
+                color:#bba9d8;
+                line-height:1.5;
+            }
+
+            .payment-locked-note {
+                color:#f2d38b;
+            }
+
             @media(max-width:650px) {
                 .payments-stats {
                     grid-template-columns:1fr;
@@ -539,6 +577,16 @@ window.GymPayments = (function () {
                             <option value="">Choose Member</option>
                         </select>
 
+                        <label>Select Existing Discount</label>
+
+                        <select id="paymentDiscount">
+                            <option value="">No Discount</option>
+                        </select>
+
+                        <div class="payment-discount-note" id="paymentDiscountNote">
+                            Select a member to see available discounts.
+                        </div>
+
                         <div class="payment-balance" id="paymentMemberBalance">
                             Select a member to see their fee details.
                         </div>
@@ -631,8 +679,8 @@ window.GymPayments = (function () {
         document.getElementById("paymentMember")
             .addEventListener("change", updateMemberBalance);
 
-        document.getElementById("paymentType")
-            .addEventListener("change", updatePaymentAmount);
+        document.getElementById("paymentDiscount")
+            .addEventListener("change", updateMemberBalance);
 
         document.getElementById("paymentSearch")
             .addEventListener("input", renderTables);
@@ -674,6 +722,12 @@ window.GymPayments = (function () {
         document.getElementById("paymentMemberBalance").textContent =
             "Select a member to see their fee details.";
 
+        document.getElementById("paymentDiscount").innerHTML =
+            '<option value="">No Discount</option>';
+
+        document.getElementById("paymentDiscountNote").textContent =
+            "Select a member to see available discounts.";
+
         setPaymentType("full");
 
         document.getElementById("paymentAmount").value = "";
@@ -707,16 +761,93 @@ window.GymPayments = (function () {
 
         if (!member) return;
 
-        const balance = getMemberBalance(member);
+        const selectedDiscountId =
+            document.getElementById("paymentDiscount").value;
+
+        const balance = getMemberBalance(member, selectedDiscountId);
 
         if (type === "full") {
             amountInput.value = balance.pending > 0
                 ? balance.pending.toFixed(2)
                 : "";
-        } else if (type === "part") {
+        } else {
             amountInput.value = "";
-        } else if (type === "advance") {
-            amountInput.value = "";
+        }
+    }
+
+    function updateDiscountOptions(member) {
+        const select = document.getElementById("paymentDiscount");
+        const note = document.getElementById("paymentDiscountNote");
+
+        if (!select || !note) return;
+
+        const balance = getMemberBalance(member);
+        const activeDiscounts = getActiveDiscounts(member.id);
+
+        if (balance.billing.locked) {
+            select.innerHTML = `
+                <option value="${escapeHTML(balance.billing.discountId)}">
+                    ${balance.billing.discount > 0
+                        ? escapeHTML(balance.billing.discountName)
+                        : "No Discount"}
+                </option>
+            `;
+
+            select.disabled = true;
+
+            note.innerHTML = `
+                <span class="payment-locked-note">
+                    Billing is locked because a payment has already been recorded.
+                    This discount cannot be changed for this billing cycle.
+                </span>
+            `;
+
+            return;
+        }
+
+        select.disabled = false;
+
+        const previousValue = select.value;
+
+        select.innerHTML = `
+            <option value="">No Discount</option>
+
+            ${activeDiscounts.map(discount => {
+                const amount = discount.type === "percentage"
+                    ? Number(discount.value) + "%"
+                    : currency(discount.value);
+
+                const reason = discount.reason
+                    ? " - " + discount.reason
+                    : "";
+
+                return `
+                    <option value="${escapeHTML(discount.id)}">
+                        ${escapeHTML(amount + reason)}
+                    </option>
+                `;
+            }).join("")}
+        `;
+
+        const stillAvailable = activeDiscounts.some(discount =>
+            discount.id === previousValue
+        );
+
+        if (stillAvailable) {
+            select.value = previousValue;
+        } else if (activeDiscounts.length) {
+            // Latest active discount default selected.
+            select.value = activeDiscounts[0].id;
+        } else {
+            select.value = "";
+        }
+
+        if (!activeDiscounts.length) {
+            note.textContent =
+                "No active discount found for this member. You can receive payment without a discount.";
+        } else {
+            note.textContent =
+                activeDiscounts.length + " active discount(s) available for this member.";
         }
     }
 
@@ -728,11 +859,24 @@ window.GymPayments = (function () {
 
         if (!member) {
             box.textContent = "Select a member to see their fee details.";
+
             document.getElementById("paymentAmount").value = "";
+
+            document.getElementById("paymentDiscount").innerHTML =
+                '<option value="">No Discount</option>';
+
+            document.getElementById("paymentDiscountNote").textContent =
+                "Select a member to see available discounts.";
+
             return;
         }
 
-        const balance = getMemberBalance(member);
+        updateDiscountOptions(member);
+
+        const selectedDiscountId =
+            document.getElementById("paymentDiscount").value;
+
+        const balance = getMemberBalance(member, selectedDiscountId);
 
         const discountText = balance.discount > 0
             ? currency(balance.discount)
@@ -756,6 +900,12 @@ window.GymPayments = (function () {
                 Remaining Pending:
                 <strong>${currency(balance.pending)}</strong>
             </span>
+            ${balance.advance > 0
+                ? `<br>Advance Amount: <strong>${currency(balance.advance)}</strong>`
+                : ""}
+            ${balance.billing.discountReason
+                ? `<br>Discount Reason: ${escapeHTML(balance.billing.discountReason)}`
+                : ""}
         `;
 
         updatePaymentAmount();
@@ -791,7 +941,10 @@ window.GymPayments = (function () {
             return;
         }
 
-        const balance = getMemberBalance(member);
+        const selectedDiscountId =
+            document.getElementById("paymentDiscount").value;
+
+        const balance = getMemberBalance(member, selectedDiscountId);
 
         if (balance.pending <= 0 && paymentType !== "advance") {
             alert("This member has no pending fee. Select Advance if you want to record an advance payment.");
@@ -803,26 +956,37 @@ window.GymPayments = (function () {
             return;
         }
 
-        if (amount > balance.pending) {
-            const confirmExtra = confirm(
-                "This amount is greater than the remaining pending fee. Do you want to save the extra amount as an advance?"
+        if (paymentType === "full" && amount > balance.pending) {
+            alert("Full Payment amount cannot be greater than the pending fee. Select Advance to record an advance payment.");
+            return;
+        }
+
+        if (paymentType === "advance" && amount <= balance.pending) {
+            const confirmAdvance = confirm(
+                "This amount is not greater than the pending fee. Do you still want to record it as an advance payment?"
             );
 
-            if (!confirmExtra) return;
+            if (!confirmAdvance) return;
         }
 
         const billing = balance.billing;
 
         // First payment par billing snapshot save hota hai.
         if (!billing.locked) {
-            GymDB.update("members", member.id, {
+            const updated = GymDB.update("members", member.id, {
                 billingOriginalFees: billing.fees,
                 billingDiscountAmount: billing.discount,
                 billingFinalFees: billing.finalFees,
                 billingDiscountName: billing.discountName,
-                billingDiscountId: billing.discountRecord?.id || "",
+                billingDiscountReason: billing.discountReason,
+                billingDiscountId: billing.discountId || "",
                 billingLockedAt: new Date().toISOString()
             });
+
+            if (!updated) {
+                alert("Could not save member billing details. Payment was not saved.");
+                return;
+            }
         }
 
         const payment = {
@@ -841,11 +1005,13 @@ window.GymPayments = (function () {
             billingDiscountAmount: billing.discount,
             billingFinalFees: billing.finalFees,
             billingDiscountName: billing.discountName,
-            billingDiscountId: billing.discountRecord?.id || "",
+            billingDiscountReason: billing.discountReason,
+            billingDiscountId: billing.discountId || "",
 
             notes: document.getElementById("paymentNotes")
                 .value.trim(),
 
+            status: "completed",
             createdAt: new Date().toISOString()
         };
 
@@ -891,7 +1057,9 @@ window.GymPayments = (function () {
         const table = document.getElementById("paymentsTableBody");
         if (!table) return;
 
-        const payments = getPayments();
+        const payments = getPayments().filter(payment =>
+            payment.status !== "void"
+        );
 
         const currentDay = today();
         const month = currentMonth();
