@@ -1,4 +1,5 @@
-const AttendanceModule = (function () {
+window.GymAttendance = (function () {
+
     const MODULE = "attendance";
     let durationInterval = null;
 
