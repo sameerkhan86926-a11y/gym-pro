@@ -94,7 +94,6 @@ window.GymMembers = (function () {
 
         let highestSerial = startSerial - 1;
 
-        // Check existing member IDs.
         members.forEach(member => {
             const match = String(member.id || "").match(pattern);
 
@@ -110,7 +109,6 @@ window.GymMembers = (function () {
             }
         });
 
-        // Check previously generated serial counter.
         const savedCounter = Number(counters[prefix]);
 
         if (Number.isSafeInteger(savedCounter)) {
@@ -131,7 +129,6 @@ window.GymMembers = (function () {
 
         let newId = prefix + "-" + nextSerial;
 
-        // Extra duplicate check.
         while (members.some(member => member.id === newId)) {
             nextSerial++;
 
@@ -142,7 +139,6 @@ window.GymMembers = (function () {
             newId = prefix + "-" + nextSerial;
         }
 
-        // Save counter so deleted IDs are not reused.
         counters[prefix] = nextSerial;
         saveMemberCounter(counters);
 
@@ -204,6 +200,52 @@ window.GymMembers = (function () {
         } else {
             alert(message);
         }
+    }
+
+    // ==========================================
+    // WHATSAPP MEMBER DETAILS
+    // ==========================================
+
+    function sendMemberWhatsApp(memberId) {
+        const member = GymDB.find(MODULE, memberId);
+
+        if (!member) {
+            alert("Member not found.");
+            return;
+        }
+
+        let phone = String(member.phone || "").replace(/\D/g, "");
+
+        // Indian mobile number support
+        if (phone.length === 10) {
+            phone = "91" + phone;
+        } else if (phone.length !== 12 || !phone.startsWith("91")) {
+            alert("Please check the member's phone number.");
+            return;
+        }
+
+        const status = getMemberStatus(member);
+
+        const message = [
+            "Hello " + (member.name || "Member") + "!",
+            "",
+            "Your Gym Membership Details:",
+            "Member ID: " + (member.id || "-"),
+            "Name: " + (member.name || "-"),
+            "Phone: " + (member.phone || "-"),
+            "Plan: " + (member.planName || "-"),
+            "Joining Date: " + (member.joiningDate || "-"),
+            "Expiry Date: " + (member.expiryDate || "-"),
+            "Membership Fees: " + currency(member.fees),
+            "Status: " + status.toUpperCase(),
+            "",
+            "Thank you for being a member!"
+        ].join("\n");
+
+        const whatsappURL =
+            "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+
+        window.open(whatsappURL, "_blank");
     }
 
     // ==========================================
@@ -353,6 +395,14 @@ window.GymMembers = (function () {
 
             .member-action.toggle {
                 background: #287c68;
+            }
+
+            .member-action.whatsapp {
+                background: #168b57;
+            }
+
+            .member-action.whatsapp:hover {
+                background: #20a96b;
             }
 
             .members-empty {
@@ -1073,7 +1123,6 @@ window.GymMembers = (function () {
         const wasEditing = Boolean(editingMemberId && existing);
 
         if (wasEditing) {
-            // Existing member ID remains unchanged.
             GymDB.update(MODULE, editingMemberId, memberData);
 
         } else {
@@ -1223,6 +1272,13 @@ window.GymMembers = (function () {
 
                     <td>
                         <button
+                            class="member-action whatsapp"
+                            data-whatsapp-member="${escapeHTML(member.id)}"
+                        >
+                            WhatsApp
+                        </button>
+
+                        <button
                             class="member-action"
                             data-edit-member="${escapeHTML(member.id)}"
                         >
@@ -1246,6 +1302,12 @@ window.GymMembers = (function () {
                 </tr>
             `;
         }).join("");
+
+        table.querySelectorAll("[data-whatsapp-member]").forEach(button => {
+            button.addEventListener("click", function () {
+                sendMemberWhatsApp(this.dataset.whatsappMember);
+            });
+        });
 
         table.querySelectorAll("[data-edit-member]").forEach(button => {
             button.addEventListener("click", function () {
