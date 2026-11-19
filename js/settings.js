@@ -1,4 +1,5 @@
 window.GymSettings = (function () {
+    "use strict";
     const SETTINGS_KEY = "gympro_settings";
 
     function getSettings() {
@@ -59,6 +60,39 @@ window.GymSettings = (function () {
             '"': "&quot;",
             "'": "&#039;"
         })[char]);
+    }
+
+    // APPLY GYM NAME THROUGHOUT THE APPLICATION
+    function applyGymName() {
+        const profile = getProfile();
+        const gymName = String(profile.gymName || "GYM PRO").trim() || "GYM PRO";
+
+        // Sidebar gym name
+        const brandName = document.querySelector(".brand h2");
+        if (brandName) {
+            brandName.textContent = gymName;
+        }
+
+        // Sidebar logo initial
+        const brandIcon = document.querySelector(".brand-icon");
+        if (brandIcon) {
+            brandIcon.textContent = gymName.charAt(0).toUpperCase();
+        }
+
+        // Browser tab title
+        document.title = gymName + " | Management System";
+
+        // Footer name
+        const footerName = document.querySelector(".footer span:first-child");
+        if (footerName) {
+            footerName.textContent = gymName + " Management System";
+        }
+
+        // Application information inside Settings
+        const applicationName = document.getElementById("applicationName");
+        if (applicationName) {
+            applicationName.textContent = gymName;
+        }
     }
 
     function render() {
@@ -257,7 +291,7 @@ window.GymSettings = (function () {
 
                     <div class="app-info-row">
                         <span>Application</span>
-                        <strong>GYM PRO</strong>
+                        <strong id="applicationName">${escapeHTML(profile.gymName || "GYM PRO")}</strong>
                     </div>
 
                     <div class="app-info-row">
@@ -282,6 +316,7 @@ window.GymSettings = (function () {
         addStyles();
         attachEvents();
         updateStorageInfo();
+        applyGymName();
     }
 
     function attachEvents() {
@@ -310,10 +345,11 @@ window.GymSettings = (function () {
     }
 
     function updateMemberIdPreview() {
-        const prefix = document.getElementById("settingMemberPrefix").value
-            .trim().toUpperCase() || "GYM";
+        const prefix = document.getElementById("settingMemberPrefix")
+            .value.trim().toUpperCase() || "GYM";
 
-        const serial = document.getElementById("settingMemberStart").value || "1001";
+        const serial = document.getElementById("settingMemberStart")
+            .value || "1001";
 
         document.getElementById("memberIdPreview").textContent =
             prefix + "-" + serial;
@@ -366,6 +402,8 @@ window.GymSettings = (function () {
         }
 
         saveProfile(profile);
+        applyGymName();
+
         alert("Gym profile saved successfully.");
     }
 
@@ -669,10 +707,16 @@ window.GymSettings = (function () {
         document.head.appendChild(style);
     }
 
+    // APPLY SAVED NAME WHEN THE APPLICATION LOADS
+    if (typeof GymDB !== "undefined") {
+        applyGymName();
+    }
+
     return {
         render,
         refresh: updateStorageInfo,
         getProfile,
-        getMemberIdConfig
+        getMemberIdConfig,
+        applyGymName
     };
 })();
