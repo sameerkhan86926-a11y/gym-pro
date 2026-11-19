@@ -3,8 +3,8 @@ GYM PRO - MAIN JAVASCRIPT
 Version 1.0.3
 ===================================== */
 
-document.addEventListener(“DOMContentLoaded”, function () 
-                          { "use strict";
+document.addEventListener("DOMContentLoaded", function () {
+ "use strict";
 
 // DATABASE CHECK
 if (typeof GymDB === "undefined") {
