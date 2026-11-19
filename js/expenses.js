@@ -14,6 +14,14 @@ window.GymExpenses = (function () {
         "Other"
     ];
 
+    const METHODS = [
+        "Cash",
+        "UPI",
+        "Bank Transfer",
+        "Card",
+        "Other"
+    ];
+
     function getExpenses() {
         return GymDB.getAll(MODULE) || [];
     }
@@ -47,6 +55,14 @@ window.GymExpenses = (function () {
         })[char]);
     }
 
+    function notify(message) {
+        if (typeof window.showToast === "function") {
+            window.showToast(message);
+        } else {
+            alert(message);
+        }
+    }
+
     function injectStyles() {
         if (document.getElementById("gymExpensesStyles")) return;
 
@@ -67,6 +83,12 @@ window.GymExpenses = (function () {
 
             .expenses-header h2 { margin:0 0 6px; }
             .expenses-header p { margin:0; opacity:.7; }
+
+            .expenses-header-actions {
+                display:flex;
+                gap:9px;
+                flex-wrap:wrap;
+            }
 
             .expenses-stats {
                 display:grid;
@@ -116,6 +138,7 @@ window.GymExpenses = (function () {
                 background:#171324;
                 color:white;
                 outline:none;
+                min-width:150px;
             }
 
             .expenses-table-wrap {
@@ -125,7 +148,7 @@ window.GymExpenses = (function () {
 
             .expenses-table {
                 width:100%;
-                min-width:700px;
+                min-width:780px;
                 border-collapse:collapse;
             }
 
@@ -209,6 +232,7 @@ window.GymExpenses = (function () {
                 background:#171324;
                 color:white;
                 outline:none;
+                box-sizing:border-box;
             }
 
             .expense-form textarea {
@@ -235,8 +259,85 @@ window.GymExpenses = (function () {
 
             .expense-form-actions .cancel { background:#494253; }
 
+            .expense-breakdown {
+                display:grid;
+                grid-template-columns:repeat(2,1fr);
+                gap:12px;
+            }
+
+            .expense-breakdown-item {
+                padding:13px;
+                border-radius:10px;
+                background:rgba(255,255,255,.05);
+                border:1px solid rgba(255,255,255,.07);
+            }
+
+            .expense-breakdown-item span {
+                display:block;
+                font-size:12px;
+                opacity:.7;
+                margin-bottom:7px;
+            }
+
+            .expense-breakdown-item strong {
+                font-size:16px;
+            }
+
+            .expense-breakdown-item small {
+                display:block;
+                opacity:.6;
+                margin-top:5px;
+            }
+
+            .expense-month-picker {
+                padding:10px;
+                border-radius:8px;
+                border:1px solid rgba(255,255,255,.13);
+                background:#171324;
+                color:white;
+                margin-bottom:15px;
+            }
+
+            .expense-filter-total {
+                margin:0 0 12px;
+                opacity:.8;
+                font-size:13px;
+            }
+
             @media(max-width:650px) {
                 .expenses-stats { grid-template-columns:1fr; }
+                .expense-breakdown { grid-template-columns:1fr; }
+                .expense-modal-box { padding:18px; }
+            }
+
+            @media print {
+                body * { visibility:hidden !important; }
+
+                #expensePrintArea,
+                #expensePrintArea * {
+                    visibility:visible !important;
+                }
+
+                #expensePrintArea {
+                    position:absolute;
+                    left:0;
+                    top:0;
+                    width:100%;
+                    color:#000 !important;
+                    background:#fff !important;
+                }
+
+                #expensePrintArea table {
+                    width:100%;
+                    border-collapse:collapse;
+                }
+
+                #expensePrintArea th,
+                #expensePrintArea td {
+                    border:1px solid #ccc;
+                    padding:8px;
+                    color:#000 !important;
+                }
             }
         `;
 
@@ -250,17 +351,27 @@ window.GymExpenses = (function () {
         if (!container) return;
 
         container.innerHTML = `
-            <div class="expenses-wrap">
+            <div class="expenses-wrap" id="expensePrintArea">
 
                 <div class="expenses-header">
                     <div>
-                        <h2>Expenses Management</h2>
+                        <h2>Expense Management</h2>
                         <p>Track and manage all gym expenses.</p>
                     </div>
 
-                    <button class="btn btn-primary" id="addExpenseBtn">
-                        + Add Expense
-                    </button>
+                    <div class="expenses-header-actions">
+                        <button class="btn btn-primary" id="addExpenseBtn">
+                            + Add Expense
+                        </button>
+
+                        <button class="expense-action" id="exportExpenseBtn">
+                            Export CSV
+                        </button>
+
+                        <button class="expense-action" id="printExpenseBtn">
+                            Print
+                        </button>
+                    </div>
                 </div>
 
                 <div class="expenses-stats">
@@ -281,13 +392,33 @@ window.GymExpenses = (function () {
                 </div>
 
                 <div class="expenses-section">
+                    <h3>Monthly Category Breakdown</h3>
+
+                    <label for="expenseReportMonth">Select Month</label>
+                    <br>
+
+                    <input type="month" id="expenseReportMonth"
+                        class="expense-month-picker"
+                        value="${currentMonth()}">
+
+                    <div class="expense-breakdown" id="expenseBreakdown"></div>
+                </div>
+
+                <div class="expenses-section">
                     <h3>Expense History</h3>
 
                     <div class="expenses-toolbar">
                         <input type="search" id="expenseSearch"
                             placeholder="Search expense...">
 
-                        <input type="date" id="expenseDateFilter">
+                        <input type="date" id="expenseDateFilter"
+                            title="Filter by exact date">
+
+                        <input type="date" id="expenseFromDate"
+                            title="From date">
+
+                        <input type="date" id="expenseToDate"
+                            title="To date">
 
                         <select id="expenseCategoryFilter">
                             <option value="all">All Categories</option>
@@ -297,7 +428,20 @@ window.GymExpenses = (function () {
                                 </option>
                             `).join("")}
                         </select>
+
+                        <select id="expenseMethodFilter">
+                            <option value="all">All Payment Methods</option>
+                            ${METHODS.map(method => `
+                                <option value="${escapeHTML(method)}">
+                                    ${escapeHTML(method)}
+                                </option>
+                            `).join("")}
+                        </select>
                     </div>
+
+                    <p class="expense-filter-total" id="expenseFilterTotal">
+                        Showing ₹0
+                    </p>
 
                     <div class="expenses-table-wrap">
                         <table class="expenses-table">
@@ -329,7 +473,7 @@ window.GymExpenses = (function () {
                         <label>Expense Title *</label>
                         <input type="text" id="expenseTitle"
                             placeholder="Example: Monthly Electricity Bill"
-                            required>
+                            maxlength="100" required>
 
                         <label>Category *</label>
                         <select id="expenseCategory" required>
@@ -347,19 +491,20 @@ window.GymExpenses = (function () {
 
                         <label>Expense Date *</label>
                         <input type="date" id="expenseDate"
-                            value="${today()}" required>
+                            max="${today()}" value="${today()}" required>
 
                         <label>Payment Method</label>
                         <select id="expenseMethod">
-                            <option value="Cash">Cash</option>
-                            <option value="UPI">UPI</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Card">Card</option>
-                            <option value="Other">Other</option>
+                            ${METHODS.map(method => `
+                                <option value="${escapeHTML(method)}">
+                                    ${escapeHTML(method)}
+                                </option>
+                            `).join("")}
                         </select>
 
                         <label>Notes</label>
                         <textarea id="expenseNotes"
+                            maxlength="1000"
                             placeholder="Optional details"></textarea>
 
                         <div class="expense-form-actions">
@@ -381,36 +526,55 @@ window.GymExpenses = (function () {
         document.getElementById("expenseForm")
             .addEventListener("submit", saveExpense);
 
-        document.getElementById("expenseSearch")
-            .addEventListener("input", renderTable);
+        [
+            "expenseSearch",
+            "expenseDateFilter",
+            "expenseFromDate",
+            "expenseToDate",
+            "expenseCategoryFilter",
+            "expenseMethodFilter"
+        ].forEach(id => {
+            const element = document.getElementById(id);
+            element.addEventListener(
+                element.tagName === "INPUT" && element.type === "search"
+                    ? "input" : "change",
+                renderTable
+            );
+        });
 
-        document.getElementById("expenseDateFilter")
-            .addEventListener("change", renderTable);
+        document.getElementById("expenseReportMonth")
+            .addEventListener("change", renderBreakdown);
 
-        document.getElementById("expenseCategoryFilter")
-            .addEventListener("change", renderTable);
+        document.getElementById("exportExpenseBtn")
+            .addEventListener("click", exportCSV);
+
+        document.getElementById("printExpenseBtn")
+            .addEventListener("click", printExpenses);
 
         renderTable();
+        renderBreakdown();
     }
 
     function openForm(expense) {
         const form = document.getElementById("expenseForm");
-
         form.reset();
 
         document.getElementById("expenseId").value = "";
         document.getElementById("expenseFormTitle").textContent = "Add New Expense";
         document.getElementById("expenseDate").value = today();
+        document.getElementById("expenseDate").max = today();
 
         if (expense) {
             document.getElementById("expenseFormTitle").textContent = "Edit Expense";
 
             document.getElementById("expenseId").value = expense.id;
             document.getElementById("expenseTitle").value = expense.title || "";
-            document.getElementById("expenseCategory").value = expense.category || "Other";
+            document.getElementById("expenseCategory").value =
+                CATEGORIES.includes(expense.category) ? expense.category : "Other";
             document.getElementById("expenseAmount").value = expense.amount ?? "";
             document.getElementById("expenseDate").value = expense.date || today();
-            document.getElementById("expenseMethod").value = expense.method || "Cash";
+            document.getElementById("expenseMethod").value =
+                METHODS.includes(expense.method) ? expense.method : "Other";
             document.getElementById("expenseNotes").value = expense.notes || "";
         }
 
@@ -428,6 +592,8 @@ window.GymExpenses = (function () {
         const title = document.getElementById("expenseTitle").value.trim();
         const amount = Number(document.getElementById("expenseAmount").value);
         const date = document.getElementById("expenseDate").value;
+        const category = document.getElementById("expenseCategory").value;
+        const method = document.getElementById("expenseMethod").value;
 
         if (!title || !Number.isFinite(amount) || amount <= 0) {
             alert("Please enter a valid expense title and amount.");
@@ -439,35 +605,49 @@ window.GymExpenses = (function () {
             return;
         }
 
+        if (!CATEGORIES.includes(category) || !METHODS.includes(method)) {
+            alert("Please select a valid category and payment method.");
+            return;
+        }
+
         const existing = id ? GymDB.find(MODULE, id) : null;
+
+        if (id && !existing) {
+            alert("Expense record not found.");
+            return;
+        }
 
         const expenseData = {
             ...(existing || {}),
-            title: title,
-            category: document.getElementById("expenseCategory").value,
-            amount: amount,
-            date: date,
-            method: document.getElementById("expenseMethod").value,
+            title,
+            category,
+            amount,
+            date,
+            method,
             notes: document.getElementById("expenseNotes").value.trim(),
             updatedAt: new Date().toISOString()
         };
 
+        let saved;
+
         if (id) {
-            GymDB.update(MODULE, id, expenseData);
+            saved = GymDB.update(MODULE, id, expenseData);
         } else {
             expenseData.id = GymDB.generateID("EXP");
             expenseData.createdAt = new Date().toISOString();
-            GymDB.add(MODULE, expenseData);
+            saved = GymDB.add(MODULE, expenseData);
+        }
+
+        if (!saved) {
+            alert("Expense could not be saved. Please try again.");
+            return;
         }
 
         closeForm();
         renderTable();
+        renderBreakdown();
 
-        if (typeof window.showToast === "function") {
-            window.showToast(id ? "Expense updated successfully" : "Expense saved successfully");
-        } else {
-            alert(id ? "Expense updated successfully." : "Expense saved successfully.");
-        }
+        notify(id ? "Expense updated successfully." : "Expense saved successfully.");
 
         if (typeof window.updateGymDashboard === "function") {
             window.updateGymDashboard();
@@ -478,20 +658,75 @@ window.GymExpenses = (function () {
         const expense = GymDB.find(MODULE, id);
         if (!expense) return;
 
-        if (!confirm("Are you sure you want to delete this expense record?")) {
+        if (!confirm(
+            "Are you sure you want to delete this expense record?"
+        )) return;
+
+        const deleted = GymDB.delete(MODULE, id);
+
+        if (!deleted) {
+            alert("Expense could not be deleted.");
             return;
         }
 
-        GymDB.delete(MODULE, id);
         renderTable();
+        renderBreakdown();
 
-        if (typeof window.showToast === "function") {
-            window.showToast("Expense deleted successfully");
-        }
+        notify("Expense deleted successfully.");
 
         if (typeof window.updateGymDashboard === "function") {
             window.updateGymDashboard();
         }
+    }
+
+    function getFilteredExpenses() {
+        const expenses = getExpenses();
+
+        const search = document.getElementById("expenseSearch")
+            .value.trim().toLowerCase();
+
+        const exactDate = document.getElementById("expenseDateFilter").value;
+        const fromDate = document.getElementById("expenseFromDate").value;
+        const toDate = document.getElementById("expenseToDate").value;
+
+        const category = document.getElementById("expenseCategoryFilter").value;
+        const method = document.getElementById("expenseMethodFilter").value;
+
+        if (fromDate && toDate && fromDate > toDate) {
+            return [];
+        }
+
+        return expenses.filter(item => {
+            const matchesSearch =
+                String(item.title || "").toLowerCase().includes(search) ||
+                String(item.category || "").toLowerCase().includes(search) ||
+                String(item.method || "").toLowerCase().includes(search) ||
+                String(item.id || "").toLowerCase().includes(search);
+
+            const matchesExactDate =
+                !exactDate || item.date === exactDate;
+
+            const matchesFrom =
+                !fromDate || item.date >= fromDate;
+
+            const matchesTo =
+                !toDate || item.date <= toDate;
+
+            const matchesCategory =
+                category === "all" || item.category === category;
+
+            const matchesMethod =
+                method === "all" || item.method === method;
+
+            return matchesSearch &&
+                matchesExactDate &&
+                matchesFrom &&
+                matchesTo &&
+                matchesCategory &&
+                matchesMethod;
+        }).sort((a, b) =>
+            String(b.date || "").localeCompare(String(a.date || ""))
+        );
     }
 
     function renderTable() {
@@ -502,9 +737,9 @@ window.GymExpenses = (function () {
         const month = currentMonth();
         const currentDay = today();
 
-        const total = expenses.reduce((sum, item) => {
-            return sum + Number(item.amount || 0);
-        }, 0);
+        const total = expenses.reduce((sum, item) =>
+            sum + Number(item.amount || 0), 0
+        );
 
         const todayTotal = expenses
             .filter(item => item.date === currentDay)
@@ -518,24 +753,15 @@ window.GymExpenses = (function () {
         document.getElementById("todayExpensesAmount").textContent = currency(todayTotal);
         document.getElementById("monthExpensesAmount").textContent = currency(monthTotal);
 
-        const search = document.getElementById("expenseSearch").value
-            .trim().toLowerCase();
+        const filtered = getFilteredExpenses();
 
-        const dateFilter = document.getElementById("expenseDateFilter").value;
-        const categoryFilter = document.getElementById("expenseCategoryFilter").value;
+        const filteredTotal = filtered.reduce((sum, item) =>
+            sum + Number(item.amount || 0), 0
+        );
 
-        const filtered = expenses.filter(item => {
-            const matchesSearch =
-                (item.title || "").toLowerCase().includes(search) ||
-                (item.category || "").toLowerCase().includes(search);
-
-            const matchesDate = !dateFilter || item.date === dateFilter;
-
-            const matchesCategory =
-                categoryFilter === "all" || item.category === categoryFilter;
-
-            return matchesSearch && matchesDate && matchesCategory;
-        }).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+        document.getElementById("expenseFilterTotal").textContent =
+            "Showing " + currency(filteredTotal) +
+            " across " + filtered.length + " record(s).";
 
         if (!filtered.length) {
             table.innerHTML = `
@@ -550,14 +776,18 @@ window.GymExpenses = (function () {
 
         table.innerHTML = filtered.map(item => `
             <tr>
-                <td><strong>${escapeHTML(item.title)}</strong></td>
+                <td>
+                    <strong>${escapeHTML(item.title)}</strong>
+                    <br>
+                    <small>${escapeHTML(item.id)}</small>
+                </td>
                 <td>
                     <span class="expense-category">
                         ${escapeHTML(item.category)}
                     </span>
                 </td>
                 <td>${escapeHTML(item.date)}</td>
-                <td>${escapeHTML(item.method)}</td>
+                <td>${escapeHTML(item.method || "-")}</td>
                 <td><strong>${currency(item.amount)}</strong></td>
                 <td>
                     <button class="expense-action"
@@ -587,8 +817,238 @@ window.GymExpenses = (function () {
         });
     }
 
+    // MONTHLY CATEGORY BREAKDOWN
+
+    function renderBreakdown() {
+        const container = document.getElementById("expenseBreakdown");
+        if (!container) return;
+
+        const month = document.getElementById("expenseReportMonth").value;
+
+        const expenses = getExpenses().filter(item =>
+            String(item.date || "").startsWith(month)
+        );
+
+        const total = expenses.reduce((sum, item) =>
+            sum + Number(item.amount || 0), 0
+        );
+
+        if (!expenses.length) {
+            container.innerHTML = `
+                <div class="expenses-empty">
+                    No expenses recorded for this month.
+                </div>
+            `;
+            return;
+        }
+
+        const grouped = {};
+
+        expenses.forEach(item => {
+            const category = item.category || "Other";
+            grouped[category] = (grouped[category] || 0) +
+                Number(item.amount || 0);
+        });
+
+        const sorted = Object.entries(grouped)
+            .sort((a, b) => b[1] - a[1]);
+
+        container.innerHTML = `
+            <div class="expense-breakdown-item">
+                <span>Total Monthly Expenses</span>
+                <strong>${currency(total)}</strong>
+                <small>${expenses.length} expense record(s)</small>
+            </div>
+
+            ${sorted.map(([category, amount]) => {
+                const percentage = total > 0
+                    ? ((amount / total) * 100).toFixed(1)
+                    : 0;
+
+                return `
+                    <div class="expense-breakdown-item">
+                        <span>${escapeHTML(category)}</span>
+                        <strong>${currency(amount)}</strong>
+                        <small>${percentage}% of monthly expenses</small>
+                    </div>
+                `;
+            }).join("")}
+        `;
+    }
+
+    // CSV EXPORT
+
+    function exportCSV() {
+        const expenses = getFilteredExpenses();
+
+        if (!expenses.length) {
+            alert("No expense records available to export.");
+            return;
+        }
+
+        const headers = [
+            "Expense ID",
+            "Title",
+            "Category",
+            "Amount",
+            "Date",
+            "Payment Method",
+            "Notes"
+        ];
+
+        function csvCell(value) {
+            let text = String(value ?? "");
+
+            // Protect spreadsheet users from formula injection.
+            if (/^[=+\-@\t\r]/.test(text)) {
+                text = "'" + text;
+            }
+
+            return '"' + text.replace(/"/g, '""') + '"';
+        }
+
+        const rows = expenses.map(item => [
+            item.id,
+            item.title,
+            item.category,
+            item.amount,
+            item.date,
+            item.method,
+            item.notes
+        ]);
+
+        const csv = "\uFEFF" + [
+            headers,
+            ...rows
+        ].map(row => row.map(csvCell).join(",")).join("\r\n");
+
+        const blob = new Blob([csv], {
+            type: "text/csv;charset=utf-8;"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "GYM-PRO-Expenses-" + today() + ".csv";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+
+        notify("Expense CSV exported successfully.");
+    }
+
+    // PRINT REPORT
+
+    function printExpenses() {
+        const expenses = getFilteredExpenses();
+
+        if (!expenses.length) {
+            alert("No expense records available to print.");
+            return;
+        }
+
+        const printWindow = window.open("", "_blank");
+
+        if (!printWindow) {
+            alert("Please allow pop-ups to print the expense report.");
+            return;
+        }
+
+        const total = expenses.reduce((sum, item) =>
+            sum + Number(item.amount || 0), 0
+        );
+
+        const rows = expenses.map(item => `
+            <tr>
+                <td>${escapeHTML(item.id)}</td>
+                <td>${escapeHTML(item.title)}</td>
+                <td>${escapeHTML(item.category)}</td>
+                <td>${escapeHTML(item.date)}</td>
+                <td>${escapeHTML(item.method || "-")}</td>
+                <td>${currency(item.amount)}</td>
+            </tr>
+        `).join("");
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>GYM PRO Expense Report</title>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        font-family:Arial,sans-serif;
+                        padding:25px;
+                        color:#222;
+                    }
+
+                    h1 { margin-bottom:5px; }
+                    p { color:#555; }
+
+                    table {
+                        width:100%;
+                        border-collapse:collapse;
+                        margin-top:20px;
+                    }
+
+                    th,td {
+                        border:1px solid #ccc;
+                        padding:10px;
+                        text-align:left;
+                        font-size:12px;
+                    }
+
+                    th { background:#eee; }
+
+                    .total {
+                        margin-top:20px;
+                        font-size:18px;
+                        font-weight:bold;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>GYM PRO - Expense Report</h1>
+                <p>Generated on: ${escapeHTML(today())}</p>
+                <p>Total Records: ${expenses.length}</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Expense ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Payment Method</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+
+                <div class="total">
+                    Total Expenses: ${currency(total)}
+                </div>
+
+                <script>
+                    window.onload = function () {
+                        window.print();
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+
+        printWindow.document.close();
+    }
+
     return {
-        render: render,
-        refresh: renderTable
+        render,
+        refresh: renderTable,
+        getExpenses
     };
 })();
