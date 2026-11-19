@@ -1,4 +1,5 @@
-const NotificationModule = (function () {
+window.GymNotifications = (function () {
+
     const MODULE = "notifications";
 
     function today() {
