@@ -16,6 +16,147 @@ window.GymMembers = (function () {
         return getPlans().filter(plan => plan.status === "active");
     }
 
+    // ==========================================
+    // MEMBER ID SERIAL SYSTEM
+    // ==========================================
+
+    function getMemberIdConfig() {
+        const config = window.GymSettings?.getMemberIdConfig?.();
+
+        return {
+            prefix: String(config?.prefix || "GYM").trim().toUpperCase(),
+            startSerial: Number(config?.startSerial) || 1001
+        };
+    }
+
+    function getSavedCounters() {
+        const settings = GymDB.getAll("settings") || [];
+
+        const record = settings.find(
+            item => item.key === "memberIdCounters"
+        );
+
+        return record && record.value && typeof record.value === "object"
+            ? record.value
+            : {};
+    }
+
+    function saveMemberCounter(counters) {
+        const settings = GymDB.getAll("settings") || [];
+
+        const index = settings.findIndex(
+            item => item.key === "memberIdCounters"
+        );
+
+        const record = {
+            key: "memberIdCounters",
+            value: counters,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (index >= 0) {
+            settings[index] = record;
+        } else {
+            settings.push(record);
+        }
+
+        GymDB.saveAll("settings", settings);
+    }
+
+    function generateMemberId() {
+        const config = getMemberIdConfig();
+
+        const prefix = config.prefix;
+        const startSerial = config.startSerial;
+
+        if (!/^[A-Z0-9]{2,12}$/.test(prefix)) {
+            throw new Error("Invalid Member ID prefix.");
+        }
+
+        if (
+            !Number.isSafeInteger(startSerial) ||
+            startSerial < 1
+        ) {
+            throw new Error("Invalid starting serial number.");
+        }
+
+        const members = getMembers();
+        const counters = getSavedCounters();
+
+        const escapedPrefix = prefix.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+        );
+
+        const pattern = new RegExp(
+            "^" + escapedPrefix + "-(\\d+)$"
+        );
+
+        let highestSerial = startSerial - 1;
+
+        // Check existing member IDs.
+        members.forEach(member => {
+            const match = String(member.id || "").match(pattern);
+
+            if (match) {
+                const serial = Number(match[1]);
+
+                if (Number.isSafeInteger(serial)) {
+                    highestSerial = Math.max(
+                        highestSerial,
+                        serial
+                    );
+                }
+            }
+        });
+
+        // Check previously generated serial counter.
+        const savedCounter = Number(counters[prefix]);
+
+        if (Number.isSafeInteger(savedCounter)) {
+            highestSerial = Math.max(
+                highestSerial,
+                savedCounter
+            );
+        }
+
+        let nextSerial = Math.max(
+            startSerial,
+            highestSerial + 1
+        );
+
+        if (!Number.isSafeInteger(nextSerial)) {
+            throw new Error("Member ID serial limit reached.");
+        }
+
+        let newId = prefix + "-" + nextSerial;
+
+        // Extra duplicate check.
+        while (members.some(member => member.id === newId)) {
+            nextSerial++;
+
+            if (!Number.isSafeInteger(nextSerial)) {
+                throw new Error("Member ID serial limit reached.");
+            }
+
+            newId = prefix + "-" + nextSerial;
+        }
+
+        // Save counter so deleted IDs are not reused.
+        counters[prefix] = nextSerial;
+        saveMemberCounter(counters);
+
+        return {
+            id: newId,
+            serial: nextSerial,
+            prefix: prefix
+        };
+    }
+
+    // ==========================================
+    // COMMON FUNCTIONS
+    // ==========================================
+
     function currency(amount) {
         return "₹" + Number(amount || 0).toLocaleString("en-IN");
     }
@@ -64,6 +205,10 @@ window.GymMembers = (function () {
             alert(message);
         }
     }
+
+    // ==========================================
+    // STYLES
+    // ==========================================
 
     function injectStyles() {
         if (document.getElementById("gymMembersStyles")) return;
@@ -340,6 +485,10 @@ window.GymMembers = (function () {
         document.head.appendChild(style);
     }
 
+    // ==========================================
+    // RENDER MEMBERS PAGE
+    // ==========================================
+
     function render() {
         injectStyles();
 
@@ -571,6 +720,10 @@ window.GymMembers = (function () {
         renderTable();
     }
 
+    // ==========================================
+    // PLAN DROPDOWN
+    // ==========================================
+
     function fillPlanDropdown(member) {
         const select = document.getElementById("memberPlan");
         const info = document.getElementById("memberPlanInfo");
@@ -601,6 +754,7 @@ window.GymMembers = (function () {
 
             if (!matchingPlan) {
                 legacyPlan = member;
+
                 html += `
                     <option value="__legacy__">
                         Existing Plan - ${escapeHTML(member.planName)}
@@ -623,6 +777,7 @@ window.GymMembers = (function () {
             if (matchingPlan) {
                 select.value = matchingPlan.id;
                 updatePlanInformation(matchingPlan);
+
             } else if (legacyPlan) {
                 select.value = "__legacy__";
 
@@ -631,17 +786,23 @@ window.GymMembers = (function () {
 
                 warning.textContent =
                     "Choose another active plan if you want to change this membership.";
+
             } else {
                 select.value = "";
             }
+
         } else {
             select.value = "";
 
             if (!plans.length) {
                 info.textContent = "No active membership plans found.";
-                warning.textContent = "Please create an active plan in Membership Plans first.";
+                warning.textContent =
+                    "Please create an active plan in Membership Plans first.";
+
             } else {
-                info.textContent = "Select a plan to automatically fill fees and expiry date.";
+                info.textContent =
+                    "Select a plan to automatically fill fees and expiry date.";
+
                 warning.textContent = "";
             }
         }
@@ -678,9 +839,11 @@ window.GymMembers = (function () {
 
         if (!plan) return;
 
-        document.getElementById("memberFees").value = Number(plan.fees || 0);
+        document.getElementById("memberFees").value =
+            Number(plan.fees || 0);
 
-        const joiningDate = document.getElementById("memberJoiningDate").value;
+        const joiningDate =
+            document.getElementById("memberJoiningDate").value;
 
         document.getElementById("memberExpiry").value =
             calculateExpiry(joiningDate, plan.durationDays);
@@ -704,6 +867,10 @@ window.GymMembers = (function () {
             );
     }
 
+    // ==========================================
+    // OPEN / CLOSE MEMBER FORM
+    // ==========================================
+
     function openForm(member) {
         const modal = document.getElementById("gymMemberModal");
         const form = document.getElementById("gymMemberForm");
@@ -723,18 +890,38 @@ window.GymMembers = (function () {
         fillPlanDropdown(member);
 
         if (member) {
-            document.getElementById("memberName").value = member.name || "";
-            document.getElementById("memberPhone").value = member.phone || "";
-            document.getElementById("memberGender").value = member.gender || "";
-            document.getElementById("memberDob").value = member.dob || "";
-            document.getElementById("memberFees").value = member.fees ?? "";
-            document.getElementById("memberExpiry").value = member.expiryDate || "";
-            document.getElementById("memberEmergency").value = member.emergencyContact || "";
-            document.getElementById("memberTrainer").value = member.trainer || "";
-            document.getElementById("memberAddress").value = member.address || "";
-            document.getElementById("memberNotes").value = member.notes || "";
+            document.getElementById("memberName").value =
+                member.name || "";
 
-            const selectedPlan = document.getElementById("memberPlan").value;
+            document.getElementById("memberPhone").value =
+                member.phone || "";
+
+            document.getElementById("memberGender").value =
+                member.gender || "";
+
+            document.getElementById("memberDob").value =
+                member.dob || "";
+
+            document.getElementById("memberFees").value =
+                member.fees ?? "";
+
+            document.getElementById("memberExpiry").value =
+                member.expiryDate || "";
+
+            document.getElementById("memberEmergency").value =
+                member.emergencyContact || "";
+
+            document.getElementById("memberTrainer").value =
+                member.trainer || "";
+
+            document.getElementById("memberAddress").value =
+                member.address || "";
+
+            document.getElementById("memberNotes").value =
+                member.notes || "";
+
+            const selectedPlan =
+                document.getElementById("memberPlan").value;
 
             if (selectedPlan && selectedPlan !== "__legacy__") {
                 const plan = GymDB.find("plans", selectedPlan);
@@ -754,17 +941,29 @@ window.GymMembers = (function () {
         editingMemberId = null;
     }
 
+    // ==========================================
+    // SAVE MEMBER
+    // ==========================================
+
     function saveMember(event) {
         event.preventDefault();
 
-        const name = document.getElementById("memberName").value.trim();
-        const phone = document.getElementById("memberPhone").value.trim();
+        const name =
+            document.getElementById("memberName").value.trim();
 
-        const joiningDate = document.getElementById("memberJoiningDate").value;
-        const selectedPlanId = document.getElementById("memberPlan").value;
+        const phone =
+            document.getElementById("memberPhone").value.trim();
+
+        const joiningDate =
+            document.getElementById("memberJoiningDate").value;
+
+        const selectedPlanId =
+            document.getElementById("memberPlan").value;
 
         if (!name || !phone || !joiningDate || !selectedPlanId) {
-            alert("Please fill all required fields and select a membership plan.");
+            alert(
+                "Please fill all required fields and select a membership plan."
+            );
             return;
         }
 
@@ -776,25 +975,33 @@ window.GymMembers = (function () {
         let planName = "";
         let planId = "";
         let durationDays = null;
-        let fees = Number(document.getElementById("memberFees").value || 0);
-        let expiryDate = document.getElementById("memberExpiry").value;
+
+        let fees = Number(
+            document.getElementById("memberFees").value || 0
+        );
+
+        let expiryDate =
+            document.getElementById("memberExpiry").value;
 
         if (selectedPlanId === "__legacy__") {
-            const existing = GymDB.find(MODULE, editingMemberId);
+            const oldMember = GymDB.find(MODULE, editingMemberId);
 
-            if (!existing) {
+            if (!oldMember) {
                 alert("Please select an active membership plan.");
                 return;
             }
 
-            planName = existing.planName || "";
-            planId = existing.planId || "";
-            durationDays = existing.durationDays || null;
+            planName = oldMember.planName || "";
+            planId = oldMember.planId || "";
+            durationDays = oldMember.durationDays || null;
+
         } else {
             const plan = GymDB.find("plans", selectedPlanId);
 
             if (!plan || plan.status !== "active") {
-                alert("Selected plan is not active. Please select another plan.");
+                alert(
+                    "Selected plan is not active. Please select another plan."
+                );
                 return;
             }
 
@@ -803,7 +1010,11 @@ window.GymMembers = (function () {
             durationDays = Number(plan.durationDays || 0);
 
             fees = Number(plan.fees || 0);
-            expiryDate = calculateExpiry(joiningDate, durationDays);
+
+            expiryDate = calculateExpiry(
+                joiningDate,
+                durationDays
+            );
         }
 
         if (!Number.isFinite(fees) || fees < 0) {
@@ -830,6 +1041,7 @@ window.GymMembers = (function () {
 
             name: name,
             phone: phone,
+
             gender: document.getElementById("memberGender").value,
             dob: document.getElementById("memberDob").value,
 
@@ -842,22 +1054,49 @@ window.GymMembers = (function () {
             fees: fees,
             expiryDate: expiryDate,
 
-            emergencyContact: document.getElementById("memberEmergency").value.trim(),
-            trainer: document.getElementById("memberTrainer").value.trim(),
-            address: document.getElementById("memberAddress").value.trim(),
-            notes: document.getElementById("memberNotes").value.trim(),
+            emergencyContact:
+                document.getElementById("memberEmergency").value.trim(),
+
+            trainer:
+                document.getElementById("memberTrainer").value.trim(),
+
+            address:
+                document.getElementById("memberAddress").value.trim(),
+
+            notes:
+                document.getElementById("memberNotes").value.trim(),
 
             status: existing ? existing.status : "active",
             updatedAt: new Date().toISOString()
         };
 
-        if (editingMemberId && existing) {
-            GymDB.update(MODULE, editingMemberId, memberData);
-        } else {
-            memberData.id = GymDB.generateID("MEM");
-            memberData.createdAt = new Date().toISOString();
+        const wasEditing = Boolean(editingMemberId && existing);
 
-            GymDB.add(MODULE, memberData);
+        if (wasEditing) {
+            // Existing member ID remains unchanged.
+            GymDB.update(MODULE, editingMemberId, memberData);
+
+        } else {
+            try {
+                const generated = generateMemberId();
+
+                memberData.id = generated.id;
+                memberData.memberSerial = generated.serial;
+                memberData.memberIdPrefix = generated.prefix;
+
+                memberData.createdAt = new Date().toISOString();
+
+                GymDB.add(MODULE, memberData);
+
+            } catch (error) {
+                console.error("Member ID generation error:", error);
+
+                alert(
+                    "Member ID generate nahi ho payi. Please try again."
+                );
+
+                return;
+            }
         }
 
         closeForm();
@@ -868,11 +1107,15 @@ window.GymMembers = (function () {
         }
 
         showMessage(
-            editingMemberId
+            wasEditing
                 ? "Member updated successfully."
                 : "Member added successfully."
         );
     }
+
+    // ==========================================
+    // MEMBER STATUS
+    // ==========================================
 
     function getMemberStatus(member) {
         if (member.status === "inactive") return "inactive";
@@ -883,6 +1126,10 @@ window.GymMembers = (function () {
 
         return "active";
     }
+
+    // ==========================================
+    // RENDER MEMBER TABLE
+    // ==========================================
 
     function renderTable() {
         const table = document.getElementById("gymMembersTable");
@@ -895,7 +1142,8 @@ window.GymMembers = (function () {
             document.getElementById("searchGymMembers")?.value || ""
         ).toLowerCase();
 
-        const filter = document.getElementById("filterGymMembers")?.value || "all";
+        const filter =
+            document.getElementById("filterGymMembers")?.value || "all";
 
         const active = currentMembers.filter(member =>
             getMemberStatus(member) === "active"
@@ -905,9 +1153,14 @@ window.GymMembers = (function () {
             getMemberStatus(member) !== "active"
         );
 
-        document.getElementById("membersTotal").textContent = currentMembers.length;
-        document.getElementById("membersActive").textContent = active.length;
-        document.getElementById("membersInactive").textContent = inactive.length;
+        document.getElementById("membersTotal").textContent =
+            currentMembers.length;
+
+        document.getElementById("membersActive").textContent =
+            active.length;
+
+        document.getElementById("membersInactive").textContent =
+            inactive.length;
 
         const filtered = currentMembers.filter(member => {
             const status = getMemberStatus(member);
@@ -941,7 +1194,8 @@ window.GymMembers = (function () {
 
             const statusText =
                 status === "active" ? "Active" :
-                status === "expired" ? "Expired" : "Inactive";
+                status === "expired" ? "Expired" :
+                "Inactive";
 
             return `
                 <tr>
@@ -995,7 +1249,10 @@ window.GymMembers = (function () {
 
         table.querySelectorAll("[data-edit-member]").forEach(button => {
             button.addEventListener("click", function () {
-                const member = GymDB.find(MODULE, this.dataset.editMember);
+                const member = GymDB.find(
+                    MODULE,
+                    this.dataset.editMember
+                );
 
                 if (member) openForm(member);
             });
@@ -1014,12 +1271,17 @@ window.GymMembers = (function () {
         });
     }
 
+    // ==========================================
+    // ACTIVATE / DEACTIVATE
+    // ==========================================
+
     function toggleMember(id) {
         const member = GymDB.find(MODULE, id);
 
         if (!member) return;
 
-        const newStatus = member.status === "inactive" ? "active" : "inactive";
+        const newStatus =
+            member.status === "inactive" ? "active" : "inactive";
 
         if (!confirm(
             newStatus === "inactive"
@@ -1042,6 +1304,10 @@ window.GymMembers = (function () {
 
         showMessage("Member status updated.");
     }
+
+    // ==========================================
+    // DELETE MEMBER
+    // ==========================================
 
     function deleteMember(id) {
         const member = GymDB.find(MODULE, id);
@@ -1066,6 +1332,10 @@ window.GymMembers = (function () {
 
         showMessage("Member deleted successfully.");
     }
+
+    // ==========================================
+    // PUBLIC FUNCTIONS
+    // ==========================================
 
     return {
         render: render,
