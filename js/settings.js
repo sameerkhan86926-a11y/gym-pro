@@ -5,27 +5,18 @@ window.GymSettings = (function () {
         return GymDB.getAll("settings") || [];
     }
 
-    function getProfile() {
-        const settings = getSettings();
-        return settings.find(item => item.key === "gymProfile")?.value || {
-            gymName: "GYM PRO",
-            ownerName: "",
-            phone: "",
-            email: "",
-            address: "",
-            currency: "INR"
-        };
+    function getSetting(key, fallback) {
+        const record = getSettings().find(item => item.key === key);
+        return record ? record.value : fallback;
     }
 
-    function saveProfile(profile) {
+    function saveSetting(key, value) {
         const settings = getSettings();
-        const index = settings.findIndex(
-            item => item.key === "gymProfile"
-        );
+        const index = settings.findIndex(item => item.key === key);
 
         const record = {
-            key: "gymProfile",
-            value: profile,
+            key,
+            value,
             updatedAt: new Date().toISOString()
         };
 
@@ -36,6 +27,28 @@ window.GymSettings = (function () {
         }
 
         GymDB.saveAll("settings", settings);
+    }
+
+    function getProfile() {
+        return getSetting("gymProfile", {
+            gymName: "GYM PRO",
+            ownerName: "",
+            phone: "",
+            email: "",
+            address: "",
+            currency: "INR"
+        });
+    }
+
+    function getMemberIdConfig() {
+        return getSetting("memberIdConfig", {
+            prefix: "GYM",
+            startSerial: 1001
+        });
+    }
+
+    function saveProfile(profile) {
+        saveSetting("gymProfile", profile);
     }
 
     function escapeHTML(value) {
@@ -53,13 +66,15 @@ window.GymSettings = (function () {
         if (!root) return;
 
         const profile = getProfile();
+        const idConfig = getMemberIdConfig();
 
         root.innerHTML = `
             <div class="gym-settings">
+
                 <div class="settings-heading">
                     <div>
                         <h2>Settings</h2>
-                        <p>Manage your gym profile and application data</p>
+                        <p>Manage your gym profile and application settings.</p>
                     </div>
                 </div>
 
@@ -71,11 +86,11 @@ window.GymSettings = (function () {
 
                     <form id="gymProfileForm">
                         <div class="settings-grid">
+
                             <div>
                                 <label>Gym Name</label>
                                 <input type="text" id="settingGymName"
-                                    value="${escapeHTML(profile.gymName)}"
-                                    required>
+                                    value="${escapeHTML(profile.gymName)}" required>
                             </div>
 
                             <div>
@@ -108,6 +123,7 @@ window.GymSettings = (function () {
                                 <label>Gym Address</label>
                                 <textarea id="settingAddress" rows="3">${escapeHTML(profile.address)}</textarea>
                             </div>
+
                         </div>
 
                         <button type="submit" class="settings-primary">
@@ -117,13 +133,75 @@ window.GymSettings = (function () {
                 </section>
 
                 <section class="settings-card">
+                    <h3>Member ID Configuration</h3>
+
+                    <p class="settings-description">
+                        Choose the member ID format and starting serial number.
+                        New members will receive IDs automatically.
+                    </p>
+
+                    <form id="memberIdForm">
+
+                        <div class="settings-grid">
+
+                            <div>
+                                <label>Member ID Prefix</label>
+                                <input
+                                    type="text"
+                                    id="settingMemberPrefix"
+                                    value="${escapeHTML(idConfig.prefix)}"
+                                    maxlength="12"
+                                    placeholder="GYM"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label>Starting Serial Number</label>
+                                <input
+                                    type="number"
+                                    id="settingMemberStart"
+                                    value="${escapeHTML(idConfig.startSerial)}"
+                                    min="1"
+                                    step="1"
+                                    required
+                                >
+                            </div>
+
+                            <div class="settings-full">
+                                <div class="member-id-preview">
+                                    <span>Example Member ID</span>
+                                    <strong id="memberIdPreview">
+                                        ${escapeHTML(idConfig.prefix)}-${escapeHTML(idConfig.startSerial)}
+                                    </strong>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="settings-primary">
+                            Save Member ID Settings
+                        </button>
+
+                    </form>
+
+                    <div class="settings-warning">
+                        Existing member IDs will not change. The new format
+                        will be used for newly registered members. If a serial
+                        number already exists, the system will skip it.
+                    </div>
+                </section>
+
+                <section class="settings-card">
                     <h3>Data Backup & Restore</h3>
+
                     <p class="settings-description">
                         Export your gym records to a JSON backup file.
                         You can later restore the file in this browser.
                     </p>
 
                     <div class="settings-actions">
+
                         <button id="backupDataBtn" class="settings-primary">
                             Download Backup
                         </button>
@@ -135,17 +213,18 @@ window.GymSettings = (function () {
                         <input type="file" id="restoreFileInput"
                             accept=".json,application/json"
                             style="display:none;">
+
                     </div>
 
                     <div class="settings-warning">
-                        Important: Restoring a backup replaces the existing
-                        GYM PRO data in this browser. Download a backup
-                        before restoring another file.
+                        Restoring a backup replaces the existing GYM PRO data
+                        in this browser. Download a backup before restoring.
                     </div>
                 </section>
 
                 <section class="settings-card">
                     <h3>Storage Information</h3>
+
                     <p class="settings-description">
                         Current data is stored locally in this browser.
                     </p>
@@ -155,14 +234,17 @@ window.GymSettings = (function () {
                             <span>Members</span>
                             <strong id="storageMembers">0</strong>
                         </div>
+
                         <div>
                             <span>Payments</span>
                             <strong id="storagePayments">0</strong>
                         </div>
+
                         <div>
                             <span>Attendance</span>
                             <strong id="storageAttendance">0</strong>
                         </div>
+
                         <div>
                             <span>Expenses</span>
                             <strong id="storageExpenses">0</strong>
@@ -172,23 +254,28 @@ window.GymSettings = (function () {
 
                 <section class="settings-card">
                     <h3>Application Information</h3>
+
                     <div class="app-info-row">
                         <span>Application</span>
                         <strong>GYM PRO</strong>
                     </div>
+
                     <div class="app-info-row">
                         <span>Version</span>
                         <strong>1.0.0</strong>
                     </div>
+
                     <div class="app-info-row">
                         <span>Storage</span>
                         <strong>Browser LocalStorage</strong>
                     </div>
+
                     <div class="app-info-row">
                         <span>Hosting</span>
                         <strong>GitHub Pages</strong>
                     </div>
                 </section>
+
             </div>
         `;
 
@@ -201,6 +288,15 @@ window.GymSettings = (function () {
         document.getElementById("gymProfileForm")
             .addEventListener("submit", saveProfileForm);
 
+        document.getElementById("memberIdForm")
+            .addEventListener("submit", saveMemberIdSettings);
+
+        document.getElementById("settingMemberPrefix")
+            .addEventListener("input", updateMemberIdPreview);
+
+        document.getElementById("settingMemberStart")
+            .addEventListener("input", updateMemberIdPreview);
+
         document.getElementById("backupDataBtn")
             .addEventListener("click", downloadBackup);
 
@@ -211,6 +307,45 @@ window.GymSettings = (function () {
 
         document.getElementById("restoreFileInput")
             .addEventListener("change", restoreBackup);
+    }
+
+    function updateMemberIdPreview() {
+        const prefix = document.getElementById("settingMemberPrefix").value
+            .trim().toUpperCase() || "GYM";
+
+        const serial = document.getElementById("settingMemberStart").value || "1001";
+
+        document.getElementById("memberIdPreview").textContent =
+            prefix + "-" + serial;
+    }
+
+    function saveMemberIdSettings(event) {
+        event.preventDefault();
+
+        const prefix = document.getElementById("settingMemberPrefix")
+            .value.trim().toUpperCase();
+
+        const startSerial = Number(
+            document.getElementById("settingMemberStart").value
+        );
+
+        if (!/^[A-Z0-9]{2,12}$/.test(prefix)) {
+            alert("Prefix must contain 2 to 12 letters or numbers.");
+            return;
+        }
+
+        if (!Number.isSafeInteger(startSerial) || startSerial < 1) {
+            alert("Please enter a valid starting serial number.");
+            return;
+        }
+
+        saveSetting("memberIdConfig", {
+            prefix,
+            startSerial
+        });
+
+        alert("Member ID settings saved successfully.");
+        updateMemberIdPreview();
     }
 
     function saveProfileForm(event) {
@@ -413,6 +548,26 @@ window.GymSettings = (function () {
                 grid-column: 1 / -1;
             }
 
+            .member-id-preview {
+                padding: 15px;
+                background: #211b32;
+                border: 1px solid #403456;
+                border-radius: 10px;
+            }
+
+            .member-id-preview span {
+                display: block;
+                color: #aaa0c5;
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .member-id-preview strong {
+                color: #c9a8ff;
+                font-size: 24px;
+                letter-spacing: 1px;
+            }
+
             .gym-settings button {
                 padding: 12px 18px;
                 border: 0;
@@ -517,6 +672,7 @@ window.GymSettings = (function () {
     return {
         render,
         refresh: updateStorageInfo,
-        getProfile
+        getProfile,
+        getMemberIdConfig
     };
 })();
