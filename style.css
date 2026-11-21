@@ -1,13 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* =====================================
+   GYM PRO - PROFESSIONAL RED & WHITE
+   ===================================== /
+
 :root {
-    --bg: #0b0b13;
-    --sidebar: #11111c;
-    --card: #161624;
-    --border: #29293b;
-    --purple: #9565ff;
-    --text: #f5f4fa;
-    --muted: #89899e;
+    --bg: #f5f6f8;
+    --sidebar: #ffffff;
+    --card: #ffffff;
+    --border: #e7e9ee;
+    --primary: #d71920;
+    --primary-dark: #ad1118;
+    --primary-light: #fff0f0;
+    --text: #202124;
+    --muted: #737985;
+    --success: #168653;
+    --shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
 }
 
 * {
@@ -20,19 +28,37 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
 }
 
 button {
-    font-family: inherit;
     cursor: pointer;
 }
+
+a {
+    color: inherit;
+}
+
+/ =====================================
+   APP LAYOUT
+   ===================================== /
 
 .app {
     display: flex;
     min-height: 100vh;
+    background: var(--bg);
 }
 
-/* SIDEBAR */
+/ =====================================
+   SIDEBAR
+   ===================================== /
 
 .sidebar {
     width: 260px;
@@ -42,6 +68,7 @@ button {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    box-shadow: 3px 0 15px rgba(20, 25, 35, 0.025);
 }
 
 .brand {
@@ -54,18 +81,21 @@ button {
 .brand-icon {
     width: 43px;
     height: 43px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #b18aff, #7542ed);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ef343b, #c81019);
+    color: #ffffff;
     display: grid;
     place-items: center;
     font-size: 24px;
     font-weight: 800;
-    box-shadow: 0 5px 20px #9565ff55;
+    box-shadow: 0 5px 15px rgba(215, 25, 32, 0.22);
 }
 
 .brand h2 {
     font-size: 19px;
-    letter-spacing: 1px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #202124;
 }
 
 .brand span {
@@ -79,9 +109,9 @@ button {
 .menu-label {
     font-size: 10px;
     font-weight: 700;
-    color: #68687e;
+    color: #999eaa;
     letter-spacing: 1.4px;
-    padding: 12px 12px;
+    padding: 12px;
 }
 
 .system-label {
@@ -96,15 +126,15 @@ button {
 
 .nav-item {
     text-decoration: none;
-    color: #a4a4b8;
+    color: #626875;
     padding: 12px;
     border-radius: 9px;
     display: flex;
     align-items: center;
     gap: 13px;
     font-size: 12px;
-    font-weight: 500;
-    transition: .2s;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
 .nav-item span {
@@ -114,14 +144,14 @@ button {
 }
 
 .nav-item:hover {
-    background: #202033;
-    color: white;
+    background: #fff4f4;
+    color: var(--primary);
 }
 
 .nav-item.active {
-    background: linear-gradient(100deg, #8655ed, #7143d7);
-    color: white;
-    box-shadow: 0 5px 18px #8655ed33;
+    background: var(--primary-light);
+    color: var(--primary);
+    box-shadow: inset 3px 0 0 var(--primary);
 }
 
 .sidebar-footer {
@@ -131,19 +161,21 @@ button {
     display: flex;
     align-items: center;
     gap: 9px;
-    color: #9292a6;
+    color: var(--muted);
     font-size: 10px;
 }
 
 .status-dot {
     width: 8px;
     height: 8px;
-    background: #35d99a;
+    background: #20b879;
     border-radius: 50%;
-    box-shadow: 0 0 10px #35d99a88;
+    box-shadow: 0 0 8px rgba(32, 184, 121, 0.3);
 }
 
-/* MAIN CONTENT */
+/ =====================================
+   MAIN CONTENT
+   ===================================== /
 
 .main-content {
     flex: 1;
@@ -153,6 +185,7 @@ button {
 .topbar {
     min-height: 85px;
     padding: 18px 30px;
+    background: #ffffff;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -162,7 +195,8 @@ button {
 
 .page-heading h1 {
     font-size: 21px;
-    font-weight: 700;
+    font-weight: 800;
+    color: #202124;
 }
 
 .page-heading p {
@@ -178,18 +212,25 @@ button {
 }
 
 .date-display {
-    color: #a5a5b7;
+    color: var(--muted);
     font-size: 11px;
 }
 
 .notification-btn {
     border: 1px solid var(--border);
-    background: var(--card);
-    color: white;
-    width: 37px;
-    height: 37px;
+    background: #ffffff;
+    color: #444b56;
+    width: 38px;
+    height: 38px;
     border-radius: 10px;
     font-size: 18px;
+    transition: 0.2s;
+}
+
+.notification-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: #f2bfc1;
 }
 
 .profile {
@@ -201,8 +242,9 @@ button {
 .avatar {
     height: 38px;
     width: 38px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #a87bff, #6842d6);
+    border-radius: 11px;
+    background: linear-gradient(135deg, #ef343b, #bd1018);
+    color: #ffffff;
     display: grid;
     place-items: center;
     font-weight: 800;
@@ -211,6 +253,7 @@ button {
 .profile strong {
     font-size: 11px;
     display: block;
+    color: #202124;
 }
 
 .profile small {
@@ -223,13 +266,15 @@ button {
 .menu-toggle {
     display: none;
     border: 1px solid var(--border);
-    background: var(--card);
-    color: white;
+    background: #ffffff;
+    color: var(--primary);
     padding: 9px 12px;
     border-radius: 8px;
 }
 
-/* CONTENT */
+/ =====================================
+   CONTENT AREA
+   ===================================== /
 
 .content-area {
     padding: 28px 30px;
@@ -237,10 +282,14 @@ button {
     margin: auto;
 }
 
+/ =====================================
+   WELCOME BANNER
+   ===================================== /
+
 .welcome-banner {
-    background: linear-gradient(110deg, #282044, #302052, #211b38);
-    border: 1px solid #59418b;
-    border-radius: 16px;
+    background: linear-gradient(110deg, #d71920, #b91119);
+    border: 1px solid #c5161e;
+    border-radius: 15px;
     padding: 28px 30px;
     min-height: 150px;
     display: flex;
@@ -248,22 +297,25 @@ button {
     align-items: center;
     overflow: hidden;
     position: relative;
+    box-shadow: 0 8px 22px rgba(215, 25, 32, 0.13);
 }
 
 .welcome-tag {
     font-size: 9px;
     letter-spacing: 2px;
-    color: #c5a9ff;
+    color: #ffe0e0;
     font-weight: 700;
 }
 
 .welcome-banner h2 {
     font-size: 24px;
+    color: #ffffff;
     margin-top: 13px;
+    font-weight: 800;
 }
 
 .welcome-banner p {
-    color: #b5abc9;
+    color: #ffe5e5;
     font-size: 12px;
     margin-top: 9px;
 }
@@ -271,13 +323,15 @@ button {
 .welcome-icon {
     font-size: 43px;
     font-weight: 900;
-    color: #c8aaff;
-    opacity: .2;
+    color: #ffffff;
+    opacity: 0.22;
     transform: rotate(-10deg);
     margin-right: 30px;
 }
 
-/* STAT CARDS */
+/ =====================================
+   STAT CARDS
+   ===================================== /
 
 .stats-grid {
     display: grid;
@@ -287,16 +341,18 @@ button {
 }
 
 .stat-card {
-    background: var(--card);
+    background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 13px;
     padding: 20px;
-    transition: .25s;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow);
 }
 
 .stat-card:hover {
     transform: translateY(-3px);
-    border-color: #7554b5;
+    border-color: #efb7b9;
+    box-shadow: 0 8px 22px rgba(20, 25, 35, 0.07);
 }
 
 .stat-top {
@@ -306,49 +362,77 @@ button {
 }
 
 .stat-top > span {
-    color: #aaaabe;
+    color: #69717e;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .stat-icon {
-    height: 35px;
-    width: 35px;
+    height: 36px;
+    width: 36px;
     border-radius: 10px;
     display: grid;
     place-items: center;
     font-size: 18px;
 }
 
-.purple { background: #8b5cf622; color: #b28aff; }
-.green { background: #21c98b22; color: #35dfa3; }
-.blue { background: #3995ff22; color: #58aaff; }
-.orange { background: #ff9f4322; color: #ffad5d; }
-.red { background: #ff565622; color: #ff7777; }
-.yellow { background: #e8c53a22; color: #e9ce58; }
+.purple {
+    background: #fff0f0;
+    color: #d71920;
+}
+
+.green {
+    background: #e9f8f0;
+    color: #168653;
+}
+
+.blue {
+    background: #edf5ff;
+    color: #2879d0;
+}
+
+.orange {
+    background: #fff3e8;
+    color: #db791c;
+}
+
+.red {
+    background: #fff0f0;
+    color: #d71920;
+}
+
+.yellow {
+    background: #fff9df;
+    color: #b18a16;
+}
 
 .stat-card h2 {
     font-size: 27px;
     margin-top: 17px;
-    letter-spacing: -.8px;
+    letter-spacing: -0.8px;
+    color: #202124;
+    font-weight: 800;
 }
 
 .stat-card small {
-    color: #77778d;
+    color: #8a909a;
     font-size: 10px;
     display: block;
     margin-top: 7px;
 }
 
-/* SECTION */
+/ =====================================
+   SECTIONS AND PANELS
+   ===================================== /
 
 .quick-actions,
 .panel {
-    background: var(--card);
+    background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 13px;
     padding: 21px;
     margin-top: 22px;
+    box-shadow: var(--shadow);
 }
 
 .section-heading {
@@ -360,6 +444,8 @@ button {
 
 .section-heading h2 {
     font-size: 14px;
+    color: #202124;
+    font-weight: 700;
 }
 
 .section-heading p {
@@ -367,6 +453,10 @@ button {
     font-size: 10px;
     margin-top: 6px;
 }
+
+/ =====================================
+   QUICK ACTIONS
+   ===================================== /
 
 .action-grid {
     display: grid;
@@ -376,33 +466,36 @@ button {
 }
 
 .action-btn {
-    background: #202033;
-    border: 1px solid #34344a;
+    background: #ffffff;
+    border: 1px solid var(--border);
     border-radius: 10px;
-    color: white;
+    color: #303640;
     padding: 16px 10px;
     display: flex;
     align-items: center;
     gap: 10px;
-    transition: .2s;
+    transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-    background: #30234b;
-    border-color: var(--purple);
+    background: var(--primary-light);
+    border-color: #e9b5b7;
     transform: translateY(-2px);
 }
 
 .action-btn span {
-    color: #b18aff;
+    color: var(--primary);
     font-size: 22px;
 }
 
 .action-btn strong {
     font-size: 10px;
+    font-weight: 700;
 }
 
-/* BOTTOM GRID */
+/ =====================================
+   BOTTOM GRID
+   ===================================== /
 
 .bottom-grid {
     display: grid;
@@ -412,55 +505,83 @@ button {
 
 .text-btn {
     background: transparent;
-    color: #ae8aff;
+    color: var(--primary);
     border: none;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
 }
+
+.text-btn:hover {
+    color: var(--primary-dark);
+}
+
+/ =====================================
+   TABLES
+   ===================================== /
 
 .table-wrapper {
     overflow-x: auto;
     margin-top: 20px;
+    width: 100%;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     min-width: 300px;
+    background: #ffffff;
 }
 
 th {
-    color: #79798f;
+    color: #69717e;
+    background: #f8f9fb;
     font-size: 10px;
     text-align: left;
-    padding: 12px 9px;
+    padding: 13px 10px;
     border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 td {
     font-size: 11px;
-    padding: 15px 9px;
-    border-bottom: 1px solid #262638;
+    padding: 14px 10px;
+    border-bottom: 1px solid #edf0f3;
+    color: #454c57;
+}
+
+tbody tr:hover {
+    background: #fffafa;
 }
 
 .empty-state {
-    color: #77778b;
+    color: #8a909a;
     text-align: center;
     padding: 25px 10px;
     font-size: 11px;
 }
+
+/ =====================================
+   ALERTS
+   ===================================== /
 
 .alerts-list {
     margin-top: 17px;
 }
 
 .alert-item {
-    padding: 12px;
-    background: #202033;
+    padding: 13px;
+    background: #fff7f7;
+    border: 1px solid #f7e1e2;
     border-radius: 9px;
     margin-bottom: 9px;
     font-size: 11px;
+    color: #454c57;
 }
+
+/ =====================================
+   FOOTER
+   ===================================== /
 
 .footer {
     border-top: 1px solid var(--border);
@@ -468,27 +589,129 @@ td {
     margin-top: 30px;
     display: flex;
     justify-content: space-between;
-    color: #66667c;
+    color: #858b96;
     font-size: 10px;
 }
 
-/* TOAST */
+/ =====================================
+   COMMON FORM ELEMENTS
+   ===================================== /
+
+input,
+select,
+textarea {
+    max-width: 100%;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select,
+textarea {
+    border: 1px solid #dfe2e8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #202124;
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #a1a6af;
+}
+
+/ =====================================
+   COMMON BUTTONS
+   ===================================== /
+
+#addGymMemberBtn,
+#addGymPlanBtn,
+#receivePaymentBtn,
+#addPaymentBtn,
+#addGymPaymentBtn,
+#manualCheckinBtn,
+#manualCheckInBtn,
+#markAttendanceBtn,
+#addAttendanceBtn,
+#addTrainerBtn,
+#addGymTrainerBtn,
+#addExpenseBtn,
+#addGymExpenseBtn,
+#manualAttendanceBtn {
+    background: linear-gradient(135deg, #e3262e, #c51019) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 9px !important;
+    padding: 12px 20px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18) !important;
+    transition: all 0.25s ease !important;
+}
+
+#addGymMemberBtn:hover,
+#addGymPlanBtn:hover,
+#receivePaymentBtn:hover,
+#addPaymentBtn:hover,
+#addGymPaymentBtn:hover,
+#manualCheckinBtn:hover,
+#manualCheckInBtn:hover,
+#markAttendanceBtn:hover,
+#addAttendanceBtn:hover,
+#addTrainerBtn:hover,
+#addGymTrainerBtn:hover,
+#addExpenseBtn:hover,
+#addGymExpenseBtn:hover,
+#manualAttendanceBtn:hover {
+    background: linear-gradient(135deg, #c9161e, #a90d15) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 17px rgba(215, 25, 32, 0.24) !important;
+}
+
+#addGymMemberBtn:active,
+#addGymPlanBtn:active,
+#receivePaymentBtn:active,
+#addPaymentBtn:active,
+#addGymPaymentBtn:active,
+#manualCheckinBtn:active,
+#manualCheckInBtn:active,
+#markAttendanceBtn:active,
+#addAttendanceBtn:active,
+#addTrainerBtn:active,
+#addGymTrainerBtn:active,
+#addExpenseBtn:active,
+#addGymExpenseBtn:active,
+#manualAttendanceBtn:active {
+    transform: scale(0.97);
+}
+
+/ =====================================
+   TOAST NOTIFICATION
+   ===================================== /
 
 .toast {
     position: fixed;
     bottom: 25px;
     right: 25px;
-    background: #25243a;
-    border: 1px solid #7855c6;
-    color: white;
+    background: #202124;
+    border: 1px solid #444b56;
+    color: #ffffff;
     padding: 13px 20px;
     border-radius: 9px;
     font-size: 12px;
     opacity: 0;
     pointer-events: none;
     transform: translateY(15px);
-    transition: .3s;
+    transition: 0.3s;
     z-index: 1000;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .toast.show {
@@ -496,7 +719,9 @@ td {
     transform: translateY(0);
 }
 
-/* MOBILE */
+/ =====================================
+   MOBILE SIDEBAR
+   ===================================== /
 
 @media(max-width: 1000px) {
     .sidebar {
@@ -505,7 +730,7 @@ td {
         top: 0;
         bottom: 0;
         z-index: 100;
-        transition: .3s;
+        transition: 0.3s;
         overflow-y: auto;
     }
 
@@ -529,6 +754,10 @@ td {
         padding: 20px 18px;
     }
 }
+
+/ =====================================
+   SMALL MOBILE
+   ===================================== */
 
 @media(max-width: 650px) {
     .topbar {
@@ -606,89 +835,12 @@ td {
     .stats-grid {
         grid-template-columns: 1fr;
     }
-}
-/* =====================================
-   GYM PRO - PRIMARY BUTTON COLOR FIX
-   ===================================== */
 
-/* Common button styling */
-#addGymMemberBtn,
-#addGymPlanBtn,
-#receivePaymentBtn,
-#addPaymentBtn,
-#addGymPaymentBtn,
-#manualCheckinBtn,
-#manualCheckInBtn,
-#markAttendanceBtn,
-#addAttendanceBtn,
-#addTrainerBtn,
-#addGymTrainerBtn,
-#addExpenseBtn,
-#addGymExpenseBtn {
+    .content-area {
+        padding: 15px 12px;
+    }
 
-    background: linear-gradient(135deg, #a855f7, #6d28d9) !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 22px !important;
-    font-weight: 700 !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.30) !important;
-    transition: all 0.25s ease !important;
-}
-
-/* Hover effect */
-#addGymMemberBtn:hover,
-#addGymPlanBtn:hover,
-#receivePaymentBtn:hover,
-#addPaymentBtn:hover,
-#addGymPaymentBtn:hover,
-#manualCheckinBtn:hover,
-#manualCheckInBtn:hover,
-#markAttendanceBtn:hover,
-#addAttendanceBtn:hover,
-#addTrainerBtn:hover,
-#addGymTrainerBtn:hover,
-#addExpenseBtn:hover,
-#addGymExpenseBtn:hover {
-
-    background: linear-gradient(135deg, #9333ea, #5b21b6) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 7px 20px rgba(139, 92, 246, 0.40) !important;
-}
-
-/* Button click effect */
-#addGymMemberBtn:active,
-#addGymPlanBtn:active,
-#receivePaymentBtn:active,
-#addPaymentBtn:active,
-#addGymPaymentBtn:active,
-#manualCheckinBtn:active,
-#manualCheckInBtn:active,
-#markAttendanceBtn:active,
-#addAttendanceBtn:active,
-#addTrainerBtn:active,
-#addGymTrainerBtn:active,
-#addExpenseBtn:active,
-#addGymExpenseBtn:active {
-
-    transform: scale(0.97);
-}
-/* MANUAL ATTENDANCE BUTTON - GYM PRO */
-
-#manualAttendanceBtn {
-    background: linear-gradient(135deg, #a855f7, #6d28d9) !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 22px !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, .35) !important;
-}
-
-#manualAttendanceBtn:hover {
-    background: linear-gradient(135deg, #9333ea, #5b21b6) !important;
-    transform: translateY(-2px);
+    .topbar {
+        padding: 13px 12px;
+    }
 }
