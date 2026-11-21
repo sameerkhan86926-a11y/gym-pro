@@ -43,6 +43,10 @@ window.GymTrainers = (function () {
         );
     }
 
+    // ==========================================
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
+    // ==========================================
+
     function injectStyles() {
         if (document.getElementById("gymTrainersStyles")) return;
 
@@ -50,226 +54,487 @@ window.GymTrainers = (function () {
         style.id = "gymTrainersStyles";
 
         style.textContent = `
-            .trainers-wrap { padding:5px 0 25px; }
-
-            .trainers-header {
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                flex-wrap:wrap;
-                gap:15px;
-                margin-bottom:22px;
+            .trainers-wrap {
+                padding: 2px 0 25px;
+                color: #202124;
             }
 
-            .trainers-header h2 { margin:0 0 6px; }
-            .trainers-header p { margin:0; opacity:.7; }
+            .trainers-header {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+            }
+
+            .trainers-header h2 {
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .trainers-header p {
+                margin: 0;
+                color: #737985;
+                font-size: 11.5px;
+            }
 
             .trainers-stats {
-                display:grid;
-                grid-template-columns:repeat(3,1fr);
-                gap:15px;
-                margin-bottom:22px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
             .trainers-stat {
-                padding:20px;
-                border-radius:14px;
-                background:rgba(255,255,255,.05);
-                border:1px solid rgba(255,255,255,.08);
+                padding: 20px;
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .trainers-stat:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
+            }
+
+            .trainers-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
             .trainers-stat span {
-                display:block;
-                opacity:.7;
-                font-size:13px;
-                margin-bottom:9px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
             }
 
-            .trainers-stat strong { font-size:25px; }
+            .trainers-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+
+            .trainers-stat strong {
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
+            }
+
+            .trainers-panel {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+            }
 
             .trainers-toolbar {
-                display:flex;
-                flex-wrap:wrap;
-                gap:12px;
-                margin-bottom:18px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 18px;
             }
 
             .trainers-toolbar input,
             .trainers-toolbar select {
-                padding:12px;
-                border-radius:9px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                outline:none;
-                min-width:180px;
+                padding: 11px 14px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                outline: none;
+                min-width: 170px;
+                transition: all 0.2s ease;
+            }
+
+            .trainers-toolbar input[type="search"] {
+                flex: 1;
+                min-width: 210px;
+            }
+
+            .trainers-toolbar select {
+                font-weight: 600;
+            }
+
+            .trainers-toolbar input:focus,
+            .trainers-toolbar select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .trainers-table-wrap {
-                overflow-x:auto;
-                border-radius:13px;
+                overflow-x: auto;
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .trainers-table {
-                width:100%;
-                min-width:950px;
-                border-collapse:collapse;
+                width: 100%;
+                min-width: 960px;
+                border-collapse: collapse;
+                background: #ffffff;
             }
 
             .trainers-table th,
             .trainers-table td {
-                padding:13px;
-                text-align:left;
-                border-bottom:1px solid rgba(255,255,255,.08);
+                padding: 13px 12px;
+                text-align: left;
+                border-bottom: 1px solid #edf0f3;
             }
 
             .trainers-table th {
-                font-size:12px;
-                opacity:.7;
-                text-transform:uppercase;
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                background: #f8f9fb;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+            }
+
+            .trainers-table td {
+                font-size: 11.5px;
+                color: #454c57;
+                vertical-align: middle;
+            }
+
+            .trainers-table tbody tr:hover {
+                background: #fffafa;
+            }
+
+            .trainer-id-pill {
+                display: inline-block;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #f3f4f6;
+                color: #5f6672;
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            .trainer-spec-pill {
+                display: inline-block;
+                padding: 4px 9px;
+                border-radius: 6px;
+                background: #edf5ff;
+                color: #2879d0;
+                font-size: 10.5px;
+                font-weight: 600;
+            }
+
+            .trainer-members-pill {
+                display: inline-block;
+                padding: 3px 9px;
+                border-radius: 20px;
+                background: #f3f4f6;
+                color: #303640;
+                font-size: 10.5px;
+                font-weight: 700;
             }
 
             .trainer-status {
-                display:inline-block;
-                padding:5px 10px;
-                border-radius:20px;
-                background:rgba(46,204,113,.13);
-                color:#6ee7a0;
-                font-size:11px;
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                background: #e9f8f0;
+                color: #168653;
+                font-size: 10px;
+                font-weight: 700;
             }
 
             .trainer-status.inactive {
-                background:rgba(255,255,255,.1);
-                color:#aaa;
+                background: #f2f4f7;
+                color: #69717e;
+            }
+
+            .trainer-actions-cell {
+                white-space: nowrap;
             }
 
             .trainer-action {
-                padding:7px 10px;
-                border:0;
-                border-radius:7px;
-                margin:2px;
-                cursor:pointer;
-                color:white;
-                background:#6845b8;
-                font-size:12px;
+                padding: 6px 10px;
+                border: 1px solid #dfe2e8;
+                border-radius: 7px;
+                margin: 2px;
+                cursor: pointer;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #303640;
+                background: #ffffff;
+                transition: all 0.18s ease;
             }
 
-            .trainer-action.delete { background:#a93650; }
-            .trainer-action.salary { background:#167c62; }
-            .trainer-action.attendance { background:#2764a5; }
+            .trainer-action:hover {
+                background: #f4f6f9;
+            }
+
+            .trainer-action.salary {
+                background: #e9f8f0;
+                border-color: #bfe7d1;
+                color: #168653;
+            }
+
+            .trainer-action.salary:hover {
+                background: #168653;
+                border-color: #168653;
+                color: #ffffff;
+            }
+
+            .trainer-action.attendance {
+                background: #edf5ff;
+                border-color: #c5defc;
+                color: #2879d0;
+            }
+
+            .trainer-action.attendance:hover {
+                background: #2879d0;
+                border-color: #2879d0;
+                color: #ffffff;
+            }
+
+            .trainer-action.delete {
+                background: #fff0f0;
+                border-color: #f5c6c8;
+                color: #d71920;
+            }
+
+            .trainer-action.delete:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
+            }
 
             .trainers-empty {
-                text-align:center;
-                padding:35px 15px;
-                opacity:.65;
+                text-align: center;
+                padding: 34px 15px;
+                color: #8a909a;
+                font-size: 12px;
             }
 
+            /* MODALS */
             .trainer-modal {
-                position:fixed;
-                inset:0;
-                z-index:9999;
-                display:none;
-                align-items:center;
-                justify-content:center;
-                padding:15px;
-                background:rgba(0,0,0,.78);
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 15px;
+                background: rgba(15, 20, 30, 0.55);
+                backdrop-filter: blur(3px);
             }
 
             .trainer-modal-box {
-                width:100%;
-                max-width:500px;
-                max-height:90vh;
-                overflow-y:auto;
-                padding:24px;
-                border-radius:16px;
-                background:#211a32;
-                border:1px solid rgba(255,255,255,.12);
+                width: 100%;
+                max-width: 520px;
+                max-height: 92vh;
+                overflow-y: auto;
+                padding: 26px;
+                border-radius: 16px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 20px 50px rgba(15, 20, 30, 0.18);
             }
 
-            .trainer-modal-box h3 { margin-top:0; }
+            .trainer-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-bottom: 14px;
+                margin-bottom: 14px;
+                border-bottom: 1px solid #edf0f3;
+            }
+
+            .trainer-modal-header h3 {
+                margin: 0;
+                font-size: 17px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .trainer-modal-close {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid #e7e9ee;
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 16px;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+            }
+
+            .trainer-modal-close:hover {
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #f2bfc1;
+            }
+
+            .trainer-modal-box h4 {
+                margin: 22px 0 10px;
+                font-size: 13.5px;
+                font-weight: 800;
+                color: #202124;
+            }
 
             .trainer-form label {
-                display:block;
-                margin:14px 0 7px;
-                font-size:13px;
+                display: block;
+                margin: 14px 0 6px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #454c57;
             }
 
             .trainer-form input,
             .trainer-form select,
             .trainer-form textarea {
-                width:100%;
-                padding:12px;
-                border-radius:9px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                outline:none;
-                box-sizing:border-box;
+                width: 100%;
+                padding: 11px 13px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12.5px;
+                outline: none;
+                box-sizing: border-box;
+            }
+
+            .trainer-form input:focus,
+            .trainer-form select:focus,
+            .trainer-form textarea:focus {
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .trainer-form textarea {
-                min-height:70px;
-                resize:vertical;
+                min-height: 70px;
+                resize: vertical;
             }
 
             .trainer-form-actions {
-                display:flex;
-                gap:10px;
-                margin-top:20px;
+                display: flex;
+                gap: 12px;
+                margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #edf0f3;
             }
 
             .trainer-form-actions button {
-                flex:1;
-                padding:12px;
-                border:0;
-                border-radius:9px;
-                cursor:pointer;
-                color:white;
-                background:#8055d9;
-                font-weight:600;
+                flex: 1;
+                padding: 12px;
+                border: 0;
+                border-radius: 9px;
+                cursor: pointer;
+                color: #ffffff;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                font-weight: 700;
+                font-size: 12.5px;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
             }
 
-            .trainer-form-actions .cancel { background:#494253; }
+            .trainer-form-actions button:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
+            }
+
+            .trainer-form-actions .cancel {
+                background: #f3f4f6;
+                color: #454c57;
+                border: 1px solid #dfe2e8;
+                box-shadow: none;
+            }
+
+            .trainer-form-actions .cancel:hover {
+                background: #e7e9ee;
+            }
+
+            .trainer-history-wrap {
+                overflow-x: auto;
+                border: 1px solid #edf0f3;
+                border-radius: 9px;
+            }
 
             .trainer-history {
-                width:100%;
-                border-collapse:collapse;
-                margin-top:15px;
-                font-size:13px;
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11.5px;
             }
 
             .trainer-history th,
             .trainer-history td {
-                padding:10px 7px;
-                text-align:left;
-                border-bottom:1px solid rgba(255,255,255,.1);
+                padding: 10px 10px;
+                text-align: left;
+                border-bottom: 1px solid #edf0f3;
+                color: #454c57;
             }
 
-            .trainer-history-wrap { overflow-x:auto; }
+            .trainer-history th {
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
 
             .trainer-info {
-                padding:13px;
-                background:rgba(255,255,255,.05);
-                border-radius:10px;
-                margin-bottom:15px;
-                font-size:13px;
-                line-height:1.8;
+                padding: 14px 16px;
+                background: #f8f9fb;
+                border: 1px solid #e7e9ee;
+                border-radius: 10px;
+                margin-bottom: 14px;
+                color: #303640;
+                font-size: 12px;
+                line-height: 1.8;
+            }
+
+            .trainer-info.highlight {
+                background: #fff5f5;
+                border-color: #f7d4d6;
             }
 
             .trainer-small-btn {
-                padding:9px 12px;
-                border:0;
-                border-radius:8px;
-                background:#6845b8;
-                color:white;
-                cursor:pointer;
+                width: 100%;
+                margin-top: 14px;
+                padding: 11px 16px;
+                border: 1px solid #dfe2e8;
+                border-radius: 9px;
+                background: #f3f4f6;
+                color: #303640;
+                font-weight: 700;
+                font-size: 12px;
+                cursor: pointer;
             }
 
-            .trainer-danger { background:#a93650; }
+            .trainer-small-btn:hover {
+                background: #e7e9ee;
+            }
 
             @media(max-width:650px) {
-                .trainers-stats { grid-template-columns:1fr; }
-                .trainer-modal-box { padding:18px; }
+                .trainers-stats {
+                    grid-template-columns: 1fr;
+                }
+                .trainers-header .btn {
+                    width: 100%;
+                }
+                .trainer-modal-box {
+                    padding: 18px;
+                }
             }
         `;
 
@@ -287,8 +552,8 @@ window.GymTrainers = (function () {
 
                 <div class="trainers-header">
                     <div>
-                        <h2>Trainer Management</h2>
-                        <p>Manage trainers, salary and attendance.</p>
+                        <h2>Trainer & Staff Management</h2>
+                        <p>Manage trainers, assigned members, monthly salaries and attendance logs.</p>
                     </div>
 
                     <button class="btn btn-primary" id="addTrainerBtn">
@@ -298,62 +563,77 @@ window.GymTrainers = (function () {
 
                 <div class="trainers-stats">
                     <div class="trainers-stat">
-                        <span>Total Trainers</span>
+                        <div class="trainers-stat-top">
+                            <span>Total Trainers</span>
+                            <div class="trainers-stat-dot" style="background:#d71920;"></div>
+                        </div>
                         <strong id="totalTrainers">0</strong>
                     </div>
 
                     <div class="trainers-stat">
-                        <span>Active Trainers</span>
+                        <div class="trainers-stat-top">
+                            <span>Active Trainers</span>
+                            <div class="trainers-stat-dot" style="background:#168653;"></div>
+                        </div>
                         <strong id="activeTrainers">0</strong>
                     </div>
 
                     <div class="trainers-stat">
-                        <span>Active Monthly Salary</span>
+                        <div class="trainers-stat-top">
+                            <span>Active Monthly Payroll</span>
+                            <div class="trainers-stat-dot" style="background:#2879d0;"></div>
+                        </div>
                         <strong id="trainerSalaryTotal">₹0</strong>
                     </div>
                 </div>
 
-                <div class="trainers-toolbar">
-                    <input type="search" id="trainerSearch"
-                        placeholder="Search name, ID or phone...">
+                <div class="trainers-panel">
+                    <div class="trainers-toolbar">
+                        <input type="search" id="trainerSearch"
+                            placeholder="Search trainer name, ID or phone...">
 
-                    <select id="trainerStatusFilter">
-                        <option value="all">All Trainers</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
+                        <select id="trainerStatusFilter">
+                            <option value="all">All Trainers</option>
+                            <option value="active">Active Only</option>
+                            <option value="inactive">Inactive Only</option>
+                        </select>
+                    </div>
 
-                <div class="trainers-table-wrap">
-                    <table class="trainers-table">
-                        <thead>
-                            <tr>
-                                <th>Trainer ID</th>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Specialization</th>
-                                <th>Members</th>
-                                <th>Monthly Salary</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
+                    <div class="trainers-table-wrap">
+                        <table class="trainers-table">
+                            <thead>
+                                <tr>
+                                    <th>Trainer ID</th>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Specialization</th>
+                                    <th>Members</th>
+                                    <th>Monthly Salary</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
 
-                        <tbody id="trainersTableBody"></tbody>
-                    </table>
+                            <tbody id="trainersTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
+            <!-- ADD / EDIT TRAINER MODAL -->
             <div class="trainer-modal" id="trainerModal">
                 <div class="trainer-modal-box">
-                    <h3 id="trainerFormTitle">Add New Trainer</h3>
+                    <div class="trainer-modal-header">
+                        <h3 id="trainerFormTitle">Add New Trainer</h3>
+                        <button type="button" class="trainer-modal-close" id="closeTrainerFormX" aria-label="Close">✕</button>
+                    </div>
 
                     <form class="trainer-form" id="trainerForm">
                         <input type="hidden" id="trainerId">
 
                         <label>Trainer Name *</label>
                         <input type="text" id="trainerName"
-                            placeholder="Enter trainer name" required>
+                            placeholder="Enter trainer full name" required>
 
                         <label>Phone Number *</label>
                         <input type="tel" id="trainerPhone"
@@ -362,15 +642,15 @@ window.GymTrainers = (function () {
 
                         <label>Email</label>
                         <input type="email" id="trainerEmail"
-                            placeholder="Enter email">
+                            placeholder="Enter email address">
 
                         <label>Specialization</label>
                         <input type="text" id="trainerSpecialization"
-                            placeholder="Weight Training, Yoga, Cardio">
+                            placeholder="e.g. Weight Training, Yoga, CrossFit">
 
                         <label>Monthly Salary (₹)</label>
                         <input type="number" id="trainerSalary"
-                            min="0" step="0.01" placeholder="Enter salary">
+                            min="0" step="0.01" placeholder="Enter monthly salary">
 
                         <label>Joining Date</label>
                         <input type="date" id="trainerJoiningDate">
@@ -383,7 +663,7 @@ window.GymTrainers = (function () {
 
                         <label>Address</label>
                         <textarea id="trainerAddress"
-                            placeholder="Enter trainer address"></textarea>
+                            placeholder="Enter trainer residential address"></textarea>
 
                         <div class="trainer-form-actions">
                             <button type="submit">Save Trainer</button>
@@ -394,17 +674,21 @@ window.GymTrainers = (function () {
                 </div>
             </div>
 
+            <!-- TRAINER SALARY MODAL -->
             <div class="trainer-modal" id="trainerSalaryModal">
                 <div class="trainer-modal-box">
-                    <h3>Trainer Salary</h3>
-                    <div id="trainerSalaryInfo" class="trainer-info"></div>
+                    <div class="trainer-modal-header">
+                        <h3>Trainer Salary Payout</h3>
+                        <button type="button" class="trainer-modal-close" id="closeSalaryX" aria-label="Close">✕</button>
+                    </div>
+                    <div id="trainerSalaryInfo" class="trainer-info highlight"></div>
 
                     <form class="trainer-form" id="trainerSalaryForm">
                         <input type="hidden" id="salaryTrainerId">
 
                         <label>Payment Amount (₹) *</label>
                         <input type="number" id="salaryAmount"
-                            min="0.01" step="0.01" required>
+                            min="0.01" step="0.01" placeholder="Enter payout amount" required>
 
                         <label>Payment Date *</label>
                         <input type="date" id="salaryDate" required>
@@ -419,10 +703,10 @@ window.GymTrainers = (function () {
 
                         <label>Note</label>
                         <textarea id="salaryNote"
-                            placeholder="Optional note"></textarea>
+                            placeholder="Optional note (e.g. Nov 2026 Salary)"></textarea>
 
                         <div class="trainer-form-actions">
-                            <button type="submit">Save Payment</button>
+                            <button type="submit">Record Payout</button>
                             <button type="button" class="cancel"
                                 id="closeSalaryBtn">Close</button>
                         </div>
@@ -433,10 +717,14 @@ window.GymTrainers = (function () {
                 </div>
             </div>
 
+            <!-- TRAINER ATTENDANCE MODAL -->
             <div class="trainer-modal" id="trainerAttendanceModal">
                 <div class="trainer-modal-box">
-                    <h3>Trainer Attendance</h3>
-                    <div id="trainerAttendanceInfo" class="trainer-info"></div>
+                    <div class="trainer-modal-header">
+                        <h3>Trainer Attendance Log</h3>
+                        <button type="button" class="trainer-modal-close" id="closeAttendanceX" aria-label="Close">✕</button>
+                    </div>
+                    <div id="trainerAttendanceInfo" class="trainer-info highlight"></div>
 
                     <form class="trainer-form" id="trainerAttendanceForm">
                         <input type="hidden" id="attendanceTrainerId">
@@ -468,12 +756,16 @@ window.GymTrainers = (function () {
                 </div>
             </div>
 
+            <!-- TRAINER PROFILE MODAL -->
             <div class="trainer-modal" id="trainerProfileModal">
                 <div class="trainer-modal-box">
-                    <h3>Trainer Profile</h3>
+                    <div class="trainer-modal-header">
+                        <h3>Trainer Profile Summary</h3>
+                        <button type="button" class="trainer-modal-close" id="closeProfileX" aria-label="Close">✕</button>
+                    </div>
                     <div id="trainerProfileContent"></div>
                     <button type="button" class="trainer-small-btn"
-                        id="closeProfileBtn">Close</button>
+                        id="closeProfileBtn">Close Profile</button>
                 </div>
             </div>
         `;
@@ -482,6 +774,9 @@ window.GymTrainers = (function () {
             .addEventListener("click", () => openForm());
 
         document.getElementById("cancelTrainerBtn")
+            .addEventListener("click", closeForm);
+
+        document.getElementById("closeTrainerFormX")
             .addEventListener("click", closeForm);
 
         document.getElementById("trainerForm")
@@ -499,13 +794,22 @@ window.GymTrainers = (function () {
         document.getElementById("closeSalaryBtn")
             .addEventListener("click", closeSalary);
 
+        document.getElementById("closeSalaryX")
+            .addEventListener("click", closeSalary);
+
         document.getElementById("trainerAttendanceForm")
             .addEventListener("submit", saveAttendance);
 
         document.getElementById("closeAttendanceBtn")
             .addEventListener("click", closeAttendance);
 
+        document.getElementById("closeAttendanceX")
+            .addEventListener("click", closeAttendance);
+
         document.getElementById("closeProfileBtn")
+            .addEventListener("click", closeProfile);
+
+        document.getElementById("closeProfileX")
             .addEventListener("click", closeProfile);
 
         renderTable();
@@ -686,18 +990,22 @@ window.GymTrainers = (function () {
 
             return `
                 <tr>
-                    <td>${escapeHTML(trainer.id)}</td>
-                    <td><strong>${escapeHTML(trainer.name)}</strong></td>
+                    <td><span class="trainer-id-pill">${escapeHTML(trainer.id)}</span></td>
+                    <td><strong style="color:#202124;">${escapeHTML(trainer.name)}</strong></td>
                     <td>${escapeHTML(trainer.phone)}</td>
-                    <td>${escapeHTML(trainer.specialization || "-")}</td>
-                    <td>${assignedCount}</td>
-                    <td>${currency(trainer.salary)}</td>
+                    <td>
+                        ${trainer.specialization
+                            ? `<span class="trainer-spec-pill">${escapeHTML(trainer.specialization)}</span>`
+                            : "-"}
+                    </td>
+                    <td><span class="trainer-members-pill">${assignedCount}</span></td>
+                    <td><strong style="color:#202124;">${currency(trainer.salary)}</strong></td>
                     <td>
                         <span class="trainer-status ${isActive ? "" : "inactive"}">
                             ${isActive ? "Active" : "Inactive"}
                         </span>
                     </td>
-                    <td>
+                    <td class="trainer-actions-cell">
                         <button class="trainer-action"
                             data-profile="${escapeHTML(trainer.id)}">View</button>
 
@@ -756,14 +1064,15 @@ window.GymTrainers = (function () {
         if (!trainer) return;
 
         document.getElementById("salaryTrainerId").value = id;
-        document.getElementById("salaryAmount").value = "";
+        document.getElementById("salaryAmount").value = trainer.salary || "";
         document.getElementById("salaryDate").value = today();
         document.getElementById("salaryMethod").value = "Cash";
         document.getElementById("salaryNote").value = "";
 
         document.getElementById("trainerSalaryInfo").innerHTML = `
-            <strong>${escapeHTML(trainer.name)}</strong><br>
-            Monthly Salary: ${currency(trainer.salary)}
+            <strong style="font-size:14px;color:#202124;">${escapeHTML(trainer.name)}</strong>
+            &nbsp;<span class="trainer-id-pill">${escapeHTML(trainer.id)}</span><br>
+            Base Monthly Salary: <strong style="color:#d71920;">${currency(trainer.salary)}</strong>
         `;
 
         renderSalaryHistory(trainer);
@@ -799,7 +1108,7 @@ window.GymTrainers = (function () {
                         ${history.map(item => `
                             <tr>
                                 <td>${escapeHTML(item.date)}</td>
-                                <td>${currency(item.amount)}</td>
+                                <td><strong style="color:#168653;">${currency(item.amount)}</strong></td>
                                 <td>${escapeHTML(item.method || "-")}</td>
                                 <td>${escapeHTML(item.note || "-")}</td>
                             </tr>
@@ -872,8 +1181,8 @@ window.GymTrainers = (function () {
         document.getElementById("trainerAttendanceNote").value = "";
 
         document.getElementById("trainerAttendanceInfo").innerHTML = `
-            <strong>${escapeHTML(trainer.name)}</strong><br>
-            Trainer ID: ${escapeHTML(trainer.id)}
+            <strong style="font-size:14px;color:#202124;">${escapeHTML(trainer.name)}</strong><br>
+            Trainer ID: <span class="trainer-id-pill">${escapeHTML(trainer.id)}</span>
         `;
 
         renderAttendanceHistory(trainer);
@@ -905,13 +1214,30 @@ window.GymTrainers = (function () {
                         </tr>
                     </thead>
                     <tbody>
-                        ${history.map(item => `
-                            <tr>
-                                <td>${escapeHTML(item.date)}</td>
-                                <td>${escapeHTML(item.status)}</td>
-                                <td>${escapeHTML(item.note || "-")}</td>
-                            </tr>
-                        `).join("")}
+                        ${history.map(item => {
+                            const badgeBg = item.status === "Present"
+                                ? "#e9f8f0"
+                                : item.status === "Absent"
+                                    ? "#fff0f0"
+                                    : "#fff8eb";
+                            const badgeColor = item.status === "Present"
+                                ? "#168653"
+                                : item.status === "Absent"
+                                    ? "#d71920"
+                                    : "#b8740e";
+
+                            return `
+                                <tr>
+                                    <td>${escapeHTML(item.date)}</td>
+                                    <td>
+                                        <span style="display:inline-block;padding:3px 9px;border-radius:12px;font-size:10.5px;font-weight:700;background:${badgeBg};color:${badgeColor};">
+                                            ${escapeHTML(item.status)}
+                                        </span>
+                                    </td>
+                                    <td>${escapeHTML(item.note || "-")}</td>
+                                </tr>
+                            `;
+                        }).join("")}
                     </tbody>
                 </table>
             </div>
@@ -1013,15 +1339,15 @@ window.GymTrainers = (function () {
         ).length;
 
         document.getElementById("trainerProfileContent").innerHTML = `
-            <div class="trainer-info">
-                <strong>${escapeHTML(trainer.name)}</strong><br>
-                Trainer ID: ${escapeHTML(trainer.id)}<br>
-                Phone: ${escapeHTML(trainer.phone)}<br>
+            <div class="trainer-info highlight">
+                <strong style="font-size:15px;color:#202124;">${escapeHTML(trainer.name)}</strong>
+                &nbsp;<span class="trainer-id-pill">${escapeHTML(trainer.id)}</span><br>
+                Phone: <strong>${escapeHTML(trainer.phone)}</strong><br>
                 Email: ${escapeHTML(trainer.email || "-")}<br>
-                Specialization: ${escapeHTML(trainer.specialization || "-")}<br>
+                Specialization: <strong>${escapeHTML(trainer.specialization || "-")}</strong><br>
                 Joining Date: ${escapeHTML(trainer.joiningDate || "-")}<br>
-                Monthly Salary: ${currency(trainer.salary)}<br>
-                Status: ${escapeHTML(trainer.status || "active")}<br>
+                Monthly Salary: <strong style="color:#d71920;">${currency(trainer.salary)}</strong><br>
+                Status: <strong style="text-transform:uppercase;">${escapeHTML(trainer.status || "active")}</strong><br>
                 Address: ${escapeHTML(trainer.address || "-")}
             </div>
 
@@ -1030,8 +1356,8 @@ window.GymTrainers = (function () {
                 ${
                     members.length
                     ? members.map(member =>
-                        escapeHTML(member.name) +
-                        " - " + escapeHTML(member.phone || "-")
+                        "<strong>" + escapeHTML(member.name) + "</strong>" +
+                        " (" + escapeHTML(member.phone || "-") + ")"
                     ).join("<br>")
                     : "No members assigned."
                 }
@@ -1039,16 +1365,16 @@ window.GymTrainers = (function () {
 
             <h4>Salary Summary</h4>
             <div class="trainer-info">
-                Total Salary Payments Recorded: ${currency(totalSalaryPaid)}<br>
-                Number of Payments: ${salaryHistory.length}
+                Total Salary Paid: <strong style="color:#168653;">${currency(totalSalaryPaid)}</strong><br>
+                Total Payout Records: <strong>${salaryHistory.length}</strong>
             </div>
 
             <h4>Attendance Summary</h4>
             <div class="trainer-info">
-                Present: ${present}<br>
-                Absent: ${absent}<br>
-                Leave: ${leave}<br>
-                Total Records: ${attendanceHistory.length}
+                Present: <strong style="color:#168653;">${present}</strong> &nbsp;•&nbsp;
+                Absent: <strong style="color:#d71920;">${absent}</strong> &nbsp;•&nbsp;
+                Leave: <strong style="color:#b8740e;">${leave}</strong><br>
+                Total Logged Days: <strong>${attendanceHistory.length}</strong>
             </div>
         `;
 
