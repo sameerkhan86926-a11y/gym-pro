@@ -63,6 +63,10 @@ window.GymExpenses = (function () {
         }
     }
 
+    // ==========================================
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
+    // ==========================================
+
     function injectStyles() {
         if (document.getElementById("gymExpensesStyles")) return;
 
@@ -70,273 +74,562 @@ window.GymExpenses = (function () {
         style.id = "gymExpensesStyles";
 
         style.textContent = `
-            .expenses-wrap { padding:5px 0 25px; }
-
-            .expenses-header {
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                flex-wrap:wrap;
-                gap:15px;
-                margin-bottom:22px;
+            .expenses-wrap {
+                padding: 2px 0 25px;
+                color: #202124;
             }
 
-            .expenses-header h2 { margin:0 0 6px; }
-            .expenses-header p { margin:0; opacity:.7; }
+            .expenses-header {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+            }
+
+            .expenses-header h2 {
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .expenses-header p {
+                margin: 0;
+                color: #737985;
+                font-size: 11.5px;
+            }
 
             .expenses-header-actions {
-                display:flex;
-                gap:9px;
-                flex-wrap:wrap;
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                flex-wrap: wrap;
+            }
+
+            .expenses-sec-btn {
+                padding: 11px 15px;
+                border: 1px solid #dfe2e8;
+                border-radius: 9px;
+                background: #ffffff;
+                color: #303640;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.18s ease;
+            }
+
+            .expenses-sec-btn:hover {
+                background: #fff4f4;
+                border-color: #f2bfc1;
+                color: #d71920;
             }
 
             .expenses-stats {
-                display:grid;
-                grid-template-columns:repeat(3,1fr);
-                gap:15px;
-                margin-bottom:22px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
             .expenses-stat {
-                padding:20px;
-                border-radius:14px;
-                background:rgba(255,255,255,.05);
-                border:1px solid rgba(255,255,255,.08);
+                padding: 20px;
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .expenses-stat:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
+            }
+
+            .expenses-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
             .expenses-stat span {
-                display:block;
-                opacity:.7;
-                font-size:13px;
-                margin-bottom:9px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
             }
 
-            .expenses-stat strong { font-size:24px; }
+            .expenses-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+
+            .expenses-stat strong {
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
+            }
 
             .expenses-section {
-                margin-top:20px;
-                padding:18px;
-                border-radius:14px;
-                background:rgba(255,255,255,.035);
-                border:1px solid rgba(255,255,255,.08);
+                margin-top: 20px;
+                padding: 20px;
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
-            .expenses-section h3 { margin-top:0; }
+            .expenses-section-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .expenses-section-top h3 {
+                margin: 0 0 3px;
+                font-size: 15px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .expenses-section-top p {
+                margin: 0;
+                font-size: 11px;
+                color: #737985;
+            }
+
+            .expense-month-wrap {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .expense-month-wrap label {
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #69717e;
+            }
+
+            .expense-month-picker {
+                padding: 9px 12px;
+                border-radius: 8px;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                font-weight: 600;
+                outline: none;
+            }
+
+            .expense-month-picker:focus {
+                background: #ffffff;
+                border-color: #d71920;
+            }
 
             .expenses-toolbar {
-                display:flex;
-                flex-wrap:wrap;
-                gap:12px;
-                margin-bottom:18px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 14px;
             }
 
             .expenses-toolbar input,
             .expenses-toolbar select {
-                padding:12px;
-                border-radius:9px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                outline:none;
-                min-width:150px;
+                padding: 10px 13px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                outline: none;
+                min-width: 145px;
+                transition: all 0.2s ease;
+            }
+
+            .expenses-toolbar input[type="search"] {
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .expenses-toolbar select {
+                font-weight: 600;
+            }
+
+            .expenses-toolbar input:focus,
+            .expenses-toolbar select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
+            }
+
+            .expense-filter-total {
+                display: inline-block;
+                margin: 0 0 14px;
+                padding: 6px 12px;
+                border-radius: 7px;
+                background: #fff5f5;
+                border: 1px solid #f7d4d6;
+                color: #d71920;
+                font-weight: 700;
+                font-size: 11.5px;
             }
 
             .expenses-table-wrap {
-                overflow-x:auto;
-                border-radius:13px;
+                overflow-x: auto;
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .expenses-table {
-                width:100%;
-                min-width:780px;
-                border-collapse:collapse;
+                width: 100%;
+                min-width: 800px;
+                border-collapse: collapse;
+                background: #ffffff;
             }
 
             .expenses-table th,
             .expenses-table td {
-                padding:14px;
-                text-align:left;
-                border-bottom:1px solid rgba(255,255,255,.08);
+                padding: 13px 12px;
+                text-align: left;
+                border-bottom: 1px solid #edf0f3;
             }
 
             .expenses-table th {
-                font-size:12px;
-                opacity:.7;
-                text-transform:uppercase;
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                background: #f8f9fb;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+            }
+
+            .expenses-table td {
+                font-size: 11.5px;
+                color: #454c57;
+                vertical-align: middle;
+            }
+
+            .expenses-table tbody tr:hover {
+                background: #fffafa;
+            }
+
+            .expense-id-pill {
+                display: inline-block;
+                margin-top: 3px;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #f3f4f6;
+                color: #5f6672;
+                font-size: 10px;
+                font-weight: 700;
             }
 
             .expense-category {
-                display:inline-block;
-                padding:5px 10px;
-                border-radius:20px;
-                background:rgba(120,90,220,.15);
-                color:#c7adff;
-                font-size:11px;
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                background: #fff0f0;
+                color: #d71920;
+                font-size: 10.5px;
+                font-weight: 700;
+            }
+
+            .expense-method-pill {
+                display: inline-block;
+                padding: 4px 9px;
+                border-radius: 6px;
+                background: #edf5ff;
+                color: #2879d0;
+                font-size: 10.5px;
+                font-weight: 600;
             }
 
             .expense-action {
-                padding:7px 11px;
-                border:0;
-                border-radius:7px;
-                margin:2px;
-                cursor:pointer;
-                color:white;
-                background:#6845b8;
+                padding: 6px 10px;
+                border: 1px solid #dfe2e8;
+                border-radius: 7px;
+                margin: 2px;
+                cursor: pointer;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #303640;
+                background: #ffffff;
+                transition: all 0.18s ease;
             }
 
-            .expense-action.delete { background:#a93650; }
+            .expense-action:hover {
+                background: #f4f6f9;
+            }
+
+            .expense-action.delete {
+                background: #fff0f0;
+                border-color: #f5c6c8;
+                color: #d71920;
+            }
+
+            .expense-action.delete:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
+            }
 
             .expenses-empty {
-                text-align:center;
-                padding:35px 15px;
-                opacity:.65;
+                text-align: center;
+                padding: 34px 15px;
+                color: #8a909a;
+                font-size: 12px;
             }
 
+            .expense-breakdown {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .expense-breakdown-item {
+                padding: 15px 16px;
+                border-radius: 10px;
+                background: #f8f9fb;
+                border: 1px solid #edf0f3;
+            }
+
+            .expense-breakdown-item.highlight {
+                background: #fff5f5;
+                border-color: #f7d4d6;
+            }
+
+            .expense-breakdown-item span {
+                display: block;
+                font-size: 11px;
+                font-weight: 600;
+                color: #69717e;
+                margin-bottom: 6px;
+            }
+
+            .expense-breakdown-item strong {
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .expense-breakdown-item.highlight strong {
+                color: #d71920;
+            }
+
+            .expense-breakdown-bar {
+                height: 5px;
+                background: #e7e9ee;
+                border-radius: 99px;
+                overflow: hidden;
+                margin: 8px 0 6px;
+            }
+
+            .expense-breakdown-fill {
+                height: 100%;
+                background: #d71920;
+                border-radius: 99px;
+            }
+
+            .expense-breakdown-item small {
+                display: block;
+                color: #8a909a;
+                font-size: 10.5px;
+            }
+
+            /* MODAL */
             .expense-modal {
-                position:fixed;
-                inset:0;
-                z-index:9999;
-                display:none;
-                align-items:center;
-                justify-content:center;
-                padding:15px;
-                background:rgba(0,0,0,.75);
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 15px;
+                background: rgba(15, 20, 30, 0.55);
+                backdrop-filter: blur(3px);
             }
 
             .expense-modal-box {
-                width:100%;
-                max-width:470px;
-                max-height:90vh;
-                overflow-y:auto;
-                padding:24px;
-                border-radius:16px;
-                background:#211a32;
-                border:1px solid rgba(255,255,255,.12);
+                width: 100%;
+                max-width: 480px;
+                max-height: 92vh;
+                overflow-y: auto;
+                padding: 26px;
+                border-radius: 16px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 20px 50px rgba(15, 20, 30, 0.18);
             }
 
-            .expense-modal-box h3 { margin-top:0; }
+            .expense-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-bottom: 14px;
+                margin-bottom: 14px;
+                border-bottom: 1px solid #edf0f3;
+            }
+
+            .expense-modal-header h3 {
+                margin: 0;
+                font-size: 17px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .expense-modal-close {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid #e7e9ee;
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 16px;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+            }
+
+            .expense-modal-close:hover {
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #f2bfc1;
+            }
 
             .expense-form label {
-                display:block;
-                margin:14px 0 7px;
-                font-size:13px;
+                display: block;
+                margin: 14px 0 6px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #454c57;
             }
 
             .expense-form input,
             .expense-form select,
             .expense-form textarea {
-                width:100%;
-                padding:12px;
-                border-radius:9px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                outline:none;
-                box-sizing:border-box;
+                width: 100%;
+                padding: 11px 13px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12.5px;
+                outline: none;
+                box-sizing: border-box;
+            }
+
+            .expense-form input:focus,
+            .expense-form select:focus,
+            .expense-form textarea:focus {
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .expense-form textarea {
-                min-height:75px;
-                resize:vertical;
+                min-height: 75px;
+                resize: vertical;
             }
 
             .expense-form-actions {
-                display:flex;
-                gap:10px;
-                margin-top:20px;
+                display: flex;
+                gap: 12px;
+                margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #edf0f3;
             }
 
             .expense-form-actions button {
-                flex:1;
-                padding:12px;
-                border:0;
-                border-radius:9px;
-                cursor:pointer;
-                color:white;
-                background:#8055d9;
-                font-weight:600;
+                flex: 1;
+                padding: 12px;
+                border: 0;
+                border-radius: 9px;
+                cursor: pointer;
+                color: #ffffff;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                font-weight: 700;
+                font-size: 12.5px;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
             }
 
-            .expense-form-actions .cancel { background:#494253; }
-
-            .expense-breakdown {
-                display:grid;
-                grid-template-columns:repeat(2,1fr);
-                gap:12px;
+            .expense-form-actions button:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
             }
 
-            .expense-breakdown-item {
-                padding:13px;
-                border-radius:10px;
-                background:rgba(255,255,255,.05);
-                border:1px solid rgba(255,255,255,.07);
+            .expense-form-actions .cancel {
+                background: #f3f4f6;
+                color: #454c57;
+                border: 1px solid #dfe2e8;
+                box-shadow: none;
             }
 
-            .expense-breakdown-item span {
-                display:block;
-                font-size:12px;
-                opacity:.7;
-                margin-bottom:7px;
+            .expense-form-actions .cancel:hover {
+                background: #e7e9ee;
             }
 
-            .expense-breakdown-item strong {
-                font-size:16px;
-            }
-
-            .expense-breakdown-item small {
-                display:block;
-                opacity:.6;
-                margin-top:5px;
-            }
-
-            .expense-month-picker {
-                padding:10px;
-                border-radius:8px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                margin-bottom:15px;
-            }
-
-            .expense-filter-total {
-                margin:0 0 12px;
-                opacity:.8;
-                font-size:13px;
+            @media(max-width:750px) {
+                .expense-breakdown {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
             }
 
             @media(max-width:650px) {
-                .expenses-stats { grid-template-columns:1fr; }
-                .expense-breakdown { grid-template-columns:1fr; }
-                .expense-modal-box { padding:18px; }
+                .expenses-stats {
+                    grid-template-columns: 1fr;
+                }
+                .expense-breakdown {
+                    grid-template-columns: 1fr;
+                }
+                .expense-modal-box {
+                    padding: 18px;
+                }
+                .expenses-header-actions {
+                    width: 100%;
+                }
+                .expenses-header-actions button {
+                    flex: 1;
+                }
             }
 
             @media print {
-                body * { visibility:hidden !important; }
+                body * { visibility: hidden !important; }
 
                 #expensePrintArea,
                 #expensePrintArea * {
-                    visibility:visible !important;
+                    visibility: visible !important;
                 }
 
                 #expensePrintArea {
-                    position:absolute;
-                    left:0;
-                    top:0;
-                    width:100%;
-                    color:#000 !important;
-                    background:#fff !important;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    color: #000 !important;
+                    background: #fff !important;
                 }
 
                 #expensePrintArea table {
-                    width:100%;
-                    border-collapse:collapse;
+                    width: 100%;
+                    border-collapse: collapse;
                 }
 
                 #expensePrintArea th,
                 #expensePrintArea td {
-                    border:1px solid #ccc;
-                    padding:8px;
-                    color:#000 !important;
+                    border: 1px solid #ccc;
+                    padding: 8px;
+                    color: #000 !important;
                 }
             }
         `;
@@ -355,8 +648,8 @@ window.GymExpenses = (function () {
 
                 <div class="expenses-header">
                     <div>
-                        <h2>Expense Management</h2>
-                        <p>Track and manage all gym expenses.</p>
+                        <h2>Expense & Operational Cost Tracker</h2>
+                        <p>Record gym overheads, salaries, equipment costs and export statements.</p>
                     </div>
 
                     <div class="expenses-header-actions">
@@ -364,52 +657,71 @@ window.GymExpenses = (function () {
                             + Add Expense
                         </button>
 
-                        <button class="expense-action" id="exportExpenseBtn">
+                        <button class="expenses-sec-btn" id="exportExpenseBtn">
                             Export CSV
                         </button>
 
-                        <button class="expense-action" id="printExpenseBtn">
-                            Print
+                        <button class="expenses-sec-btn" id="printExpenseBtn">
+                            Print Report
                         </button>
                     </div>
                 </div>
 
                 <div class="expenses-stats">
                     <div class="expenses-stat">
-                        <span>Total Expenses</span>
+                        <div class="expenses-stat-top">
+                            <span>Total Cumulative Expenses</span>
+                            <div class="expenses-stat-dot" style="background:#d71920;"></div>
+                        </div>
                         <strong id="totalExpensesAmount">₹0</strong>
                     </div>
 
                     <div class="expenses-stat">
-                        <span>Today's Expenses</span>
+                        <div class="expenses-stat-top">
+                            <span>Today's Expenses</span>
+                            <div class="expenses-stat-dot" style="background:#d97706;"></div>
+                        </div>
                         <strong id="todayExpensesAmount">₹0</strong>
                     </div>
 
                     <div class="expenses-stat">
-                        <span>This Month Expenses</span>
+                        <div class="expenses-stat-top">
+                            <span>This Month Expenses</span>
+                            <div class="expenses-stat-dot" style="background:#2879d0;"></div>
+                        </div>
                         <strong id="monthExpensesAmount">₹0</strong>
                     </div>
                 </div>
 
                 <div class="expenses-section">
-                    <h3>Monthly Category Breakdown</h3>
+                    <div class="expenses-section-top">
+                        <div>
+                            <h3>Monthly Category Breakdown</h3>
+                            <p>Category-wise spending distribution for the selected month</p>
+                        </div>
 
-                    <label for="expenseReportMonth">Select Month</label>
-                    <br>
-
-                    <input type="month" id="expenseReportMonth"
-                        class="expense-month-picker"
-                        value="${currentMonth()}">
+                        <div class="expense-month-wrap">
+                            <label for="expenseReportMonth">Month:</label>
+                            <input type="month" id="expenseReportMonth"
+                                class="expense-month-picker"
+                                value="${currentMonth()}">
+                        </div>
+                    </div>
 
                     <div class="expense-breakdown" id="expenseBreakdown"></div>
                 </div>
 
                 <div class="expenses-section">
-                    <h3>Expense History</h3>
+                    <div class="expenses-section-top">
+                        <div>
+                            <h3>Expense History</h3>
+                            <p>Search, filter and manage individual expense entries</p>
+                        </div>
+                    </div>
 
                     <div class="expenses-toolbar">
                         <input type="search" id="expenseSearch"
-                            placeholder="Search expense...">
+                            placeholder="Search title, category or ID...">
 
                         <input type="date" id="expenseDateFilter"
                             title="Filter by exact date">
@@ -465,7 +777,10 @@ window.GymExpenses = (function () {
 
             <div class="expense-modal" id="expenseModal">
                 <div class="expense-modal-box">
-                    <h3 id="expenseFormTitle">Add New Expense</h3>
+                    <div class="expense-modal-header">
+                        <h3 id="expenseFormTitle">Add New Expense</h3>
+                        <button type="button" class="expense-modal-close" id="closeExpenseX" aria-label="Close">✕</button>
+                    </div>
 
                     <form class="expense-form" id="expenseForm">
                         <input type="hidden" id="expenseId">
@@ -505,7 +820,7 @@ window.GymExpenses = (function () {
                         <label>Notes</label>
                         <textarea id="expenseNotes"
                             maxlength="1000"
-                            placeholder="Optional details"></textarea>
+                            placeholder="Optional details (bill number, vendor name, etc.)"></textarea>
 
                         <div class="expense-form-actions">
                             <button type="submit">Save Expense</button>
@@ -521,6 +836,9 @@ window.GymExpenses = (function () {
             .addEventListener("click", () => openForm());
 
         document.getElementById("cancelExpenseBtn")
+            .addEventListener("click", closeForm);
+
+        document.getElementById("closeExpenseX")
             .addEventListener("click", closeForm);
 
         document.getElementById("expenseForm")
@@ -760,8 +1078,8 @@ window.GymExpenses = (function () {
         );
 
         document.getElementById("expenseFilterTotal").textContent =
-            "Showing " + currency(filteredTotal) +
-            " across " + filtered.length + " record(s).";
+            "Filtered Total: " + currency(filteredTotal) +
+            " (" + filtered.length + " record" + (filtered.length === 1 ? "" : "s") + ")";
 
         if (!filtered.length) {
             table.innerHTML = `
@@ -777,9 +1095,9 @@ window.GymExpenses = (function () {
         table.innerHTML = filtered.map(item => `
             <tr>
                 <td>
-                    <strong>${escapeHTML(item.title)}</strong>
+                    <strong style="color:#202124;">${escapeHTML(item.title)}</strong>
                     <br>
-                    <small>${escapeHTML(item.id)}</small>
+                    <span class="expense-id-pill">${escapeHTML(item.id)}</span>
                 </td>
                 <td>
                     <span class="expense-category">
@@ -787,8 +1105,12 @@ window.GymExpenses = (function () {
                     </span>
                 </td>
                 <td>${escapeHTML(item.date)}</td>
-                <td>${escapeHTML(item.method || "-")}</td>
-                <td><strong>${currency(item.amount)}</strong></td>
+                <td>
+                    <span class="expense-method-pill">
+                        ${escapeHTML(item.method || "-")}
+                    </span>
+                </td>
+                <td><strong style="color:#d71920;">${currency(item.amount)}</strong></td>
                 <td>
                     <button class="expense-action"
                         data-edit-expense="${escapeHTML(item.id)}">
@@ -835,7 +1157,7 @@ window.GymExpenses = (function () {
 
         if (!expenses.length) {
             container.innerHTML = `
-                <div class="expenses-empty">
+                <div class="expenses-empty" style="grid-column:1/-1;">
                     No expenses recorded for this month.
                 </div>
             `;
@@ -854,9 +1176,12 @@ window.GymExpenses = (function () {
             .sort((a, b) => b[1] - a[1]);
 
         container.innerHTML = `
-            <div class="expense-breakdown-item">
+            <div class="expense-breakdown-item highlight">
                 <span>Total Monthly Expenses</span>
                 <strong>${currency(total)}</strong>
+                <div class="expense-breakdown-bar">
+                    <div class="expense-breakdown-fill" style="width:100%;"></div>
+                </div>
                 <small>${expenses.length} expense record(s)</small>
             </div>
 
@@ -869,6 +1194,9 @@ window.GymExpenses = (function () {
                     <div class="expense-breakdown-item">
                         <span>${escapeHTML(category)}</span>
                         <strong>${currency(amount)}</strong>
+                        <div class="expense-breakdown-bar">
+                            <div class="expense-breakdown-fill" style="width:${percentage}%;"></div>
+                        </div>
                         <small>${percentage}% of monthly expenses</small>
                     </div>
                 `;
@@ -981,38 +1309,39 @@ window.GymExpenses = (function () {
                 <meta charset="UTF-8">
                 <style>
                     body {
-                        font-family:Arial,sans-serif;
-                        padding:25px;
-                        color:#222;
+                        font-family: 'Inter', Arial, sans-serif;
+                        padding: 28px;
+                        color: #202124;
                     }
 
-                    h1 { margin-bottom:5px; }
-                    p { color:#555; }
+                    h1 { margin-bottom: 4px; color: #d71920; }
+                    p { color: #5f6672; font-size: 13px; margin: 4px 0; }
 
                     table {
-                        width:100%;
-                        border-collapse:collapse;
-                        margin-top:20px;
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
                     }
 
-                    th,td {
-                        border:1px solid #ccc;
-                        padding:10px;
-                        text-align:left;
-                        font-size:12px;
+                    th, td {
+                        border: 1px solid #dfe2e8;
+                        padding: 10px;
+                        text-align: left;
+                        font-size: 12px;
                     }
 
-                    th { background:#eee; }
+                    th { background: #f8f9fb; font-weight: 700; }
 
                     .total {
-                        margin-top:20px;
-                        font-size:18px;
-                        font-weight:bold;
+                        margin-top: 20px;
+                        font-size: 17px;
+                        font-weight: 800;
+                        color: #d71920;
                     }
                 </style>
             </head>
             <body>
-                <h1>GYM PRO - Expense Report</h1>
+                <h1>GYM PRO — Expense Report</h1>
                 <p>Generated on: ${escapeHTML(today())}</p>
                 <p>Total Records: ${expenses.length}</p>
 
