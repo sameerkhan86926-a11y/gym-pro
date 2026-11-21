@@ -241,26 +241,45 @@ window.GymExpenses = (function () {
             .expenses-toolbar {
                 display: flex;
                 flex-wrap: wrap;
+                align-items: flex-end;
                 gap: 10px;
                 margin-bottom: 14px;
             }
 
+            .expense-filter-field {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .expense-filter-field.search-field {
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .expense-filter-field label {
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
+
             .expenses-toolbar input,
             .expenses-toolbar select {
-                padding: 10px 13px;
+                padding: 10px 12px;
                 border-radius: 9px;
                 border: 1px solid #dfe2e8;
                 background: #f8f9fb;
                 color: #202124;
                 font-size: 12px;
                 outline: none;
-                min-width: 150px;
+                min-width: 140px;
                 transition: all 0.2s ease;
             }
 
             .expenses-toolbar input[type="search"] {
-                flex: 1;
-                min-width: 210px;
+                width: 100%;
             }
 
             .expenses-toolbar select {
@@ -275,21 +294,22 @@ window.GymExpenses = (function () {
             }
 
             .expense-reset-btn {
-                padding: 10px 14px;
+                padding: 10px 15px;
                 border-radius: 9px;
-                border: 1px solid #dfe2e8;
-                background: #ffffff;
-                color: #5f6672;
+                border: 1px solid #f2bfc1;
+                background: #fff5f5;
+                color: #d71920;
                 font-size: 11.5px;
-                font-weight: 600;
+                font-weight: 700;
                 cursor: pointer;
                 transition: all 0.18s ease;
+                white-space: nowrap;
             }
 
             .expense-reset-btn:hover {
-                background: #fff4f4;
-                border-color: #f2bfc1;
-                color: #d71920;
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
             }
 
             .expense-filter-total {
@@ -619,6 +639,9 @@ window.GymExpenses = (function () {
                 .expenses-header-actions button {
                     flex: 1;
                 }
+                .expense-filter-field {
+                    width: 100%;
+                }
             }
 
             @media print {
@@ -723,6 +746,9 @@ window.GymExpenses = (function () {
                             <input type="month" id="expenseReportMonth"
                                 class="expense-month-picker"
                                 value="${currentMonth()}">
+                            <button type="button" class="expense-reset-btn" id="resetExpenseMonthBtn">
+                                Reset
+                            </button>
                         </div>
                     </div>
 
@@ -738,32 +764,48 @@ window.GymExpenses = (function () {
                     </div>
 
                     <div class="expenses-toolbar">
-                        <input type="search" id="expenseSearch"
-                            placeholder="Search title, category or ID...">
+                        <div class="expense-filter-field search-field">
+                            <label for="expenseSearch">Search</label>
+                            <input type="search" id="expenseSearch"
+                                placeholder="Search title, category or ID...">
+                        </div>
 
-                        <input type="date" id="expenseDateFilter"
-                            title="Filter by date">
+                        <div class="expense-filter-field">
+                            <label for="expenseFromDate">From Date</label>
+                            <input type="date" id="expenseFromDate">
+                        </div>
 
-                        <select id="expenseCategoryFilter">
-                            <option value="all">All Categories</option>
-                            ${CATEGORIES.map(category => `
-                                <option value="${escapeHTML(category)}">
-                                    ${escapeHTML(category)}
-                                </option>
-                            `).join("")}
-                        </select>
+                        <div class="expense-filter-field">
+                            <label for="expenseToDate">To Date</label>
+                            <input type="date" id="expenseToDate">
+                        </div>
 
-                        <select id="expenseMethodFilter">
-                            <option value="all">All Payment Methods</option>
-                            ${METHODS.map(method => `
-                                <option value="${escapeHTML(method)}">
-                                    ${escapeHTML(method)}
-                                </option>
-                            `).join("")}
-                        </select>
+                        <div class="expense-filter-field">
+                            <label for="expenseCategoryFilter">Category</label>
+                            <select id="expenseCategoryFilter">
+                                <option value="all">All Categories</option>
+                                ${CATEGORIES.map(category => `
+                                    <option value="${escapeHTML(category)}">
+                                        ${escapeHTML(category)}
+                                    </option>
+                                `).join("")}
+                            </select>
+                        </div>
+
+                        <div class="expense-filter-field">
+                            <label for="expenseMethodFilter">Method</label>
+                            <select id="expenseMethodFilter">
+                                <option value="all">All Methods</option>
+                                ${METHODS.map(method => `
+                                    <option value="${escapeHTML(method)}">
+                                        ${escapeHTML(method)}
+                                    </option>
+                                `).join("")}
+                            </select>
+                        </div>
 
                         <button type="button" class="expense-reset-btn" id="resetExpenseFiltersBtn">
-                            Reset
+                            Reset Filters
                         </button>
                     </div>
 
@@ -862,7 +904,8 @@ window.GymExpenses = (function () {
 
         [
             "expenseSearch",
-            "expenseDateFilter",
+            "expenseFromDate",
+            "expenseToDate",
             "expenseCategoryFilter",
             "expenseMethodFilter"
         ].forEach(id => {
@@ -877,10 +920,19 @@ window.GymExpenses = (function () {
         document.getElementById("resetExpenseFiltersBtn")
             .addEventListener("click", () => {
                 document.getElementById("expenseSearch").value = "";
-                document.getElementById("expenseDateFilter").value = "";
+                document.getElementById("expenseFromDate").value = "";
+                document.getElementById("expenseToDate").value = "";
                 document.getElementById("expenseCategoryFilter").value = "all";
                 document.getElementById("expenseMethodFilter").value = "all";
                 renderTable();
+                notify("Filters reset.");
+            });
+
+        document.getElementById("resetExpenseMonthBtn")
+            .addEventListener("click", () => {
+                document.getElementById("expenseReportMonth").value = currentMonth();
+                renderBreakdown();
+                notify("Month reset to current month.");
             });
 
         document.getElementById("expenseReportMonth")
@@ -1026,9 +1078,15 @@ window.GymExpenses = (function () {
         const search = document.getElementById("expenseSearch")
             .value.trim().toLowerCase();
 
-        const exactDate = document.getElementById("expenseDateFilter").value;
+        const fromDate = document.getElementById("expenseFromDate").value;
+        const toDate = document.getElementById("expenseToDate").value;
+
         const category = document.getElementById("expenseCategoryFilter").value;
         const method = document.getElementById("expenseMethodFilter").value;
+
+        if (fromDate && toDate && fromDate > toDate) {
+            return [];
+        }
 
         return expenses.filter(item => {
             const matchesSearch =
@@ -1037,8 +1095,11 @@ window.GymExpenses = (function () {
                 String(item.method || "").toLowerCase().includes(search) ||
                 String(item.id || "").toLowerCase().includes(search);
 
-            const matchesExactDate =
-                !exactDate || item.date === exactDate;
+            const matchesFrom =
+                !fromDate || item.date >= fromDate;
+
+            const matchesTo =
+                !toDate || item.date <= toDate;
 
             const matchesCategory =
                 category === "all" || item.category === category;
@@ -1047,7 +1108,8 @@ window.GymExpenses = (function () {
                 method === "all" || item.method === method;
 
             return matchesSearch &&
-                matchesExactDate &&
+                matchesFrom &&
+                matchesTo &&
                 matchesCategory &&
                 matchesMethod;
         }).sort((a, b) =>
