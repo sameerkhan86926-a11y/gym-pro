@@ -12,6 +12,16 @@ window.GymBackup = (function () {
         }
     }
 
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[char]);
+    }
+
     function getCounts() {
         return {
             members: (GymDB.getAll("members") || []).length,
@@ -21,6 +31,19 @@ window.GymBackup = (function () {
             expenses: (GymDB.getAll("expenses") || []).length,
             trainers: (GymDB.getAll("trainers") || []).length
         };
+    }
+
+    function getStorageKilobytes() {
+        try {
+            if (typeof GymDB.getStorageInfo === "function") {
+                const info = GymDB.getStorageInfo();
+                if (info && info.kilobytes != null) return info.kilobytes;
+            }
+            const raw = JSON.stringify(GymDB.exportData());
+            return (new Blob([raw]).size / 1024).toFixed(1);
+        } catch (_) {
+            return "0.0";
+        }
     }
 
     function getSettingRecord(key) {
@@ -219,7 +242,7 @@ window.GymBackup = (function () {
         if (!root) return;
 
         const counts = getCounts();
-        const storage = GymDB.getStorageInfo();
+        const storageKb = getStorageKilobytes();
         const savedClientId = getDriveClientId();
 
         root.innerHTML = `
@@ -230,8 +253,8 @@ window.GymBackup = (function () {
                         <p>Export local JSON backups or connect Admin Google Drive for cloud protection.</p>
                     </div>
                     <div class="backup-meta-pills">
-                        <span class="backup-last-pill">Storage Used: <strong>${storage.kilobytes} KB</strong></span>
-                        <span class="backup-last-pill">Last Backup: <strong id="lastBackupLabel">${getLastBackupDate()}</strong></span>
+                        <span class="backup-last-pill">Storage Used: <strong>${escapeHTML(storageKb)} KB</strong></span>
+                        <span class="backup-last-pill">Last Backup: <strong id="lastBackupLabel">${escapeHTML(getLastBackupDate())}</strong></span>
                     </div>
                 </div>
 
