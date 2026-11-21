@@ -61,17 +61,17 @@ window.GymPlans = (function () {
 
         const standard = {
             1: "1 Day",
-            30: "1 Month",
-            90: "3 Months",
-            180: "6 Months",
-            365: "12 Months"
+            30: "1 Month (30 Days)",
+            90: "3 Months (90 Days)",
+            180: "6 Months (180 Days)",
+            365: "12 Months (365 Days)"
         };
 
         return standard[days] || days + " Days";
     }
 
     // ==========================================
-    // STYLES
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
     // ==========================================
 
     function injectStyles() {
@@ -82,51 +82,90 @@ window.GymPlans = (function () {
 
         style.textContent = `
             .plans-wrap {
-                padding: 5px 0 25px;
+                padding: 2px 0 25px;
             }
 
             .plans-header {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 gap: 15px;
                 flex-wrap: wrap;
-                margin-bottom: 22px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .plans-header h2 {
-                margin: 0 0 6px;
-                font-size: 25px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .plans-header p {
                 margin: 0;
-                opacity: .7;
+                color: #737985;
+                font-size: 11.5px;
             }
 
             .plans-stats {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
-                margin-bottom: 22px;
+                margin-bottom: 20px;
             }
 
             .plans-stat {
                 padding: 20px;
-                border-radius: 14px;
-                background: rgba(255,255,255,.05);
-                border: 1px solid rgba(255,255,255,.08);
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .plans-stat:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
+            }
+
+            .plans-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
             .plans-stat span {
-                display: block;
-                opacity: .7;
-                font-size: 13px;
-                margin-bottom: 9px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .plans-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
             }
 
             .plans-stat strong {
-                font-size: 25px;
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
+            }
+
+            .plans-panel {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .plans-toolbar {
@@ -138,126 +177,184 @@ window.GymPlans = (function () {
 
             .plans-toolbar input,
             .plans-toolbar select {
-                padding: 12px 14px;
+                padding: 11px 14px;
                 border-radius: 9px;
-                border: 1px solid rgba(255,255,255,.13);
-                background: #171324;
-                color: #fff;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
                 outline: none;
+                transition: all 0.2s ease;
+            }
+
+            .plans-toolbar input:focus,
+            .plans-toolbar select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .plans-toolbar input {
                 flex: 1;
-                min-width: 180px;
+                min-width: 210px;
             }
 
             .plans-toolbar select {
-                min-width: 150px;
+                min-width: 160px;
+                font-weight: 600;
             }
 
             .plans-table-wrap {
                 overflow-x: auto;
-                border-radius: 13px;
-                background: rgba(255,255,255,.025);
-                border: 1px solid rgba(255,255,255,.06);
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .plans-table {
                 width: 100%;
                 border-collapse: collapse;
-                min-width: 800px;
+                min-width: 820px;
+                background: #ffffff;
             }
 
             .plans-table th,
             .plans-table td {
-                padding: 15px;
+                padding: 14px 12px;
                 text-align: left;
-                border-bottom: 1px solid rgba(255,255,255,.08);
+                border-bottom: 1px solid #edf0f3;
             }
 
             .plans-table th {
-                font-size: 12px;
-                opacity: .7;
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                background: #f8f9fb;
                 text-transform: uppercase;
+                letter-spacing: 0.4px;
                 white-space: nowrap;
             }
 
             .plans-table td {
-                font-size: 14px;
+                font-size: 12px;
+                color: #454c57;
+                vertical-align: middle;
+            }
+
+            .plans-table tbody tr:hover {
+                background: #fffafa;
             }
 
             .plan-name {
                 font-weight: 700;
-                font-size: 14px;
+                font-size: 13px;
+                color: #202124;
             }
 
             .plan-description {
                 display: block;
-                margin-top: 5px;
-                opacity: .6;
-                font-size: 12px;
-                max-width: 220px;
+                margin-top: 4px;
+                color: #8a909a;
+                font-size: 11px;
+                max-width: 260px;
                 white-space: normal;
+                line-height: 1.45;
+            }
+
+            .plan-duration-pill {
+                display: inline-block;
+                padding: 4px 9px;
+                border-radius: 6px;
+                background: #f3f4f6;
+                color: #454c57;
+                font-size: 11px;
+                font-weight: 600;
             }
 
             .plan-price {
-                font-size: 16px;
-                font-weight: 700;
+                font-size: 14px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .plan-members-count {
                 display: inline-block;
-                padding: 6px 11px;
+                padding: 4px 10px;
                 border-radius: 20px;
-                background: rgba(128,85,217,.15);
-                color: #c7aaff;
-                font-size: 12px;
+                background: #edf5ff;
+                color: #2879d0;
+                font-size: 10.5px;
                 font-weight: 700;
             }
 
             .plan-status {
                 display: inline-block;
-                padding: 5px 10px;
+                padding: 4px 10px;
                 border-radius: 20px;
-                font-size: 11px;
-                background: rgba(46,204,113,.13);
-                color: #6ee7a0;
+                font-size: 10px;
+                font-weight: 700;
+                background: #e9f8f0;
+                color: #168653;
             }
 
             .plan-status.inactive {
-                background: rgba(255,255,255,.1);
-                color: #aaa;
+                background: #f2f4f7;
+                color: #69717e;
+            }
+
+            .plan-actions-cell {
+                white-space: nowrap;
             }
 
             .plan-action {
-                padding: 8px 11px;
-                border: 0;
+                padding: 6px 10px;
+                border: 1px solid #dfe2e8;
                 border-radius: 7px;
                 margin: 2px;
                 cursor: pointer;
-                color: white;
-                background: #6845b8;
-                font-size: 12px;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #303640;
+                background: #ffffff;
+                transition: all 0.18s ease;
             }
 
             .plan-action:hover {
-                filter: brightness(1.15);
-            }
-
-            .plan-action.delete {
-                background: #a93650;
+                background: #f4f6f9;
+                border-color: #cbd2dc;
             }
 
             .plan-action.toggle {
-                background: #287c68;
+                background: #fff8eb;
+                border-color: #f5deb3;
+                color: #b8740e;
+            }
+
+            .plan-action.toggle:hover {
+                background: #d97706;
+                border-color: #d97706;
+                color: #ffffff;
+            }
+
+            .plan-action.delete {
+                background: #fff0f0;
+                border-color: #f5c6c8;
+                color: #d71920;
+            }
+
+            .plan-action.delete:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
             }
 
             .plans-empty {
                 text-align: center;
-                padding: 40px 15px;
-                opacity: .65;
+                padding: 38px 15px;
+                color: #8a909a;
+                font-size: 12px;
             }
 
+            /* MODAL */
             .plans-modal {
                 position: fixed;
                 inset: 0;
@@ -266,7 +363,8 @@ window.GymPlans = (function () {
                 align-items: center;
                 justify-content: center;
                 padding: 15px;
-                background: rgba(0,0,0,.78);
+                background: rgba(15, 20, 30, 0.55);
+                backdrop-filter: blur(3px);
             }
 
             .plans-modal-box {
@@ -274,29 +372,61 @@ window.GymPlans = (function () {
                 max-width: 520px;
                 max-height: 92vh;
                 overflow-y: auto;
-                padding: 25px;
-                border-radius: 17px;
-                background: #211a32;
-                border: 1px solid rgba(255,255,255,.12);
-                box-shadow: 0 20px 60px rgba(0,0,0,.4);
+                padding: 26px;
+                border-radius: 16px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 20px 50px rgba(15, 20, 30, 0.18);
             }
 
-            .plans-modal-box h3 {
-                margin-top: 0;
-                margin-bottom: 5px;
-                font-size: 21px;
+            .plans-modal-header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 10px;
+                padding-bottom: 14px;
+                margin-bottom: 14px;
+                border-bottom: 1px solid #edf0f3;
+            }
+
+            .plans-modal-header h3 {
+                margin: 0 0 4px;
+                font-size: 17px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .plans-modal-subtitle {
-                opacity: .65;
-                font-size: 13px;
-                margin-bottom: 20px;
+                color: #737985;
+                font-size: 11.5px;
+                margin: 0;
+            }
+
+            .plans-modal-close {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid #e7e9ee;
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 16px;
+                display: grid;
+                place-items: center;
+                flex-shrink: 0;
+            }
+
+            .plans-modal-close:hover {
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #f2bfc1;
             }
 
             .plans-form label {
                 display: block;
-                font-size: 13px;
-                margin: 14px 0 7px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #454c57;
+                margin: 14px 0 6px;
             }
 
             .plans-form input,
@@ -304,62 +434,85 @@ window.GymPlans = (function () {
             .plans-form textarea {
                 width: 100%;
                 box-sizing: border-box;
-                padding: 12px 14px;
+                padding: 11px 13px;
                 border-radius: 9px;
-                border: 1px solid rgba(255,255,255,.13);
-                background: #171324;
-                color: #fff;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12.5px;
                 outline: none;
             }
 
             .plans-form input:focus,
             .plans-form select:focus,
             .plans-form textarea:focus {
-                border-color: #9469e8;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .plans-form textarea {
-                min-height: 85px;
+                min-height: 80px;
                 resize: vertical;
             }
 
             .plans-duration-box {
-                padding: 12px;
+                padding: 12px 14px;
                 margin-top: 10px;
                 border-radius: 10px;
-                background: rgba(128,85,217,.1);
-                border: 1px solid rgba(128,85,217,.2);
+                background: #f8f9fb;
+                border: 1px solid #e7e9ee;
+            }
+
+            .plans-duration-box label {
+                margin-top: 0;
             }
 
             .plans-preview {
                 margin-top: 15px;
-                padding: 13px;
+                padding: 13px 15px;
                 border-radius: 10px;
-                background: rgba(46,204,113,.08);
-                border: 1px solid rgba(46,204,113,.18);
-                line-height: 1.7;
-                font-size: 13px;
+                background: #fff5f5;
+                border: 1px solid #f7d4d6;
+                color: #303640;
+                line-height: 1.75;
+                font-size: 12px;
             }
 
             .plans-form-actions {
                 display: flex;
-                gap: 10px;
+                gap: 12px;
                 margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #edf0f3;
             }
 
             .plans-form-actions button {
                 flex: 1;
-                padding: 13px;
+                padding: 12px;
                 border: 0;
                 border-radius: 9px;
                 cursor: pointer;
-                color: white;
-                background: linear-gradient(135deg,#9469e8,#6845b8);
+                color: #ffffff;
+                background: linear-gradient(135deg, #e3262e, #c51019);
                 font-weight: 700;
+                font-size: 12.5px;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
+            }
+
+            .plans-form-actions button:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
             }
 
             .plans-form-actions .cancel {
-                background: #494253;
+                background: #f3f4f6;
+                color: #454c57;
+                border: 1px solid #dfe2e8;
+                box-shadow: none;
+            }
+
+            .plans-form-actions .cancel:hover {
+                background: #e7e9ee;
             }
 
             @media(max-width:650px) {
@@ -372,7 +525,7 @@ window.GymPlans = (function () {
                 }
 
                 .plans-modal-box {
-                    padding: 19px;
+                    padding: 18px;
                 }
 
                 .plans-toolbar input,
@@ -402,8 +555,8 @@ window.GymPlans = (function () {
 
                 <div class="plans-header">
                     <div>
-                        <h2>Membership Plans</h2>
-                        <p>Create, manage and track your gym membership plans.</p>
+                        <h2>Membership Packages & Plans</h2>
+                        <p>Create, customize and manage gym membership tiers and pricing.</p>
                     </div>
 
                     <button class="btn btn-primary" id="addGymPlanBtn">
@@ -414,57 +567,68 @@ window.GymPlans = (function () {
                 <div class="plans-stats">
 
                     <div class="plans-stat">
-                        <span>Total Plans</span>
+                        <div class="plans-stat-top">
+                            <span>Total Plans</span>
+                            <div class="plans-stat-dot" style="background:#d71920;"></div>
+                        </div>
                         <strong id="totalGymPlans">0</strong>
                     </div>
 
                     <div class="plans-stat">
-                        <span>Active Plans</span>
+                        <div class="plans-stat-top">
+                            <span>Active Plans</span>
+                            <div class="plans-stat-dot" style="background:#168653;"></div>
+                        </div>
                         <strong id="activeGymPlans">0</strong>
                     </div>
 
                     <div class="plans-stat">
-                        <span>Inactive Plans</span>
+                        <div class="plans-stat-top">
+                            <span>Inactive Plans</span>
+                            <div class="plans-stat-dot" style="background:#8a909a;"></div>
+                        </div>
                         <strong id="inactiveGymPlans">0</strong>
                     </div>
 
                 </div>
 
-                <div class="plans-toolbar">
+                <div class="plans-panel">
+                    <div class="plans-toolbar">
 
-                    <input
-                        type="search"
-                        id="searchGymPlans"
-                        placeholder="Search plan name..."
-                    >
+                        <input
+                            type="search"
+                            id="searchGymPlans"
+                            placeholder="Search membership plan by name..."
+                        >
 
-                    <select id="filterGymPlans">
-                        <option value="all">All Plans</option>
-                        <option value="active">Active Plans</option>
-                        <option value="inactive">Inactive Plans</option>
-                    </select>
+                        <select id="filterGymPlans">
+                            <option value="all">All Plans</option>
+                            <option value="active">Active Plans Only</option>
+                            <option value="inactive">Inactive Plans Only</option>
+                        </select>
 
-                </div>
+                    </div>
 
-                <div class="plans-table-wrap">
+                    <div class="plans-table-wrap">
 
-                    <table class="plans-table">
+                        <table class="plans-table">
 
-                        <thead>
-                            <tr>
-                                <th>Plan Name</th>
-                                <th>Duration</th>
-                                <th>Fees</th>
-                                <th>Members</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
+                            <thead>
+                                <tr>
+                                    <th>Plan Name</th>
+                                    <th>Duration</th>
+                                    <th>Fees</th>
+                                    <th>Enrolled</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
 
-                        <tbody id="gymPlansTable"></tbody>
+                            <tbody id="gymPlansTable"></tbody>
 
-                    </table>
+                        </table>
 
+                    </div>
                 </div>
 
             </div>
@@ -473,10 +637,14 @@ window.GymPlans = (function () {
 
                 <div class="plans-modal-box">
 
-                    <h3 id="gymPlanFormTitle">Add Membership Plan</h3>
-
-                    <div class="plans-modal-subtitle">
-                        Configure membership duration and pricing.
+                    <div class="plans-modal-header">
+                        <div>
+                            <h3 id="gymPlanFormTitle">Add Membership Plan</h3>
+                            <p class="plans-modal-subtitle">
+                                Configure membership duration and pricing.
+                            </p>
+                        </div>
+                        <button type="button" class="plans-modal-close" id="closeGymPlanX" aria-label="Close">✕</button>
                     </div>
 
                     <form class="plans-form" id="gymPlanForm">
@@ -488,7 +656,7 @@ window.GymPlans = (function () {
                         <input
                             type="text"
                             id="gymPlanName"
-                            placeholder="Example: Monthly Premium"
+                            placeholder="Example: Monthly Premium / Quarterly Pro"
                             maxlength="60"
                             required
                         >
@@ -496,11 +664,11 @@ window.GymPlans = (function () {
                         <label>Membership Duration *</label>
 
                         <select id="gymPlanDuration" required>
-                            <option value="1">Daily Plan - 1 Day</option>
+                            <option value="1">Daily Pass - 1 Day</option>
                             <option value="30">Monthly Plan - 30 Days</option>
-                            <option value="90">3 Months - 90 Days</option>
-                            <option value="180">6 Months - 180 Days</option>
-                            <option value="365">12 Months - 365 Days</option>
+                            <option value="90">Quarterly Plan - 90 Days</option>
+                            <option value="180">Half-Yearly Plan - 180 Days</option>
+                            <option value="365">Annual Plan - 365 Days</option>
                             <option value="custom">Custom Duration</option>
                         </select>
 
@@ -516,7 +684,7 @@ window.GymPlans = (function () {
                                 id="gymPlanCustomDays"
                                 min="1"
                                 max="3650"
-                                placeholder="Enter number of days"
+                                placeholder="Enter number of days (e.g. 45)"
                             >
                         </div>
 
@@ -541,7 +709,7 @@ window.GymPlans = (function () {
                         <textarea
                             id="gymPlanDescription"
                             maxlength="500"
-                            placeholder="Optional plan details"
+                            placeholder="Optional plan perks or details (e.g. Cardio + Strength + Locker)"
                         ></textarea>
 
                         <label>Plan Status</label>
@@ -580,6 +748,9 @@ window.GymPlans = (function () {
             });
 
         document.getElementById("cancelGymPlan")
+            .addEventListener("click", closeForm);
+
+        document.getElementById("closeGymPlanX")
             .addEventListener("click", closeForm);
 
         document.getElementById("gymPlanDuration")
@@ -645,10 +816,10 @@ window.GymPlans = (function () {
         }
 
         preview.innerHTML = `
-            <strong>Plan Preview</strong><br>
-            Plan: ${escapeHTML(name)}<br>
-            Duration: ${days} Days<br>
-            Fees: ${currency(fees)}
+            <strong style="color:#d71920;">Plan Summary Preview</strong><br>
+            <strong>Plan:</strong> ${escapeHTML(name)} &nbsp;•&nbsp;
+            <strong>Duration:</strong> ${days} Days &nbsp;•&nbsp;
+            <strong>Fees:</strong> ${currency(fees)}
         `;
     }
 
@@ -919,7 +1090,9 @@ window.GymPlans = (function () {
                     </td>
 
                     <td>
-                        ${getDurationLabel(plan.durationDays)}
+                        <span class="plan-duration-pill">
+                            ${getDurationLabel(plan.durationDays)}
+                        </span>
                     </td>
 
                     <td>
@@ -930,7 +1103,7 @@ window.GymPlans = (function () {
 
                     <td>
                         <span class="plan-members-count">
-                            ${assignedMembers} Members
+                            ${assignedMembers} Member${assignedMembers === 1 ? "" : "s"}
                         </span>
                     </td>
 
@@ -940,7 +1113,7 @@ window.GymPlans = (function () {
                         </span>
                     </td>
 
-                    <td>
+                    <td class="plan-actions-cell">
 
                         <button
                             class="plan-action"
