@@ -3,18 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#10101c">
+    <meta name="theme-color" content="#d71920">
     <title>GYM PRO | Management System</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Clean SaaS Vector Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+
+<!-- Mobile Sidebar Backdrop -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <div class="app">
 
     <aside class="sidebar" id="sidebar">
 
         <div class="brand">
-            <div class="brand-icon">G</div>
+            <div class="brand-icon">
+                <i data-lucide="dumbbell"></i>
+            </div>
             <div>
                 <h2>GYM PRO</h2>
                 <span>MANAGEMENT SYSTEM</span>
@@ -25,43 +32,53 @@
 
         <nav>
             <a href="#" class="nav-item active" data-page="dashboard">
-                <span>▦</span> Dashboard
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
             </a>
 
             <a href="#" class="nav-item" data-page="members">
-                <span>♙</span> Members
+                <i data-lucide="users"></i>
+                <span>Members</span>
             </a>
 
             <a href="#" class="nav-item" data-page="membership">
-                <span>▣</span> Membership Plans
+                <i data-lucide="credit-card"></i>
+                <span>Membership Plans</span>
             </a>
 
             <a href="#" class="nav-item" data-page="discounts">
-                <span>%</span> Discounts
+                <i data-lucide="percent"></i>
+                <span>Discounts</span>
             </a>
 
             <a href="#" class="nav-item" data-page="payments">
-                <span>₹</span> Fees & Payments
+                <i data-lucide="indian-rupee"></i>
+                <span>Fees & Payments</span>
             </a>
 
             <a href="#" class="nav-item" data-page="attendance">
-                <span>◷</span> Attendance
+                <i data-lucide="calendar-check"></i>
+                <span>Attendance</span>
             </a>
 
             <a href="#" class="nav-item" data-page="expiry">
-                <span>◴</span> Expiry Management
+                <i data-lucide="clock-alert"></i>
+                <span>Expiry Management</span>
             </a>
 
             <a href="#" class="nav-item" data-page="trainers">
-                <span>♟</span> Trainers
+                <i data-lucide="user-check"></i>
+                <span>Trainers</span>
             </a>
 
             <a href="#" class="nav-item" data-page="expenses">
-                <span>↗</span> Expenses
+                <i data-lucide="trending-down"></i>
+                <span>Expenses</span>
             </a>
 
             <a href="#" class="nav-item" data-page="reports">
-                <span>▤</span> Reports
+                <i data-lucide="bar-chart-3"></i>
+                <span>Reports</span>
             </a>
         </nav>
 
@@ -69,15 +86,18 @@
 
         <nav>
             <a href="#" class="nav-item" data-page="biometric">
-                <span>▥</span> Biometric Device
+                <i data-lucide="fingerprint"></i>
+                <span>Biometric Device</span>
             </a>
 
             <a href="#" class="nav-item" data-page="backup">
-                <span>☁</span> Backup & Restore
+                <i data-lucide="cloud-upload"></i>
+                <span>Backup & Restore</span>
             </a>
 
             <a href="#" class="nav-item" data-page="settings">
-                <span>⚙</span> Settings
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
             </a>
         </nav>
 
@@ -92,7 +112,9 @@
 
         <header class="topbar">
 
-            <button class="menu-toggle" id="menuToggle">☰</button>
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+                <i data-lucide="menu"></i>
+            </button>
 
             <div class="page-heading">
                 <h1 id="pageTitle">Dashboard</h1>
@@ -107,7 +129,7 @@
                     class="notification-btn"
                     id="notificationButton"
                     title="Notifications">
-                    ♧
+                    <i data-lucide="bell"></i>
                 </button>
 
                 <div class="profile">
@@ -135,7 +157,9 @@
                         <p>Manage your gym, members and business from one place.</p>
                     </div>
 
-                    <div class="welcome-icon">GYM</div>
+                    <div class="welcome-icon">
+                        <i data-lucide="trophy"></i>
+                    </div>
                 </section>
 
                 <section class="stats-grid">
@@ -143,7 +167,9 @@
                     <div class="stat-card">
                         <div class="stat-top">
                             <span>Total Members</span>
-                            <div class="stat-icon purple">♙</div>
+                            <div class="stat-icon purple">
+                                <i data-lucide="users"></i>
+                            </div>
                         </div>
                         <h2 id="totalMembers">0</h2>
                         <small>All registered members</small>
@@ -152,7 +178,9 @@
                     <div class="stat-card">
                         <div class="stat-top">
                             <span>Active Members</span>
-                            <div class="stat-icon green">✓</div>
+                            <div class="stat-icon green">
+                                <i data-lucide="user-check"></i>
+                            </div>
                         </div>
                         <h2 id="activeMembers">0</h2>
                         <small>Currently active memberships</small>
@@ -161,7 +189,9 @@
                     <div class="stat-card">
                         <div class="stat-top">
                             <span>Today's Attendance</span>
-                            <div class="stat-icon blue">◷</div>
+                            <div class="stat-icon blue">
+                                <i data-lucide="calendar-check-2"></i>
+                            </div>
                         </div>
                         <h2 id="todayAttendance">0</h2>
                         <small>Members checked in today</small>
@@ -170,7 +200,9 @@
                     <div class="stat-card">
                         <div class="stat-top">
                             <span>Monthly Revenue</span>
-                            <div class="stat-icon orange">₹</div>
+                            <div class="stat-icon orange">
+                                <i data-lucide="indian-rupee"></i>
+                            </div>
                         </div>
                         <h2 id="monthlyRevenue">₹0</h2>
                         <small>Payments received this month</small>
@@ -179,7 +211,9 @@
                     <div class="stat-card">
                         <div class="stat-top">
                             <span>Pending Fees</span>
-                            <div class="stat-icon red">!</div>
+                            <div class="stat-icon red">
+                                <i data-lucide="alert-circle"></i>
+                            </div>
                         </div>
                         <h2 id="pendingFees">₹0</h2>
                         <small>Outstanding member payments</small>
@@ -188,7 +222,9 @@
                     <div class="stat-card">
                         <div class="stat-top">
                             <span>Expiring Memberships</span>
-                            <div class="stat-icon yellow">◴</div>
+                            <div class="stat-icon yellow">
+                                <i data-lucide="clock"></i>
+                            </div>
                         </div>
                         <h2 id="expiringMembers">0</h2>
                         <small>Expiring within 7 days</small>
@@ -208,22 +244,22 @@
                     <div class="action-grid">
 
                         <button class="action-btn" data-action="add-member">
-                            <span>＋</span>
+                            <span class="action-icon-box"><i data-lucide="user-plus"></i></span>
                             <strong>Add Member</strong>
                         </button>
 
                         <button class="action-btn" data-action="collect-payment">
-                            <span>₹</span>
+                            <span class="action-icon-box"><i data-lucide="indian-rupee"></i></span>
                             <strong>Collect Fees</strong>
                         </button>
 
                         <button class="action-btn" data-action="mark-attendance">
-                            <span>✓</span>
+                            <span class="action-icon-box"><i data-lucide="check-circle-2"></i></span>
                             <strong>Attendance</strong>
                         </button>
 
                         <button class="action-btn" data-action="add-discount">
-                            <span>%</span>
+                            <span class="action-icon-box"><i data-lucide="badge-percent"></i></span>
                             <strong>Give Discount</strong>
                         </button>
 
@@ -242,7 +278,7 @@
                             </div>
 
                             <button class="text-btn" data-page="members">
-                                View All
+                                View All →
                             </button>
                         </div>
 
@@ -280,7 +316,7 @@
                             </div>
 
                             <button class="text-btn" data-page="expiry">
-                                View All
+                                View All →
                             </button>
                         </div>
 
@@ -327,6 +363,25 @@
 <script src="js/notifications.js"></script>
 <script src="js/settings.js"></script>
 <script src="script.js"></script>
+
+<script>
+    // Initialize Lucide Icons & Mobile Overlay Sync
+    lucide.createIcons();
+
+    const overlay = document.getElementById('sidebarOverlay');
+    const sidebarEl = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('menuToggle');
+
+    if (toggleBtn && overlay && sidebarEl) {
+        toggleBtn.addEventListener('click', () => {
+            overlay.classList.toggle('active', sidebarEl.classList.contains('open'));
+        });
+        overlay.addEventListener('click', () => {
+            sidebarEl.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+    }
+</script>
 
 </body>
 </html>
