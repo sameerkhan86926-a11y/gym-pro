@@ -25,6 +25,14 @@ window.GymDiscounts = (function () {
         })[char]);
     }
 
+    function showMessage(message) {
+        if (typeof window.showToast === "function") {
+            window.showToast(message);
+        } else {
+            alert(message);
+        }
+    }
+
     function today() {
         const d = new Date();
         return [
@@ -57,27 +65,38 @@ window.GymDiscounts = (function () {
 
                 <div class="discount-heading">
                     <div>
-                        <h2>Discount Management</h2>
-                        <p>Manage individual and bulk member discounts.</p>
+                        <h2>Discounts & Promotional Offers</h2>
+                        <p>Create and manage individual or bulk member fee discounts.</p>
                     </div>
 
-                    <button id="addDiscountBtn">+ Add Discount</button>
+                    <button id="addDiscountBtn" class="discount-primary-btn">+ Add Discount</button>
                 </div>
 
                 <div class="discount-stats">
-                    <div>
-                        <span>Total Discounts</span>
+                    <div class="discount-stat-card">
+                        <div class="discount-stat-top">
+                            <span>Total Discounts</span>
+                            <div class="discount-stat-dot" style="background:#d71920;"></div>
+                        </div>
                         <strong id="discountTotal">0</strong>
                     </div>
-                    <div>
-                        <span>Active Discounts</span>
+                    <div class="discount-stat-card">
+                        <div class="discount-stat-top">
+                            <span>Active Discounts</span>
+                            <div class="discount-stat-dot" style="background:#168653;"></div>
+                        </div>
                         <strong id="discountActive">0</strong>
                     </div>
-                    <div>
-                        <span>Expired / Inactive</span>
+                    <div class="discount-stat-card">
+                        <div class="discount-stat-top">
+                            <span>Expired / Inactive</span>
+                            <div class="discount-stat-dot" style="background:#8a909a;"></div>
+                        </div>
                         <strong id="discountInactive">0</strong>
                     </div>
                 </div>
+
+                <div id="discountFormContainer"></div>
 
                 <div class="discount-section">
 
@@ -85,7 +104,7 @@ window.GymDiscounts = (function () {
 
                         <input type="search"
                             id="discountSearch"
-                            placeholder="Search member or reason...">
+                            placeholder="Search member name, ID or reason...">
 
                         <select id="discountMemberFilter">
                             <option value="all">All Members</option>
@@ -93,8 +112,8 @@ window.GymDiscounts = (function () {
 
                         <select id="discountTypeFilter">
                             <option value="all">All Types</option>
-                            <option value="percentage">Percentage</option>
-                            <option value="fixed">Fixed Amount</option>
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (₹)</option>
                         </select>
 
                         <select id="discountStatusFilter">
@@ -114,7 +133,7 @@ window.GymDiscounts = (function () {
                                     <th>Member</th>
                                     <th>Discount</th>
                                     <th>Reason</th>
-                                    <th>Validity</th>
+                                    <th>Validity Period</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -124,8 +143,6 @@ window.GymDiscounts = (function () {
                         </table>
                     </div>
                 </div>
-
-                <div id="discountFormContainer"></div>
 
             </div>
         `;
@@ -234,26 +251,27 @@ window.GymDiscounts = (function () {
                 discount.memberName || "Member";
 
             const amount = discount.type === "percentage"
-                ? Number(discount.value) + "%"
-                : money(discount.value);
+                ? Number(discount.value) + "% OFF"
+                : money(discount.value) + " OFF";
 
             const status = getStatus(discount);
 
             return `
                 <tr>
                     <td>
-                        <strong>${escapeHTML(name)}</strong>
-                        <small>${escapeHTML(discount.memberId)}</small>
+                        <strong style="color:#202124;">${escapeHTML(name)}</strong>
+                        <span class="discount-id-pill">${escapeHTML(discount.memberId)}</span>
                     </td>
 
-                    <td>${escapeHTML(amount)}</td>
+                    <td>
+                        <span class="discount-value-pill">${escapeHTML(amount)}</span>
+                    </td>
 
                     <td>${escapeHTML(discount.reason || "-")}</td>
 
                     <td>
-                        ${escapeHTML(discount.startDate || "-")}
-                        <br>
-                        to ${escapeHTML(discount.endDate || "-")}
+                        <span style="color:#202124;font-weight:600;">${escapeHTML(discount.startDate || "-")}</span>
+                        <small>to ${escapeHTML(discount.endDate || "No expiry")}</small>
                     </td>
 
                     <td>
@@ -312,30 +330,32 @@ window.GymDiscounts = (function () {
             <div class="discount-form-card">
 
                 <div class="discount-form-heading">
-                    <h3>${existing ? "Edit Discount" : "Create Discount"}</h3>
-                    <button type="button" id="closeDiscountForm">✕</button>
+                    <div>
+                        <h3>${existing ? "Edit Discount" : "Create New Discount"}</h3>
+                        <p>Apply percentage or flat fee reduction to members.</p>
+                    </div>
+                    <button type="button" id="closeDiscountForm" aria-label="Close">✕</button>
                 </div>
 
                 <form id="discountForm">
 
                     ${existing ? "" : `
-                        <div class="discount-form-grid">
+                        <div class="discount-form-grid" style="margin-top:0;">
                             <div>
-                                <label>Discount Apply To</label>
+                                <label>Discount Apply To *</label>
 
                                 <select id="discountTarget">
-                                    <option value="single">One Member</option>
+                                    <option value="single">Single Member</option>
                                     <option value="all">All Active Members</option>
-                                    <option value="selected">Selected Members</option>
+                                    <option value="selected">Selected Members (Bulk)</option>
                                 </select>
                             </div>
                         </div>
                     `}
 
-                    <div id="singleMemberArea"
-                        ${!existing ? "" : ""}>
+                    <div id="singleMemberArea">
 
-                        <label>Select Member</label>
+                        <label>Select Member *</label>
 
                         <select id="discountMember"
                             ${existing ? "disabled" : ""}>
@@ -358,13 +378,13 @@ window.GymDiscounts = (function () {
                         <div class="bulk-member-tools">
                             <input type="search"
                                 id="bulkMemberSearch"
-                                placeholder="Search members...">
+                                placeholder="Filter members by name or ID...">
 
-                            <button type="button" id="selectAllBulk">
+                            <button type="button" id="selectAllBulk" class="bulk-tool-btn">
                                 Select All
                             </button>
 
-                            <button type="button" id="clearAllBulk">
+                            <button type="button" id="clearAllBulk" class="bulk-tool-btn secondary">
                                 Clear
                             </button>
                         </div>
@@ -380,7 +400,7 @@ window.GymDiscounts = (function () {
                                         value="${escapeHTML(member.id)}">
 
                                     <span>
-                                        ${escapeHTML(member.name)}
+                                        <strong>${escapeHTML(member.name)}</strong>
                                         <small>${escapeHTML(member.id)}</small>
                                     </span>
 
@@ -393,7 +413,7 @@ window.GymDiscounts = (function () {
                     <div class="discount-form-grid">
 
                         <div>
-                            <label>Discount Type</label>
+                            <label>Discount Type *</label>
 
                             <select id="discountType">
                                 <option value="percentage"
@@ -409,12 +429,13 @@ window.GymDiscounts = (function () {
                         </div>
 
                         <div>
-                            <label>Discount Value</label>
+                            <label>Discount Value *</label>
 
                             <input type="number"
                                 id="discountValue"
                                 min="0.01"
                                 step="0.01"
+                                placeholder="e.g. 10 or 500"
                                 value="${escapeHTML(existing?.value ?? "")}"
                                 required>
                         </div>
@@ -452,18 +473,23 @@ window.GymDiscounts = (function () {
                         </div>
 
                         <div class="discount-form-full">
-                            <label>Reason</label>
+                            <label>Reason / Offer Note</label>
 
                             <textarea id="discountReason"
                                 rows="3"
-                                placeholder="Enter discount reason...">${escapeHTML(existing?.reason || "")}</textarea>
+                                placeholder="e.g. Annual renewal offer, Referral discount...">${escapeHTML(existing?.reason || "")}</textarea>
                         </div>
 
                     </div>
 
-                    <button type="submit" class="discount-save-btn">
-                        ${existing ? "Update Discount" : "Save Discount"}
-                    </button>
+                    <div class="discount-form-footer">
+                        <button type="submit" class="discount-save-btn">
+                            ${existing ? "Update Discount" : "Save & Apply Discount"}
+                        </button>
+                        <button type="button" class="discount-cancel-btn" id="cancelDiscountFormBtn">
+                            Cancel
+                        </button>
+                    </div>
 
                 </form>
             </div>
@@ -507,6 +533,11 @@ window.GymDiscounts = (function () {
                 container.innerHTML = "";
             });
 
+        document.getElementById("cancelDiscountFormBtn")
+            .addEventListener("click", () => {
+                container.innerHTML = "";
+            });
+
         document.getElementById("discountForm")
             .addEventListener("submit", event => {
                 saveDiscount(event, id);
@@ -525,7 +556,7 @@ window.GymDiscounts = (function () {
             target === "single" ? "block" : "none";
 
         document.getElementById("bulkMemberArea").style.display =
-            target === "single" ? "none" : "block";
+            target === "selected" ? "block" : "none";
     }
 
     function filterBulkMembers() {
@@ -618,8 +649,6 @@ window.GymDiscounts = (function () {
         const now = new Date().toISOString();
 
         if (id) {
-            const old = GymDB.find(MODULE, id);
-
             GymDB.update(MODULE, id, {
                 memberId: targetMembers[0].id,
                 memberName: targetMembers[0].name,
@@ -660,7 +689,11 @@ window.GymDiscounts = (function () {
         fillMemberFilter();
         renderTable();
 
-        alert(
+        if (typeof window.updateGymDashboard === "function") {
+            window.updateGymDashboard();
+        }
+
+        showMessage(
             id
                 ? "Discount updated successfully."
                 : "Discount applied to " + targetMembers.length + " member(s)."
@@ -675,7 +708,11 @@ window.GymDiscounts = (function () {
         GymDB.delete(MODULE, id);
         renderTable();
 
-        alert("Discount deleted successfully.");
+        if (typeof window.updateGymDashboard === "function") {
+            window.updateGymDashboard();
+        }
+
+        showMessage("Discount deleted successfully.");
     }
 
     function addStyles() {
@@ -686,277 +723,477 @@ window.GymDiscounts = (function () {
 
         style.textContent = `
             .gym-discounts {
-                color:#f4f0ff;
-                width:100%;
+                color: #202124;
+                width: 100%;
+                padding: 2px 0 25px;
             }
 
             .discount-heading {
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:15px;
-                flex-wrap:wrap;
-                margin-bottom:22px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .discount-heading h2 {
-                margin:0 0 6px;
-                font-size:25px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .discount-heading p {
-                margin:0;
-                color:#aaa0c5;
+                margin: 0;
+                color: #737985;
+                font-size: 11.5px;
             }
 
-            .gym-discounts button {
-                border:0;
-                border-radius:9px;
-                padding:10px 15px;
-                background:linear-gradient(135deg,#a77aff,#7544d8);
-                color:white;
-                font-weight:600;
-                cursor:pointer;
+            .discount-primary-btn,
+            .discount-save-btn {
+                border: 0;
+                border-radius: 9px;
+                padding: 12px 20px;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
+            }
+
+            .discount-primary-btn:hover,
+            .discount-save-btn:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
+                transform: translateY(-1px);
             }
 
             .discount-stats {
-                display:grid;
-                grid-template-columns:repeat(3,minmax(0,1fr));
-                gap:14px;
-                margin-bottom:20px;
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
-            .discount-stats div {
-                padding:18px;
-                background:#1c172b;
-                border:1px solid #382950;
-                border-radius:13px;
+            .discount-stat-card {
+                padding: 20px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
             }
 
-            .discount-stats span,
-            .discount-stats strong {
-                display:block;
+            .discount-stat-card:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
             }
 
-            .discount-stats span {
-                color:#b9adcf;
-                font-size:13px;
+            .discount-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
-            .discount-stats strong {
-                margin-top:10px;
-                font-size:24px;
+            .discount-stat-card span {
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .discount-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+
+            .discount-stat-card strong {
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
             }
 
             .discount-section,
             .discount-form-card {
-                background:#171326;
-                border:1px solid #302548;
-                border-radius:14px;
-                padding:18px;
-                margin-bottom:20px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+            }
+
+            .discount-form-card {
+                border-color: #f2bfc1;
             }
 
             .discount-toolbar {
-                display:flex;
-                flex-wrap:wrap;
-                gap:12px;
-                margin-bottom:18px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 18px;
             }
 
             .discount-toolbar input,
-            .discount-toolbar select,
-            .discount-form-card input,
-            .discount-form-card select,
-            .discount-form-card textarea {
-                padding:11px;
-                border:1px solid #403456;
-                border-radius:8px;
-                background:#211b32;
-                color:white;
-                min-width:0;
+            .discount-toolbar select {
+                padding: 11px 14px;
+                border: 1px solid #dfe2e8;
+                border-radius: 9px;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                min-width: 0;
+                outline: none;
             }
 
             .discount-toolbar input {
-                flex:1;
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .discount-toolbar select {
+                font-weight: 600;
+            }
+
+            .discount-form-card input,
+            .discount-form-card select,
+            .discount-form-card textarea {
+                padding: 11px 13px;
+                border: 1px solid #dfe2e8;
+                border-radius: 9px;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12.5px;
+                min-width: 0;
+                outline: none;
+            }
+
+            .discount-toolbar input:focus,
+            .discount-toolbar select:focus,
+            .discount-form-card input:focus,
+            .discount-form-card select:focus,
+            .discount-form-card textarea:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .discount-table-wrap {
-                overflow-x:auto;
+                overflow-x: auto;
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .discount-table-wrap table {
-                width:100%;
-                min-width:750px;
-                border-collapse:collapse;
+                width: 100%;
+                min-width: 780px;
+                border-collapse: collapse;
+                background: #ffffff;
             }
 
             .discount-table-wrap th,
             .discount-table-wrap td {
-                padding:13px;
-                border-bottom:1px solid #302548;
-                text-align:left;
-                font-size:13px;
+                padding: 13px 12px;
+                border-bottom: 1px solid #edf0f3;
+                text-align: left;
+                font-size: 11.5px;
+                color: #454c57;
+                vertical-align: middle;
             }
 
             .discount-table-wrap th {
-                color:#bba6ed;
-                background:#211a32;
+                color: #69717e;
+                background: #f8f9fb;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+            }
+
+            .discount-table-wrap tbody tr:hover {
+                background: #fffafa;
             }
 
             .discount-table-wrap td small,
             .bulk-member-item small {
-                display:block;
-                color:#a99abd;
-                margin-top:4px;
+                display: block;
+                color: #8a909a;
+                margin-top: 3px;
+                font-size: 10.5px;
+            }
+
+            .discount-id-pill {
+                display: inline-block;
+                margin-top: 4px;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #f3f4f6;
+                color: #5f6672;
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            .discount-value-pill {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 6px;
+                background: #fff0f0;
+                color: #d71920;
+                font-size: 11px;
+                font-weight: 800;
             }
 
             .discount-status {
-                display:inline-block;
-                padding:5px 9px;
-                border-radius:20px;
-                font-size:10px;
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 10px;
+                font-weight: 700;
             }
 
             .discount-status.active {
-                background:#17452f;
-                color:#8ef0b6;
+                background: #e9f8f0;
+                color: #168653;
             }
 
             .discount-status.inactive,
             .discount-status.expired {
-                background:#492323;
-                color:#ffaaaa;
+                background: #fff0f0;
+                color: #d71920;
             }
 
             .discount-status.upcoming {
-                background:#514019;
-                color:#ffe39a;
+                background: #fff8eb;
+                color: #b8740e;
             }
 
             .discount-actions {
-                display:flex;
-                gap:7px;
+                display: flex;
+                gap: 6px;
             }
 
             .discount-actions button {
-                padding:7px 10px;
-                font-size:12px;
+                padding: 6px 10px;
+                font-size: 10.5px;
+                font-weight: 600;
+                border-radius: 7px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #303640;
+                cursor: pointer;
+                transition: all 0.18s ease;
+            }
+
+            .discount-actions button:hover {
+                background: #f4f6f9;
             }
 
             .discount-actions .discount-delete {
-                background:#8d3434;
+                background: #fff0f0;
+                border-color: #f5c6c8;
+                color: #d71920;
+            }
+
+            .discount-actions .discount-delete:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
             }
 
             .discount-empty {
-                text-align:center !important;
-                padding:25px !important;
-                color:#aaa0c5;
+                text-align: center !important;
+                padding: 34px 15px !important;
+                color: #8a909a;
+                font-size: 12px;
             }
 
             .discount-form-heading {
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                margin-bottom:20px;
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                padding-bottom: 14px;
+                margin-bottom: 18px;
+                border-bottom: 1px solid #edf0f3;
             }
 
             .discount-form-heading h3 {
-                margin:0;
+                margin: 0 0 3px;
+                font-size: 16px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .discount-form-heading p {
+                margin: 0;
+                font-size: 11.5px;
+                color: #737985;
             }
 
             .discount-form-heading button {
-                padding:7px 11px;
-                background:#382950;
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid #e7e9ee;
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 15px;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+            }
+
+            .discount-form-heading button:hover {
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #f2bfc1;
             }
 
             .discount-form-grid {
-                display:grid;
-                grid-template-columns:repeat(2,minmax(0,1fr));
-                gap:16px;
-                margin:18px 0;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 15px;
+                margin: 16px 0;
             }
 
             .discount-form-grid > div,
             #singleMemberArea {
-                display:flex;
-                flex-direction:column;
-                gap:8px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
             }
 
             .discount-form-grid label,
             #singleMemberArea label,
             #bulkMemberArea > label {
-                color:#c5b8df;
-                font-size:13px;
+                color: #454c57;
+                font-size: 11.5px;
+                font-weight: 600;
             }
 
             .discount-form-grid input,
             .discount-form-grid select,
             .discount-form-grid textarea,
             #singleMemberArea select {
-                width:100%;
-                box-sizing:border-box;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .discount-form-full {
-                grid-column:1 / -1;
+                grid-column: 1 / -1;
             }
 
-            .discount-save-btn {
-                min-width:170px;
+            .discount-form-footer {
+                display: flex;
+                gap: 10px;
+                margin-top: 18px;
+                padding-top: 16px;
+                border-top: 1px solid #edf0f3;
+            }
+
+            .discount-cancel-btn {
+                padding: 12px 18px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #f3f4f6;
+                color: #454c57;
+                font-weight: 600;
+                font-size: 12px;
+                cursor: pointer;
+            }
+
+            .discount-cancel-btn:hover {
+                background: #e7e9ee;
             }
 
             .bulk-member-tools {
-                display:flex;
-                gap:8px;
-                flex-wrap:wrap;
-                margin:10px 0;
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin: 8px 0 10px;
             }
 
             .bulk-member-tools input {
-                flex:1;
-                min-width:150px;
+                flex: 1;
+                min-width: 160px;
+            }
+
+            .bulk-tool-btn {
+                padding: 9px 14px;
+                border-radius: 8px;
+                border: 1px solid #f2bfc1;
+                background: #fff0f0;
+                color: #d71920;
+                font-size: 11.5px;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            .bulk-tool-btn.secondary {
+                border-color: #dfe2e8;
+                background: #f8f9fb;
+                color: #454c57;
             }
 
             .bulk-member-list {
-                max-height:220px;
-                overflow-y:auto;
-                border:1px solid #403456;
-                border-radius:9px;
-                padding:8px;
-                background:#211b32;
+                max-height: 220px;
+                overflow-y: auto;
+                border: 1px solid #dfe2e8;
+                border-radius: 9px;
+                padding: 6px;
+                background: #f8f9fb;
             }
 
             .bulk-member-item {
-                display:flex;
-                align-items:center;
-                gap:10px;
-                padding:9px;
-                border-bottom:1px solid #382950;
-                cursor:pointer;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 9px 10px;
+                border-bottom: 1px solid #edf0f3;
+                background: #ffffff;
+                border-radius: 6px;
+                margin-bottom: 4px;
+                cursor: pointer;
+            }
+
+            .bulk-member-item:hover {
+                background: #fffafa;
             }
 
             .bulk-member-item input {
-                width:17px;
-                height:17px;
+                width: 16px;
+                height: 16px;
+                accent-color: #d71920;
             }
 
             @media(max-width:650px) {
                 .discount-stats {
-                    grid-template-columns:1fr 1fr;
+                    grid-template-columns: 1fr;
                 }
 
                 .discount-form-grid {
-                    grid-template-columns:1fr;
+                    grid-template-columns: 1fr;
                 }
 
                 .discount-form-full {
-                    grid-column:auto;
+                    grid-column: auto;
                 }
 
                 .discount-toolbar {
-                    flex-direction:column;
+                    flex-direction: column;
+                }
+
+                .discount-heading button {
+                    width: 100%;
                 }
             }
         `;
