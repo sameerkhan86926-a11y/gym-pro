@@ -32,7 +32,11 @@ window.GymReports = (function () {
 
         if (isNaN(d.getTime())) return date;
 
-        return d.toLocaleDateString("en-IN");
+        return d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
     }
 
     function escapeHTML(value) {
@@ -45,6 +49,14 @@ window.GymReports = (function () {
                 "'": "&#039;"
             }[char];
         });
+    }
+
+    function notify(message) {
+        if (typeof window.showToast === "function") {
+            window.showToast(message);
+        } else {
+            alert(message);
+        }
     }
 
     function getRange(type) {
@@ -258,13 +270,18 @@ window.GymReports = (function () {
 
                 <div class="report-header">
                     <div>
-                        <h2>Reports & Analytics</h2>
-                        <p>Gym income, expenses and performance reports</p>
+                        <h2>Business Reports & Financial Analytics</h2>
+                        <p>Analyze fee collections, operational expenses, net profit and gym activity.</p>
                     </div>
 
-                    <button class="report-export" id="exportReportBtn">
-                        Export CSV
-                    </button>
+                    <div class="report-header-actions">
+                        <button class="report-export-btn" id="exportReportBtn">
+                            Export CSV
+                        </button>
+                        <button class="report-sec-btn" id="printReportBtn">
+                            Print Report
+                        </button>
+                    </div>
                 </div>
 
                 <div class="report-filters">
@@ -290,7 +307,7 @@ window.GymReports = (function () {
                         <input type="date" id="reportTo">
                     </div>
 
-                    <button id="generateReportBtn">
+                    <button id="generateReportBtn" class="report-primary-btn">
                         Generate Report
                     </button>
 
@@ -299,32 +316,50 @@ window.GymReports = (function () {
                 <div class="report-cards">
 
                     <div class="report-card">
-                        <span>Total Collection</span>
-                        <h3 id="reportRevenue">₹0</h3>
+                        <div class="report-card-top">
+                            <span>Total Collection</span>
+                            <div class="report-card-dot" style="background:#168653;"></div>
+                        </div>
+                        <h3 id="reportRevenue" style="color:#168653;">₹0</h3>
                     </div>
 
                     <div class="report-card">
-                        <span>Total Expenses</span>
-                        <h3 id="reportExpenses">₹0</h3>
+                        <div class="report-card-top">
+                            <span>Total Expenses</span>
+                            <div class="report-card-dot" style="background:#d71920;"></div>
+                        </div>
+                        <h3 id="reportExpenses" style="color:#d71920;">₹0</h3>
                     </div>
 
                     <div class="report-card">
-                        <span>Net Balance</span>
+                        <div class="report-card-top">
+                            <span>Net Balance (Profit / Loss)</span>
+                            <div class="report-card-dot" style="background:#2879d0;"></div>
+                        </div>
                         <h3 id="reportProfit">₹0</h3>
                     </div>
 
                     <div class="report-card">
-                        <span>Pending Fees</span>
+                        <div class="report-card-top">
+                            <span>Pending Member Fees</span>
+                            <div class="report-card-dot" style="background:#d97706;"></div>
+                        </div>
                         <h3 id="reportPending">₹0</h3>
                     </div>
 
                     <div class="report-card">
-                        <span>Active Members</span>
+                        <div class="report-card-top">
+                            <span>Active Members</span>
+                            <div class="report-card-dot" style="background:#168653;"></div>
+                        </div>
                         <h3 id="reportActive">0</h3>
                     </div>
 
                     <div class="report-card">
-                        <span>Attendance Records</span>
+                        <div class="report-card-top">
+                            <span>Attendance Check-ins</span>
+                            <div class="report-card-dot" style="background:#2879d0;"></div>
+                        </div>
                         <h3 id="reportAttendance">0</h3>
                     </div>
 
@@ -332,7 +367,10 @@ window.GymReports = (function () {
 
                 <div class="report-section">
 
-                    <h3>Collection Details</h3>
+                    <div class="report-section-header">
+                        <h3>Collection Details</h3>
+                        <p>All fee payments received during the selected date range</p>
+                    </div>
 
                     <div class="report-table-wrap">
                         <table>
@@ -347,7 +385,7 @@ window.GymReports = (function () {
 
                             <tbody id="reportPaymentsTable">
                                 <tr>
-                                    <td colspan="4">No payment records</td>
+                                    <td colspan="4" class="report-empty">No payment records</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -357,14 +395,17 @@ window.GymReports = (function () {
 
                 <div class="report-section">
 
-                    <h3>Expense Details</h3>
+                    <div class="report-section-header">
+                        <h3>Expense Details</h3>
+                        <p>All operational expenses recorded during the selected date range</p>
+                    </div>
 
                     <div class="report-table-wrap">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Expense</th>
+                                    <th>Expense Title</th>
                                     <th>Category</th>
                                     <th>Amount</th>
                                 </tr>
@@ -372,7 +413,7 @@ window.GymReports = (function () {
 
                             <tbody id="reportExpensesTable">
                                 <tr>
-                                    <td colspan="4">No expense records</td>
+                                    <td colspan="4" class="report-empty">No expense records</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -423,6 +464,11 @@ window.GymReports = (function () {
 
         document.getElementById("exportReportBtn")
             .addEventListener("click", exportCSV);
+
+        document.getElementById("printReportBtn")
+            .addEventListener("click", function () {
+                window.print();
+            });
     }
 
     function generateReport() {
@@ -452,8 +498,9 @@ window.GymReports = (function () {
         document.getElementById("reportExpenses").textContent =
             money(data.expenseTotal);
 
-        document.getElementById("reportProfit").textContent =
-            money(data.profit);
+        const profitEl = document.getElementById("reportProfit");
+        profitEl.textContent = money(data.profit);
+        profitEl.style.color = data.profit >= 0 ? "#168653" : "#d71920";
 
         document.getElementById("reportPending").textContent =
             money(data.pending);
@@ -476,7 +523,7 @@ window.GymReports = (function () {
         if (!payments.length) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="4">No payment records found</td>
+                    <td colspan="4" class="report-empty">No payment records found for this period.</td>
                 </tr>
             `;
             return;
@@ -486,9 +533,9 @@ window.GymReports = (function () {
             return `
                 <tr>
                     <td>${dateFormat(getPaymentDate(payment))}</td>
-                    <td>${escapeHTML(payment.memberName || "Member")}</td>
-                    <td>${escapeHTML(payment.method || "-")}</td>
-                    <td>${money(getPaymentAmount(payment))}</td>
+                    <td><strong style="color:#202124;">${escapeHTML(payment.memberName || "Member")}</strong></td>
+                    <td><span class="report-pill blue">${escapeHTML(payment.method || "-")}</span></td>
+                    <td><strong style="color:#168653;">${money(getPaymentAmount(payment))}</strong></td>
                 </tr>
             `;
         }).join("");
@@ -502,7 +549,7 @@ window.GymReports = (function () {
         if (!expenses.length) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="4">No expense records found</td>
+                    <td colspan="4" class="report-empty">No expense records found for this period.</td>
                 </tr>
             `;
             return;
@@ -512,9 +559,9 @@ window.GymReports = (function () {
             return `
                 <tr>
                     <td>${dateFormat(getExpenseDate(expense))}</td>
-                    <td>${escapeHTML(expense.title || "-")}</td>
-                    <td>${escapeHTML(expense.category || "-")}</td>
-                    <td>${money(expense.amount)}</td>
+                    <td><strong style="color:#202124;">${escapeHTML(expense.title || "-")}</strong></td>
+                    <td><span class="report-pill red">${escapeHTML(expense.category || "-")}</span></td>
+                    <td><strong style="color:#d71920;">${money(expense.amount)}</strong></td>
                 </tr>
             `;
         }).join("");
@@ -600,10 +647,16 @@ window.GymReports = (function () {
         link.click();
         link.remove();
 
+        notify("Report CSV exported successfully.");
+
         setTimeout(function () {
             URL.revokeObjectURL(url);
         }, 1000);
     }
+
+    // ==========================================
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
+    // ==========================================
 
     function addStyles() {
         if (document.getElementById("gymReportStyles")) return;
@@ -614,165 +667,291 @@ window.GymReports = (function () {
 
         style.textContent = `
             .report-module {
-                color: #f4f0ff;
+                color: #202124;
                 width: 100%;
+                padding: 2px 0 25px;
             }
 
             .report-header {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 gap: 15px;
                 flex-wrap: wrap;
-                margin-bottom: 22px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .report-header h2 {
-                margin: 0 0 6px;
-                font-size: 25px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .report-header p {
-                color: #aaa0c5;
+                color: #737985;
+                font-size: 11.5px;
                 margin: 0;
             }
 
-            .report-module button {
-                border: 0;
-                border-radius: 10px;
-                padding: 12px 18px;
-                background: linear-gradient(135deg,#a77aff,#7544d8);
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-                box-shadow: 0 4px 12px #0004;
+            .report-header-actions {
+                display: flex;
+                gap: 9px;
+                flex-wrap: wrap;
             }
 
-            .report-module button:hover {
-                filter: brightness(1.12);
+            .report-primary-btn,
+            .report-export-btn {
+                border: 0;
+                border-radius: 9px;
+                padding: 11px 18px;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
+            }
+
+            .report-primary-btn:hover,
+            .report-export-btn:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
                 transform: translateY(-1px);
+            }
+
+            .report-sec-btn {
+                padding: 11px 16px;
+                border: 1px solid #dfe2e8;
+                border-radius: 9px;
+                background: #ffffff;
+                color: #303640;
+                font-weight: 700;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.18s ease;
+            }
+
+            .report-sec-btn:hover {
+                background: #fff4f4;
+                border-color: #f2bfc1;
+                color: #d71920;
             }
 
             .report-filters {
                 display: flex;
-                align-items: end;
-                gap: 12px;
+                align-items: flex-end;
+                gap: 14px;
                 flex-wrap: wrap;
-                padding: 18px;
-                background: #171326;
-                border: 1px solid #302548;
-                border-radius: 15px;
+                padding: 18px 20px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
                 margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .report-filters div {
                 display: flex;
                 flex-direction: column;
-                gap: 7px;
+                gap: 6px;
                 flex: 1;
-                min-width: 130px;
+                min-width: 150px;
             }
 
             .report-filters label {
-                color: #bdb1d8;
-                font-size: 13px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
             }
 
             .report-filters input,
             .report-filters select {
                 width: 100%;
                 box-sizing: border-box;
-                padding: 11px;
-                border-radius: 8px;
-                border: 1px solid #403456;
-                background: #211b32;
-                color: white;
+                padding: 10px 13px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                font-weight: 600;
+                outline: none;
+            }
+
+            .report-filters input:focus,
+            .report-filters select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .report-cards {
                 display: grid;
-                grid-template-columns: repeat(3,minmax(0,1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: 15px;
-                margin-bottom: 22px;
+                margin-bottom: 20px;
             }
 
             .report-card {
-                background: linear-gradient(145deg,#211936,#171326);
-                border: 1px solid #382950;
-                border-radius: 14px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
                 padding: 20px;
-                box-shadow: 0 5px 15px #0003;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .report-card:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
+            }
+
+            .report-card-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
             .report-card span {
-                color: #b9adcf;
-                font-size: 13px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .report-card-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
             }
 
             .report-card h3 {
-                margin: 12px 0 0;
-                font-size: 23px;
+                margin: 0;
+                font-size: 25px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
                 overflow-wrap: anywhere;
             }
 
             .report-section {
-                background: #171326;
-                border: 1px solid #302548;
-                border-radius: 14px;
-                padding: 18px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px;
                 margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
-            .report-section h3 {
-                margin: 0 0 15px;
+            .report-section-header {
+                margin-bottom: 16px;
+            }
+
+            .report-section-header h3 {
+                margin: 0 0 3px;
+                font-size: 15px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .report-section-header p {
+                margin: 0;
+                font-size: 11px;
+                color: #737985;
             }
 
             .report-table-wrap {
                 width: 100%;
                 overflow-x: auto;
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .report-section table {
                 width: 100%;
                 border-collapse: collapse;
-                min-width: 520px;
+                min-width: 540px;
+                background: #ffffff;
             }
 
             .report-section th,
             .report-section td {
-                padding: 13px;
+                padding: 13px 12px;
                 text-align: left;
-                border-bottom: 1px solid #302548;
-                font-size: 13px;
+                border-bottom: 1px solid #edf0f3;
+                font-size: 11.5px;
+                color: #454c57;
             }
 
             .report-section th {
-                color: #bba6ed;
-                background: #211a32;
+                color: #69717e;
+                background: #f8f9fb;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
             }
 
-            .report-section td {
-                color: #e8e0f6;
+            .report-section tbody tr:hover {
+                background: #fffafa;
             }
 
-            @media(max-width:700px) {
+            .report-pill {
+                display: inline-block;
+                padding: 4px 9px;
+                border-radius: 20px;
+                font-size: 10.5px;
+                font-weight: 700;
+            }
+
+            .report-pill.blue {
+                background: #edf5ff;
+                color: #2879d0;
+            }
+
+            .report-pill.red {
+                background: #fff0f0;
+                color: #d71920;
+            }
+
+            .report-empty {
+                text-align: center !important;
+                padding: 32px 15px !important;
+                color: #8a909a !important;
+                font-size: 12px;
+            }
+
+            @media(max-width:750px) {
                 .report-cards {
-                    grid-template-columns: repeat(2,minmax(0,1fr));
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
                 }
 
                 .report-card {
-                    padding: 15px;
+                    padding: 16px;
                 }
 
                 .report-card h3 {
-                    font-size: 19px;
+                    font-size: 20px;
                 }
             }
 
-            @media(max-width:420px) {
+            @media(max-width:450px) {
                 .report-cards {
-                    grid-template-columns: 1fr 1fr;
-                    gap: 9px;
+                    grid-template-columns: 1fr;
+                }
+
+                .report-header-actions {
+                    width: 100%;
+                }
+
+                .report-header-actions button {
+                    flex: 1;
                 }
             }
         `;
