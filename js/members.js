@@ -16,6 +16,12 @@ window.GymMembers = (function () {
         return getPlans().filter(plan => plan.status === "active");
     }
 
+    function getActiveTrainers() {
+        return (GymDB.getAll("trainers") || []).filter(
+            trainer => trainer.status === "active"
+        );
+    }
+
     // ==========================================
     // MEMBER ID SERIAL SYSTEM
     // ==========================================
@@ -234,6 +240,7 @@ window.GymMembers = (function () {
             "Name: " + (member.name || "-"),
             "Phone: " + (member.phone || "-"),
             "Plan: " + (member.planName || "-"),
+            "Trainer: " + (member.trainer || "Not Assigned"),
             "Joining Date: " + (member.joiningDate || "-"),
             "Expiry Date: " + (member.expiryDate || "-"),
             "Membership Fees: " + currency(member.fees),
@@ -391,7 +398,7 @@ window.GymMembers = (function () {
             .members-table {
                 width: 100%;
                 border-collapse: collapse;
-                min-width: 900px;
+                min-width: 960px;
                 background: #ffffff;
             }
 
@@ -431,6 +438,18 @@ window.GymMembers = (function () {
                 font-size: 10px;
                 font-weight: 700;
                 letter-spacing: 0.3px;
+            }
+
+            .member-trainer-tag {
+                display: inline-block;
+                margin-top: 4px;
+                margin-left: 4px;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #fff5f5;
+                color: #d71920;
+                font-size: 10px;
+                font-weight: 600;
             }
 
             .member-plan-pill {
@@ -483,6 +502,18 @@ window.GymMembers = (function () {
             .member-action:hover {
                 background: #f4f6f9;
                 border-color: #cbd2dc;
+            }
+
+            .member-action.renew {
+                background: #edf5ff;
+                border-color: #c5defc;
+                color: #2879d0;
+            }
+
+            .member-action.renew:hover {
+                background: #2879d0;
+                border-color: #2879d0;
+                color: #ffffff;
             }
 
             .member-action.whatsapp {
@@ -579,6 +610,7 @@ window.GymMembers = (function () {
                 font-size: 16px;
                 display: grid;
                 place-items: center;
+                cursor: pointer;
             }
 
             .members-modal-close:hover {
@@ -613,6 +645,13 @@ window.GymMembers = (function () {
                 color: #202124;
                 font-size: 12.5px;
                 outline: none;
+            }
+
+            .members-form input:focus,
+            .members-form select:focus,
+            .members-form textarea:focus {
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .members-form textarea {
@@ -721,7 +760,7 @@ window.GymMembers = (function () {
                 <div class="members-header">
                     <div>
                         <h2>Gym Members Directory</h2>
-                        <p>Add, edit, search and manage active or expired memberships.</p>
+                        <p>Add, edit, renew memberships and assign trainers.</p>
                     </div>
 
                     <button class="btn btn-primary" id="addGymMemberBtn">
@@ -760,7 +799,7 @@ window.GymMembers = (function () {
                         <input
                             type="search"
                             id="searchGymMembers"
-                            placeholder="Search by member name, phone, plan or ID..."
+                            placeholder="Search by member name, phone, trainer, plan or ID..."
                         >
 
                         <select id="filterGymMembers">
@@ -793,6 +832,7 @@ window.GymMembers = (function () {
 
             </div>
 
+            <!-- ADD / EDIT MEMBER MODAL -->
             <div class="members-modal" id="gymMemberModal">
                 <div class="members-modal-box">
                     <div class="members-modal-header">
@@ -885,12 +925,10 @@ window.GymMembers = (function () {
                             </div>
 
                             <div>
-                                <label>Trainer Name</label>
-                                <input
-                                    type="text"
-                                    id="memberTrainer"
-                                    placeholder="Enter trainer name"
-                                >
+                                <label>Assign Trainer</label>
+                                <select id="memberTrainer">
+                                    <option value="">No Trainer Assigned</option>
+                                </select>
                             </div>
 
                             <div class="members-full">
@@ -926,6 +964,43 @@ window.GymMembers = (function () {
                     </form>
                 </div>
             </div>
+
+            <!-- RENEW MEMBERSHIP MODAL -->
+            <div class="members-modal" id="renewMemberModal">
+                <div class="members-modal-box" style="max-width:480px;">
+                    <div class="members-modal-header">
+                        <h3>Renew Membership</h3>
+                        <button type="button" class="members-modal-close" id="closeRenewX" aria-label="Close">✕</button>
+                    </div>
+
+                    <form class="members-form" id="renewMemberForm">
+                        <input type="hidden" id="renewMemberId">
+
+                        <div class="members-plan-info" id="renewMemberSummary"></div>
+
+                        <label>Select Renewal Plan *</label>
+                        <select id="renewPlanSelect" required></select>
+
+                        <label>New Cycle Start Date *</label>
+                        <input type="date" id="renewStartDate" required>
+
+                        <label>New Expiry Date *</label>
+                        <input type="date" id="renewExpiryDate" required>
+
+                        <label>Renewal Fees (₹) *</label>
+                        <input type="number" id="renewFeesInput" min="0" step="0.01" required>
+
+                        <div class="members-plan-warning" style="color:#5f6672;font-weight:500;">
+                            After renewal, the new plan fee will automatically appear in <strong>Fees &amp; Payments</strong> for collection.
+                        </div>
+
+                        <div class="members-form-actions">
+                            <button type="submit">Confirm Renewal</button>
+                            <button type="button" class="cancel" id="cancelRenewBtn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         `;
 
         document.getElementById("addGymMemberBtn")
@@ -942,6 +1017,15 @@ window.GymMembers = (function () {
         document.getElementById("gymMemberForm")
             .addEventListener("submit", saveMember);
 
+        document.getElementById("closeRenewX")
+            .addEventListener("click", closeRenewModal);
+
+        document.getElementById("cancelRenewBtn")
+            .addEventListener("click", closeRenewModal);
+
+        document.getElementById("renewMemberForm")
+            .addEventListener("submit", saveRenewal);
+
         document.getElementById("searchGymMembers")
             .addEventListener("input", renderTable);
 
@@ -955,6 +1039,45 @@ window.GymMembers = (function () {
             .addEventListener("change", handleJoiningDateChange);
 
         renderTable();
+    }
+
+    // ==========================================
+    // TRAINER DROPDOWN
+    // ==========================================
+
+    function fillTrainerDropdown(selectedTrainer) {
+        const select = document.getElementById("memberTrainer");
+        if (!select) return;
+
+        const trainers = getActiveTrainers();
+
+        let html = `<option value="">No Trainer Assigned</option>`;
+
+        trainers.forEach(trainer => {
+            const spec = trainer.specialization
+                ? ` (${escapeHTML(trainer.specialization)})`
+                : "";
+            html += `
+                <option value="${escapeHTML(trainer.name)}">
+                    ${escapeHTML(trainer.name)}${spec}
+                </option>
+            `;
+        });
+
+        // Agar purane trainer ka naam list mein nahi hai toh preserve karein
+        if (
+            selectedTrainer &&
+            !trainers.some(t => t.name === selectedTrainer)
+        ) {
+            html += `
+                <option value="${escapeHTML(selectedTrainer)}">
+                    ${escapeHTML(selectedTrainer)}
+                </option>
+            `;
+        }
+
+        select.innerHTML = html;
+        select.value = selectedTrainer || "";
     }
 
     // ==========================================
@@ -1125,6 +1248,7 @@ window.GymMembers = (function () {
             member?.joiningDate || today();
 
         fillPlanDropdown(member);
+        fillTrainerDropdown(member?.trainer || "");
 
         if (member) {
             document.getElementById("memberName").value =
@@ -1176,6 +1300,138 @@ window.GymMembers = (function () {
         if (modal) modal.style.display = "none";
 
         editingMemberId = null;
+    }
+
+    // ==========================================
+    // RENEW MEMBERSHIP MODAL & LOGIC
+    // ==========================================
+
+    function openRenewModal(memberId) {
+        const member = GymDB.find(MODULE, memberId);
+        if (!member) return;
+
+        const plans = getActivePlans();
+        if (!plans.length) {
+            alert("Please create an active membership plan first.");
+            return;
+        }
+
+        document.getElementById("renewMemberId").value = member.id;
+
+        document.getElementById("renewMemberSummary").innerHTML = `
+            <strong style="font-size:13.5px;color:#202124;">${escapeHTML(member.name)}</strong>
+            &nbsp;<span class="member-id-pill">${escapeHTML(member.id)}</span><br>
+            Current Plan: <strong>${escapeHTML(member.planName || "-")}</strong>
+            &nbsp;•&nbsp;
+            Current Expiry: <strong>${escapeHTML(member.expiryDate || "-")}</strong>
+        `;
+
+        const select = document.getElementById("renewPlanSelect");
+        select.innerHTML = plans.map(plan => `
+            <option value="${escapeHTML(plan.id)}">
+                ${escapeHTML(plan.name)} - ${currency(plan.fees)} (${Number(plan.durationDays || 0)} Days)
+            </option>
+        `).join("");
+
+        // Agar member abhi active hai toh expiry ke agle din se start karein, warna aaj se
+        let startDate = today();
+        if (member.expiryDate && member.expiryDate >= today()) {
+            const nextDay = new Date(member.expiryDate + "T12:00:00");
+            if (!isNaN(nextDay.getTime())) {
+                nextDay.setDate(nextDay.getDate() + 1);
+                startDate = [
+                    nextDay.getFullYear(),
+                    String(nextDay.getMonth() + 1).padStart(2, "0"),
+                    String(nextDay.getDate()).padStart(2, "0")
+                ].join("-");
+            }
+        }
+
+        document.getElementById("renewStartDate").value = startDate;
+
+        if (member.planId && plans.some(p => p.id === member.planId)) {
+            select.value = member.planId;
+        }
+
+        const updateRenewFields = () => {
+            const plan = GymDB.find("plans", select.value);
+            if (!plan) return;
+
+            document.getElementById("renewFeesInput").value = Number(plan.fees || 0);
+            document.getElementById("renewExpiryDate").value = calculateExpiry(
+                document.getElementById("renewStartDate").value,
+                plan.durationDays
+            );
+        };
+
+        select.onchange = updateRenewFields;
+        document.getElementById("renewStartDate").onchange = updateRenewFields;
+        updateRenewFields();
+
+        document.getElementById("renewMemberModal").style.display = "flex";
+    }
+
+    function closeRenewModal() {
+        const modal = document.getElementById("renewMemberModal");
+        if (modal) modal.style.display = "none";
+    }
+
+    function saveRenewal(event) {
+        event.preventDefault();
+
+        const memberId = document.getElementById("renewMemberId").value;
+        const member = GymDB.find(MODULE, memberId);
+        const plan = GymDB.find("plans", document.getElementById("renewPlanSelect").value);
+
+        if (!member || !plan) {
+            alert("Please select a valid membership plan.");
+            return;
+        }
+
+        const startDate = document.getElementById("renewStartDate").value;
+        const expiryDate = document.getElementById("renewExpiryDate").value;
+        const renewalFees = Number(document.getElementById("renewFeesInput").value || 0);
+
+        if (!startDate || !expiryDate || expiryDate < startDate) {
+            alert("Please enter valid renewal start and expiry dates.");
+            return;
+        }
+
+        if (!Number.isFinite(renewalFees) || renewalFees < 0) {
+            alert("Please enter valid renewal fees.");
+            return;
+        }
+
+        // Purane paid amount + nayi renewal fees ko total cycle mein add karein aur billing unlock karein
+        const previousPaid = (GymDB.getAll("payments") || [])
+            .filter(p => String(p.memberId) === String(member.id) && p.status !== "void")
+            .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+        GymDB.update(MODULE, member.id, {
+            planId: plan.id,
+            planName: plan.name,
+            durationDays: Number(plan.durationDays || 0),
+            joiningDate: startDate,
+            expiryDate: expiryDate,
+            fees: previousPaid + renewalFees,
+            billingFinalFees: null,
+            billingOriginalFees: null,
+            billingDiscountAmount: null,
+            billingDiscountName: "",
+            billingDiscountReason: "",
+            billingDiscountId: "",
+            status: "active",
+            updatedAt: new Date().toISOString()
+        });
+
+        closeRenewModal();
+        renderTable();
+
+        if (typeof window.updateGymDashboard === "function") {
+            window.updateGymDashboard();
+        }
+
+        showMessage("Membership renewed! Collect fees from Fees & Payments.");
     }
 
     // ==========================================
@@ -1405,7 +1661,8 @@ window.GymMembers = (function () {
                 String(member.name || "").toLowerCase().includes(search) ||
                 String(member.phone || "").toLowerCase().includes(search) ||
                 String(member.id || "").toLowerCase().includes(search) ||
-                String(member.planName || "").toLowerCase().includes(search);
+                String(member.planName || "").toLowerCase().includes(search) ||
+                String(member.trainer || "").toLowerCase().includes(search);
 
             const matchesFilter =
                 filter === "all" ||
@@ -1439,6 +1696,9 @@ window.GymMembers = (function () {
                         <strong style="color:#202124;">${escapeHTML(member.name)}</strong>
                         <br>
                         <span class="member-id-pill">${escapeHTML(member.id || "")}</span>
+                        ${member.trainer
+                            ? `<span class="member-trainer-tag">Trainer: ${escapeHTML(member.trainer)}</span>`
+                            : ""}
                     </td>
 
                     <td>${escapeHTML(member.phone || "")}</td>
@@ -1460,6 +1720,13 @@ window.GymMembers = (function () {
                     </td>
 
                     <td class="member-actions-cell">
+                        <button
+                            class="member-action renew"
+                            data-renew-member="${escapeHTML(member.id)}"
+                        >
+                            Renew
+                        </button>
+
                         <button
                             class="member-action whatsapp"
                             data-whatsapp-member="${escapeHTML(member.id)}"
@@ -1491,6 +1758,12 @@ window.GymMembers = (function () {
                 </tr>
             `;
         }).join("");
+
+        table.querySelectorAll("[data-renew-member]").forEach(button => {
+            button.addEventListener("click", function () {
+                openRenewModal(this.dataset.renewMember);
+            });
+        });
 
         table.querySelectorAll("[data-whatsapp-member]").forEach(button => {
             button.addEventListener("click", function () {
