@@ -1,6 +1,6 @@
 /* =====================================
 GYM PRO - MAIN JAVASCRIPT
-Version 1.0.3
+Version 1.0.4 (Red & White Enterprise Edition)
 ===================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const dashboardContent = document.getElementById("dashboardContent");
     const modulePlaceholder = document.getElementById("modulePlaceholder");
     const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
 
     // PAGE INFORMATION
     const pages = {
@@ -74,6 +75,13 @@ document.addEventListener("DOMContentLoaded", function () {
             subtitle: "Customize your gym management system"
         }
     };
+
+    // ICON REFRESH HELPER
+    function refreshIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+            window.lucide.createIcons();
+        }
+    }
 
     // DATE HELPERS
     function getToday() {
@@ -325,8 +333,21 @@ document.addEventListener("DOMContentLoaded", function () {
         setText("pendingFees", formatCurrency(pendingFees));
         setText("expiringMembers", expiringMembers.length);
 
+        // UPDATE NOTIFICATION BELL BADGE
+        const notifBtn = document.getElementById("notificationButton");
+        if (notifBtn) {
+            notifBtn.classList.toggle("has-alerts", expiringMembers.length > 0);
+            notifBtn.setAttribute(
+                "title",
+                expiringMembers.length > 0
+                    ? expiringMembers.length + " membership(s) expiring soon"
+                    : "Notifications"
+            );
+        }
+
         renderRecentMembers(members);
         renderMembershipAlerts(expiringMembers);
+        refreshIcons();
     }
 
     // RECENT MEMBERS
@@ -359,7 +380,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             return `
                 <tr>
-                    <td>${name}</td>
+                    <td><strong style="color:#202124;">${name}</strong></td>
                     <td>${phone}</td>
                     <td>${plan}</td>
                     <td>
@@ -399,15 +420,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const message = days === 0
                 ? "Expires today"
-                : "Expires in " + days + " days";
+                : "Expires in " + days + " day" + (days > 1 ? "s" : "");
 
             return `
                 <div class="alert-item">
                     <div>
                         <strong>${escapeHTML(member.name || "Member")}</strong>
-                        <p>${escapeHTML(member.phone || "")}</p>
+                        <p>${escapeHTML(member.phone || "No phone")}</p>
                     </div>
-                    <span>${message}</span>
+                    <span class="alert-tag">${message}</span>
                 </div>
             `;
         }).join("");
@@ -436,74 +457,92 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (module && typeof module.render === "function") {
             module.render();
+            refreshIcons();
             return true;
         }
 
         return false;
     }
 
-    // BIOMETRIC PLACEHOLDER
+    // BIOMETRIC PLACEHOLDER (RED & WHITE THEME)
     function showBiometricPage() {
         if (!modulePlaceholder) return;
 
         modulePlaceholder.innerHTML = `
-            <div class="module-placeholder" style="padding:35px 20px;text-align:center;">
-                <div style="font-size:42px;color:#ad8aff;margin-bottom:15px;">
-                    ♧
+            <div class="panel" style="padding:45px 24px;text-align:center;max-width:620px;margin:22px auto;">
+                <div style="width:68px;height:68px;border-radius:18px;background:#fff0f0;color:#d71920;display:grid;place-items:center;margin:0 auto 18px;">
+                    <i data-lucide="fingerprint" style="width:34px;height:34px;"></i>
                 </div>
 
-                <h2>Biometric Device</h2>
+                <h2 style="font-size:20px;font-weight:800;color:#202124;">Biometric Device Integration</h2>
 
-                <p style="color:#aaa;margin:15px auto;max-width:500px;line-height:1.7;">
-                    Fingerprint device integration is not connected yet.
-                    First, the device model and its supported software/API
-                    need to be identified.
+                <p style="color:#737985;font-size:12.5px;margin:12px auto;max-width:460px;line-height:1.7;">
+                    Fingerprint scanner hardware is not connected yet. Connect a supported USB/LAN biometric device and configure its local API bridge to enable auto check-ins.
                 </p>
 
-                <div style="padding:15px;border:1px solid #39304e;border-radius:12px;margin:20px auto;max-width:450px;">
-                    <strong>Current Status:</strong>
-                    <span style="color:#ffbd59;"> Not Connected</span>
+                <div style="padding:14px 18px;background:#fff8eb;border:1px solid #f7dfad;border-radius:10px;margin:22px auto;max-width:420px;font-size:12px;color:#5c4814;">
+                    <strong>Device Status:</strong>
+                    <span style="color:#d97706;font-weight:700;"> ● Disconnected</span>
                 </div>
 
-                <p style="color:#999;font-size:13px;">
-                    Manual attendance is available in the Attendance module.
+                <p style="color:#8a909a;font-size:11.5px;margin-bottom:20px;">
+                    You can continue marking member check-ins manually from the Attendance module.
                 </p>
 
-                <button type="button" id="biometricBack"
-                    style="padding:12px 22px;border:0;border-radius:8px;background:#8154f7;color:white;cursor:pointer;margin-top:15px;">
-                    Back to Dashboard
-                </button>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                    <button type="button" id="biometricAttendanceBtn"
+                        style="padding:11px 20px;border:0;border-radius:9px;background:linear-gradient(135deg,#e3262e,#c51019);color:#ffffff;font-weight:700;font-size:12px;box-shadow:0 4px 12px rgba(215,25,32,0.18);">
+                        Go to Attendance
+                    </button>
+                    <button type="button" id="biometricBack"
+                        style="padding:11px 20px;border:1px solid #dfe2e8;border-radius:9px;background:#ffffff;color:#454c57;font-weight:600;font-size:12px;">
+                        Back to Dashboard
+                    </button>
+                </div>
             </div>
         `;
 
-        const backButton = document.getElementById("biometricBack");
+        refreshIcons();
 
+        const backButton = document.getElementById("biometricBack");
         if (backButton) {
             backButton.addEventListener("click", function () {
                 openPage("dashboard");
             });
         }
+
+        const attButton = document.getElementById("biometricAttendanceBtn");
+        if (attButton) {
+            attButton.addEventListener("click", function () {
+                openPage("attendance");
+            });
+        }
     }
 
-    // MODULE NOT AVAILABLE
+    // MODULE NOT AVAILABLE (RED & WHITE THEME)
     function showModuleError(pageName) {
         if (!modulePlaceholder) return;
 
         modulePlaceholder.innerHTML = `
-            <div style="padding:35px 20px;text-align:center;">
-                <h2>${escapeHTML(pages[pageName].title)}</h2>
-                <p style="color:#aaa;margin:15px 0;">
+            <div class="panel" style="padding:45px 24px;text-align:center;max-width:540px;margin:22px auto;">
+                <div style="width:60px;height:60px;border-radius:16px;background:#fff0f0;color:#d71920;display:grid;place-items:center;margin:0 auto 16px;">
+                    <i data-lucide="alert-triangle" style="width:30px;height:30px;"></i>
+                </div>
+                <h2 style="font-size:19px;font-weight:800;color:#202124;">${escapeHTML(pages[pageName].title)}</h2>
+                <p style="color:#737985;font-size:12.5px;margin:10px 0 6px;">
                     This module could not be loaded.
                 </p>
-                <p style="color:#999;font-size:13px;">
-                    Please check the JavaScript file and its connection.
+                <p style="color:#999eaa;font-size:11.5px;margin-bottom:20px;">
+                    Please check that the corresponding JavaScript file is properly linked in index.html.
                 </p>
                 <button type="button" id="moduleBack"
-                    style="padding:12px 22px;border:0;border-radius:8px;background:#8154f7;color:white;cursor:pointer;">
+                    style="padding:11px 22px;border:0;border-radius:9px;background:linear-gradient(135deg,#e3262e,#c51019);color:#ffffff;font-weight:700;font-size:12px;box-shadow:0 4px 12px rgba(215,25,32,0.18);">
                     Back to Dashboard
                 </button>
             </div>
         `;
+
+        refreshIcons();
 
         const backButton = document.getElementById("moduleBack");
 
@@ -559,9 +598,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        // CLOSE MOBILE SIDEBAR
+        // CLOSE MOBILE SIDEBAR & OVERLAY
         if (sidebar) {
             sidebar.classList.remove("open");
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove("active");
         }
 
         // QUICK ADD MEMBER
@@ -614,7 +656,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (menuToggle && sidebar) {
         menuToggle.addEventListener("click", function () {
-            sidebar.classList.toggle("open");
+            const isOpen = sidebar.classList.toggle("open");
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.toggle("active", isOpen);
+            }
+        });
+    }
+
+    if (sidebarOverlay && sidebar) {
+        sidebarOverlay.addEventListener("click", function () {
+            sidebar.classList.remove("open");
+            sidebarOverlay.classList.remove("active");
         });
     }
 
@@ -630,5 +682,5 @@ document.addEventListener("DOMContentLoaded", function () {
     // INITIALIZE
     openPage("dashboard");
 
-    console.log("GYM PRO v1.0.3 initialized successfully.");
+    console.log("GYM PRO v1.0.4 initialized successfully.");
 });
