@@ -1,6 +1,9 @@
 window.GymBackup = (function () {
     "use strict";
 
+    const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+    let driveToken = null;
+
     function notify(message) {
         if (typeof window.showToast === "function") {
             window.showToast(message);
@@ -16,14 +19,37 @@ window.GymBackup = (function () {
             payments: (GymDB.getAll("payments") || []).length,
             attendance: (GymDB.getAll("attendance") || []).length,
             expenses: (GymDB.getAll("expenses") || []).length,
-            trainers: (GymDB.getAll("trainers") || []).length,
-            discounts: (GymDB.getAll("discounts") || []).length
+            trainers: (GymDB.getAll("trainers") || []).length
         };
     }
 
-    function getLastBackupDate() {
+    function getSettingRecord(key) {
         const settings = GymDB.getAll("settings") || [];
-        const record = settings.find(item => item.key === "lastBackupDate");
+        return settings.find(item => item.key === key) || null;
+    }
+
+    function saveSettingRecord(key, value) {
+        const settings = GymDB.getAll("settings") || [];
+        const idx = settings.findIndex(item => item.key === key);
+        const now = new Date().toISOString();
+        const entry = { key, value, updatedAt: now };
+
+        if (idx >= 0) {
+            settings[idx] = entry;
+        } else {
+            settings.push(entry);
+        }
+
+        GymDB.saveAll("settings", settings);
+    }
+
+    function getDriveClientId() {
+        const rec = getSettingRecord("googleDriveClientId");
+        return rec && rec.value ? String(rec.value).trim() : "";
+    }
+
+    function getLastBackupDate() {
+        const record = getSettingRecord("lastBackupDate");
         if (!record || !record.value) return "Never";
 
         const d = new Date(record.value);
@@ -38,22 +64,162 @@ window.GymBackup = (function () {
             });
     }
 
-    function setLastBackupDate(isoString) {
-        const settings = GymDB.getAll("settings") || [];
-        const idx = settings.findIndex(item => item.key === "lastBackupDate");
-        const entry = {
-            key: "lastBackupDate",
-            value: isoString,
-            updatedAt: isoString
-        };
+    function requestGoogleDriveToken(clientId) {
+        return new Promise((resolve, reject) => {
+            if (!clientId) {
+                reject(new Error("Please enter and save your Google Drive Client ID first."));
+                return;
+            }
 
-        if (idx >= 0) {
-            settings[idx] = entry;
-        } else {
-            settings.push(entry);
+            if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+                reject(new Error("Google Drive SDK did not load. Check internet connection and index.html script."));
+                return;
+            }
+
+            if (driveToken) {
+                resolve(driveToken);
+                return;
+            }
+
+            const tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: clientId,
+                scope: DRIVE_SCOPE,
+                callback: (response) => {
+                    if (response && response.access_token) {
+                        driveToken = response.access_token;
+                        resolve(driveToken);
+                    } else {
+                        reject(new Error(response?.error || "Google authorization cancelled or failed."));
+                    }
+                }
+            });
+
+            tokenClient.requestAccessToken({ prompt: "" });
+        });
+    }
+
+    async function uploadBackupToDrive() {
+        try {
+            const clientId = (document.getElementById("driveClientIdInput")?.value || "").trim() || getDriveClientId();
+            if (clientId) {
+                saveSettingRecord("googleDriveClientId", clientId);
+            }
+
+            const token = await requestGoogleDriveToken(clientId);
+            const fileData = GymDB.exportData();
+            const fileName = "GYM-PRO-Backup-" + fileData.backupDate.slice(0, 10) + ".json";
+            const jsonText = JSON.stringify(fileData, null, 2);
+
+            const boundary = "-------gympro_boundary_" + Date.now();
+            const metadata = {
+                name: fileName,
+                mimeType: "application/json"
+            };
+
+            const multipartBody =
+                "--" + boundary + "\r\n" +
+                "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+                JSON.stringify(metadata) + "\r\n" +
+                "--" + boundary + "\r\n" +
+                "Content-Type: application/json\r\n\r\n" +
+                jsonText + "\r\n" +
+                "--" + boundary + "--";
+
+            const res = await fetch(
+                "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        "Content-Type": "multipart/related; boundary=" + boundary
+                    },
+                    body: multipartBody
+                }
+            );
+
+            if (!res.ok) {
+                if (res.status === 401) driveToken = null;
+                throw new Error("Drive upload failed (HTTP " + res.status + ").");
+            }
+
+            saveSettingRecord("lastBackupDate", fileData.backupDate);
+            const label = document.getElementById("lastBackupLabel");
+            if (label) label.textContent = getLastBackupDate();
+
+            notify("Backup uploaded to Google Drive (" + fileName + ").");
+        } catch (err) {
+            console.error(err);
+            alert(err.message || "Google Drive upload failed.");
         }
+    }
 
-        GymDB.saveAll("settings", settings);
+    async function restoreBackupFromDrive() {
+        try {
+            const clientId = (document.getElementById("driveClientIdInput")?.value || "").trim() || getDriveClientId();
+            if (clientId) {
+                saveSettingRecord("googleDriveClientId", clientId);
+            }
+
+            const token = await requestGoogleDriveToken(clientId);
+
+            const query = encodeURIComponent(
+                "name contains 'GYM-PRO-Backup-' and mimeType = 'application/json' and trashed = false"
+            );
+
+            const listRes = await fetch(
+                `https://www.googleapis.com/drive/v3/files?q=${query}&orderBy=createdTime%20desc&pageSize=1&fields=files(id,name,createdTime)`,
+                {
+                    headers: { Authorization: "Bearer " + token }
+                }
+            );
+
+            if (!listRes.ok) {
+                if (listRes.status === 401) driveToken = null;
+                throw new Error("Unable to fetch backup list from Google Drive.");
+            }
+
+            const listData = await listRes.json();
+            const latestFile = listData.files && listData.files[0];
+
+            if (!latestFile) {
+                alert("No GYM-PRO-Backup file found in your Google Drive.");
+                return;
+            }
+
+            const confirmed = confirm(
+                `Latest backup found: "${latestFile.name}".\nRestoring will replace existing GYM PRO data in this browser. Continue?`
+            );
+            if (!confirmed) return;
+
+            const fileRes = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(latestFile.id)}?alt=media`,
+                {
+                    headers: { Authorization: "Bearer " + token }
+                }
+            );
+
+            if (!fileRes.ok) {
+                throw new Error("Failed to download backup content from Google Drive.");
+            }
+
+            const backupJson = await fileRes.json();
+            if (backupJson.application !== "GYM PRO" || !backupJson.data) {
+                alert("Invalid GYM PRO backup file format on Drive.");
+                return;
+            }
+
+            const ok = GymDB.importData(backupJson);
+            if (!ok) {
+                alert("Restore failed.");
+                return;
+            }
+
+            alert("Backup restored from Google Drive! Page will now reload.");
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert(err.message || "Google Drive restore failed.");
+        }
     }
 
     function render() {
@@ -61,6 +227,8 @@ window.GymBackup = (function () {
         if (!root) return;
 
         const counts = getCounts();
+        const storage = GymDB.getStorageInfo();
+        const savedClientId = getDriveClientId();
 
         root.innerHTML = `
             <div class="gym-backup-wrap">
@@ -68,9 +236,12 @@ window.GymBackup = (function () {
                 <div class="backup-header">
                     <div>
                         <h2>Backup & Data Restore</h2>
-                        <p>Export a complete JSON snapshot of your gym database or restore from a previous backup.</p>
+                        <p>Export local JSON backups or connect Admin Google Drive for cloud protection.</p>
                     </div>
-                    <span class="backup-last-pill">Last Backup: <strong id="lastBackupLabel">${getLastBackupDate()}</strong></span>
+                    <div class="backup-meta-pills">
+                        <span class="backup-last-pill">Storage Used: <strong>${storage.kilobytes} KB</strong></span>
+                        <span class="backup-last-pill">Last Backup: <strong id="lastBackupLabel">${getLastBackupDate()}</strong></span>
+                    </div>
                 </div>
 
                 <div class="backup-stats-grid">
@@ -103,10 +274,10 @@ window.GymBackup = (function () {
                 <div class="backup-two-col">
 
                     <section class="backup-card">
-                        <div class="backup-card-badge green">EXPORT DATA</div>
-                        <h3>Download Full Backup</h3>
+                        <div class="backup-card-badge green">LOCAL BACKUP</div>
+                        <h3>Download Full Backup (.json)</h3>
                         <p>
-                            Generate a portable <code>.json</code> backup file containing all members, plans, payments, discounts, attendance logs, trainers, expenses and settings.
+                            Save a complete <code>.json</code> backup file onto your computer containing members, plans, payments, discounts, attendance, trainers, expenses and settings.
                         </p>
 
                         <button type="button" id="backupDataBtn" class="backup-primary-btn">
@@ -115,10 +286,10 @@ window.GymBackup = (function () {
                     </section>
 
                     <section class="backup-card">
-                        <div class="backup-card-badge blue">IMPORT DATA</div>
+                        <div class="backup-card-badge blue">LOCAL RESTORE</div>
                         <h3>Restore From Backup File</h3>
                         <p>
-                            Select a valid GYM PRO <code>.json</code> backup file to restore your records into this browser.
+                            Select a previously downloaded GYM PRO <code>.json</code> backup file to restore your records into this browser.
                         </p>
 
                         <button type="button" id="restoreDataBtn" class="backup-secondary-btn">
@@ -130,11 +301,42 @@ window.GymBackup = (function () {
                             style="display:none;">
 
                         <div class="backup-warning">
-                            <strong>Warning:</strong> Restoring a backup replaces all current data stored in this browser. Always download a fresh backup before restoring.
+                            <strong>Warning:</strong> Restoring a backup replaces all current data in this browser. Download a fresh backup first.
                         </div>
                     </section>
 
                 </div>
+
+                <!-- ADMIN GOOGLE DRIVE CLOUD BACKUP -->
+                <section class="backup-card drive-card">
+                    <div class="backup-card-badge red">ADMIN GOOGLE DRIVE</div>
+                    <h3>Connect Admin Google Drive</h3>
+                    <p>
+                        Admin can enter their own Google Cloud OAuth Client ID once to upload and restore backups directly to their Google Drive.
+                    </p>
+
+                    <div class="drive-id-row">
+                        <input type="text" id="driveClientIdInput"
+                            value="${escapeHTML(savedClientId)}"
+                            placeholder="Paste Google OAuth Client ID (e.g. 1234567890-xxx.apps.googleusercontent.com)">
+                        <button type="button" id="saveDriveIdBtn" class="backup-secondary-btn">
+                            Save Client ID
+                        </button>
+                    </div>
+
+                    <div class="drive-btn-row">
+                        <button type="button" id="driveUploadBtn" class="backup-primary-btn">
+                            ☁ Upload Backup to Drive
+                        </button>
+                        <button type="button" id="driveRestoreBtn" class="backup-secondary-btn">
+                            ☁ Restore Latest From Drive
+                        </button>
+                    </div>
+
+                    <div class="backup-note">
+                        <strong>Admin Setup Tip:</strong> In Google Cloud Console, enable <strong>Google Drive API</strong> and add this site's URL under <strong>Authorized JavaScript origins</strong> for your Web OAuth Client ID.
+                    </div>
+                </section>
 
             </div>
         `;
@@ -151,19 +353,25 @@ window.GymBackup = (function () {
 
         document.getElementById("restoreFileInput")
             .addEventListener("change", restoreBackup);
+
+        document.getElementById("saveDriveIdBtn")
+            .addEventListener("click", () => {
+                const val = document.getElementById("driveClientIdInput").value.trim();
+                saveSettingRecord("googleDriveClientId", val);
+                driveToken = null;
+                notify("Google Drive Client ID saved.");
+            });
+
+        document.getElementById("driveUploadBtn")
+            .addEventListener("click", uploadBackupToDrive);
+
+        document.getElementById("driveRestoreBtn")
+            .addEventListener("click", restoreBackupFromDrive);
     }
 
     function downloadBackup() {
         try {
-            const now = new Date().toISOString();
-            const backup = GymDB.exportData();
-
-            const fileData = {
-                application: "GYM PRO",
-                version: "1.0.4",
-                backupDate: now,
-                data: backup
-            };
+            const fileData = GymDB.exportData();
 
             const blob = new Blob(
                 [JSON.stringify(fileData, null, 2)],
@@ -174,14 +382,14 @@ window.GymBackup = (function () {
             const link = document.createElement("a");
 
             link.href = url;
-            link.download = "GYM-PRO-Backup-" + now.slice(0, 10) + ".json";
+            link.download = "GYM-PRO-Backup-" + fileData.backupDate.slice(0, 10) + ".json";
 
             document.body.appendChild(link);
             link.click();
             link.remove();
             URL.revokeObjectURL(url);
 
-            setLastBackupDate(now);
+            saveSettingRecord("lastBackupDate", fileData.backupDate);
             const label = document.getElementById("lastBackupLabel");
             if (label) label.textContent = getLastBackupDate();
 
@@ -213,7 +421,12 @@ window.GymBackup = (function () {
 
                 if (!confirmed) return;
 
-                GymDB.importData(backup.data);
+                const success = GymDB.importData(backup);
+
+                if (!success) {
+                    alert("Restore failed. Backup file structure is invalid.");
+                    return;
+                }
 
                 alert("Backup restored successfully! The application will now reload.");
                 window.location.reload();
@@ -274,6 +487,12 @@ window.GymBackup = (function () {
                 font-size: 11.5px;
             }
 
+            .backup-meta-pills {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
             .backup-last-pill {
                 padding: 7px 12px;
                 border-radius: 8px;
@@ -326,6 +545,40 @@ window.GymBackup = (function () {
                 box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
+            .drive-card {
+                margin-top: 18px;
+            }
+
+            .drive-id-row {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 14px;
+            }
+
+            .drive-id-row input {
+                flex: 1;
+                min-width: 240px;
+                padding: 11px 13px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12px;
+                outline: none;
+            }
+
+            .drive-id-row input:focus {
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
+            }
+
+            .drive-btn-row {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
             .backup-card-badge {
                 display: inline-block;
                 padding: 4px 9px;
@@ -344,6 +597,11 @@ window.GymBackup = (function () {
             .backup-card-badge.blue {
                 background: #edf5ff;
                 color: #2879d0;
+            }
+
+            .backup-card-badge.red {
+                background: #fff0f0;
+                color: #d71920;
             }
 
             .backup-card h3 {
@@ -411,6 +669,17 @@ window.GymBackup = (function () {
                 background: #fff8eb;
                 border: 1px solid #f7dfad;
                 color: #7c5812;
+                font-size: 11.5px;
+                line-height: 1.6;
+            }
+
+            .backup-note {
+                margin-top: 16px;
+                padding: 12px 14px;
+                border-radius: 9px;
+                background: #f8f9fb;
+                border: 1px solid #e7e9ee;
+                color: #5f6672;
                 font-size: 11.5px;
                 line-height: 1.6;
             }
