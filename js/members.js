@@ -249,7 +249,7 @@ window.GymMembers = (function () {
     }
 
     // ==========================================
-    // STYLES
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
     // ==========================================
 
     function injectStyles() {
@@ -260,50 +260,90 @@ window.GymMembers = (function () {
 
         style.textContent = `
             .members-wrap {
-                padding: 5px 0 25px;
+                padding: 2px 0 25px;
             }
 
             .members-header {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 gap: 15px;
                 flex-wrap: wrap;
-                margin-bottom: 22px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .members-header h2 {
-                margin: 0 0 6px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .members-header p {
                 margin: 0;
-                opacity: .7;
+                color: #737985;
+                font-size: 11.5px;
             }
 
             .members-stats {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
-                margin-bottom: 22px;
+                margin-bottom: 20px;
             }
 
             .members-stat {
                 padding: 20px;
-                border-radius: 14px;
-                background: rgba(255,255,255,.05);
-                border: 1px solid rgba(255,255,255,.08);
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .members-stat:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
+            }
+
+            .members-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
             .members-stat span {
-                display: block;
-                opacity: .7;
-                font-size: 13px;
-                margin-bottom: 9px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .members-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
             }
 
             .members-stat strong {
-                font-size: 25px;
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
+            }
+
+            .members-panel {
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .members-toolbar {
@@ -315,102 +355,180 @@ window.GymMembers = (function () {
 
             .members-toolbar input,
             .members-toolbar select {
-                padding: 12px 14px;
+                padding: 11px 14px;
                 border-radius: 9px;
-                border: 1px solid rgba(255,255,255,.13);
-                background: #171324;
-                color: #fff;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
                 outline: none;
+                transition: all 0.2s ease;
+            }
+
+            .members-toolbar input:focus,
+            .members-toolbar select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .members-toolbar input {
                 flex: 1;
-                min-width: 180px;
+                min-width: 210px;
             }
 
             .members-toolbar select {
-                min-width: 140px;
+                min-width: 160px;
+                font-weight: 600;
             }
 
             .members-table-wrap {
                 overflow-x: auto;
-                border-radius: 13px;
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .members-table {
                 width: 100%;
                 border-collapse: collapse;
-                min-width: 850px;
+                min-width: 900px;
+                background: #ffffff;
             }
 
             .members-table th,
             .members-table td {
-                padding: 14px;
+                padding: 13px 12px;
                 text-align: left;
-                border-bottom: 1px solid rgba(255,255,255,.08);
+                border-bottom: 1px solid #edf0f3;
             }
 
             .members-table th {
-                font-size: 12px;
-                opacity: .7;
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                background: #f8f9fb;
                 text-transform: uppercase;
+                letter-spacing: 0.4px;
             }
 
             .members-table td {
-                font-size: 13px;
+                font-size: 11.5px;
+                color: #454c57;
+                vertical-align: middle;
+            }
+
+            .members-table tbody tr:hover {
+                background: #fffafa;
+            }
+
+            .member-id-pill {
+                display: inline-block;
+                margin-top: 4px;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #f3f4f6;
+                color: #5f6672;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+            }
+
+            .member-plan-pill {
+                display: inline-block;
+                padding: 4px 9px;
+                border-radius: 6px;
+                background: #edf5ff;
+                color: #2879d0;
+                font-size: 10.5px;
+                font-weight: 600;
             }
 
             .member-status {
                 display: inline-block;
-                padding: 5px 10px;
+                padding: 4px 10px;
                 border-radius: 20px;
-                font-size: 11px;
-                background: rgba(46,204,113,.13);
-                color: #6ee7a0;
+                font-size: 10px;
+                font-weight: 700;
+                background: #e9f8f0;
+                color: #168653;
             }
 
             .member-status.inactive {
-                background: rgba(255,255,255,.1);
-                color: #aaa;
+                background: #f2f4f7;
+                color: #69717e;
             }
 
             .member-status.expired {
-                background: rgba(231,76,60,.15);
-                color: #ff8d8d;
+                background: #fff0f0;
+                color: #d71920;
+            }
+
+            .member-actions-cell {
+                white-space: nowrap;
             }
 
             .member-action {
-                padding: 7px 10px;
-                border: 0;
+                padding: 6px 10px;
+                border: 1px solid #dfe2e8;
                 border-radius: 7px;
                 margin: 2px;
                 cursor: pointer;
-                color: white;
-                background: #6845b8;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #303640;
+                background: #ffffff;
+                transition: all 0.18s ease;
             }
 
-            .member-action.delete {
-                background: #a93650;
-            }
-
-            .member-action.toggle {
-                background: #287c68;
+            .member-action:hover {
+                background: #f4f6f9;
+                border-color: #cbd2dc;
             }
 
             .member-action.whatsapp {
-                background: #168b57;
+                background: #e9f8f0;
+                border-color: #bfe7d1;
+                color: #168653;
             }
 
             .member-action.whatsapp:hover {
-                background: #20a96b;
+                background: #168653;
+                border-color: #168653;
+                color: #ffffff;
+            }
+
+            .member-action.toggle {
+                background: #fff8eb;
+                border-color: #f5deb3;
+                color: #b8740e;
+            }
+
+            .member-action.toggle:hover {
+                background: #d97706;
+                border-color: #d97706;
+                color: #ffffff;
+            }
+
+            .member-action.delete {
+                background: #fff0f0;
+                border-color: #f5c6c8;
+                color: #d71920;
+            }
+
+            .member-action.delete:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
             }
 
             .members-empty {
                 text-align: center;
                 padding: 35px 15px;
-                opacity: .65;
+                color: #8a909a;
+                font-size: 12px;
             }
 
+            /* MODAL */
             .members-modal {
                 position: fixed;
                 inset: 0;
@@ -419,35 +537,68 @@ window.GymMembers = (function () {
                 align-items: center;
                 justify-content: center;
                 padding: 15px;
-                background: rgba(0,0,0,.78);
+                background: rgba(15, 20, 30, 0.55);
+                backdrop-filter: blur(3px);
             }
 
             .members-modal-box {
                 width: 100%;
-                max-width: 650px;
+                max-width: 680px;
                 max-height: 92vh;
                 overflow-y: auto;
-                padding: 24px;
+                padding: 26px;
                 border-radius: 16px;
-                background: #211a32;
-                border: 1px solid rgba(255,255,255,.12);
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 20px 50px rgba(15, 20, 30, 0.18);
             }
 
-            .members-modal-box h3 {
-                margin-top: 0;
-                margin-bottom: 20px;
+            .members-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-bottom: 14px;
+                margin-bottom: 16px;
+                border-bottom: 1px solid #edf0f3;
+            }
+
+            .members-modal-header h3 {
+                margin: 0;
+                font-size: 17px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .members-modal-close {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid #e7e9ee;
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 16px;
+                display: grid;
+                place-items: center;
+            }
+
+            .members-modal-close:hover {
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #f2bfc1;
             }
 
             .members-form-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 0 15px;
+                gap: 0 16px;
             }
 
             .members-form label {
                 display: block;
-                font-size: 13px;
-                margin: 13px 0 7px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #454c57;
+                margin: 13px 0 6px;
             }
 
             .members-form input,
@@ -455,16 +606,17 @@ window.GymMembers = (function () {
             .members-form textarea {
                 width: 100%;
                 box-sizing: border-box;
-                padding: 12px 14px;
+                padding: 11px 13px;
                 border-radius: 9px;
-                border: 1px solid rgba(255,255,255,.13);
-                background: #171324;
-                color: #fff;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12.5px;
                 outline: none;
             }
 
             .members-form textarea {
-                min-height: 75px;
+                min-height: 72px;
                 resize: vertical;
             }
 
@@ -473,25 +625,29 @@ window.GymMembers = (function () {
             }
 
             .members-plan-info {
-                margin-top: 12px;
-                padding: 12px;
-                border-radius: 9px;
-                background: rgba(128,85,217,.13);
-                border: 1px solid rgba(128,85,217,.25);
+                margin-top: 14px;
+                padding: 13px 15px;
+                border-radius: 10px;
+                background: #fff5f5;
+                border: 1px solid #f7d4d6;
+                color: #303640;
                 font-size: 12px;
-                line-height: 1.7;
+                line-height: 1.75;
             }
 
             .members-plan-warning {
-                color: #ffc56d;
+                color: #d97706;
+                font-weight: 600;
                 margin-top: 8px;
-                font-size: 12px;
+                font-size: 11.5px;
             }
 
             .members-form-actions {
                 display: flex;
-                gap: 10px;
+                gap: 12px;
                 margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #edf0f3;
             }
 
             .members-form-actions button {
@@ -500,13 +656,27 @@ window.GymMembers = (function () {
                 border: 0;
                 border-radius: 9px;
                 cursor: pointer;
-                color: white;
-                background: #8055d9;
-                font-weight: 600;
+                color: #ffffff;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                font-weight: 700;
+                font-size: 12.5px;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
+            }
+
+            .members-form-actions button:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
             }
 
             .members-form-actions .cancel {
-                background: #494253;
+                background: #f3f4f6;
+                color: #454c57;
+                border: 1px solid #dfe2e8;
+                box-shadow: none;
+            }
+
+            .members-form-actions .cancel:hover {
+                background: #e7e9ee;
             }
 
             @media(max-width:650px) {
@@ -550,8 +720,8 @@ window.GymMembers = (function () {
 
                 <div class="members-header">
                     <div>
-                        <h2>Gym Members</h2>
-                        <p>Manage your gym members and memberships.</p>
+                        <h2>Gym Members Directory</h2>
+                        <p>Add, edit, search and manage active or expired memberships.</p>
                     </div>
 
                     <button class="btn btn-primary" id="addGymMemberBtn">
@@ -561,60 +731,74 @@ window.GymMembers = (function () {
 
                 <div class="members-stats">
                     <div class="members-stat">
-                        <span>Total Members</span>
+                        <div class="members-stat-top">
+                            <span>Total Registered</span>
+                            <div class="members-stat-dot" style="background:#d71920;"></div>
+                        </div>
                         <strong id="membersTotal">0</strong>
                     </div>
 
                     <div class="members-stat">
-                        <span>Active Members</span>
+                        <div class="members-stat-top">
+                            <span>Active Members</span>
+                            <div class="members-stat-dot" style="background:#168653;"></div>
+                        </div>
                         <strong id="membersActive">0</strong>
                     </div>
 
                     <div class="members-stat">
-                        <span>Inactive Members</span>
+                        <div class="members-stat-top">
+                            <span>Inactive / Expired</span>
+                            <div class="members-stat-dot" style="background:#8a909a;"></div>
+                        </div>
                         <strong id="membersInactive">0</strong>
                     </div>
                 </div>
 
-                <div class="members-toolbar">
-                    <input
-                        type="search"
-                        id="searchGymMembers"
-                        placeholder="Search name, phone or member ID..."
-                    >
+                <div class="members-panel">
+                    <div class="members-toolbar">
+                        <input
+                            type="search"
+                            id="searchGymMembers"
+                            placeholder="Search by member name, phone, plan or ID..."
+                        >
 
-                    <select id="filterGymMembers">
-                        <option value="all">All Members</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="expired">Expired</option>
-                    </select>
-                </div>
+                        <select id="filterGymMembers">
+                            <option value="all">All Members</option>
+                            <option value="active">Active Only</option>
+                            <option value="inactive">Inactive Only</option>
+                            <option value="expired">Expired Only</option>
+                        </select>
+                    </div>
 
-                <div class="members-table-wrap">
-                    <table class="members-table">
-                        <thead>
-                            <tr>
-                                <th>Member</th>
-                                <th>Phone</th>
-                                <th>Membership Plan</th>
-                                <th>Joining Date</th>
-                                <th>Expiry Date</th>
-                                <th>Fees</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
+                    <div class="members-table-wrap">
+                        <table class="members-table">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Phone</th>
+                                    <th>Membership Plan</th>
+                                    <th>Joining Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Fees</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
 
-                        <tbody id="gymMembersTable"></tbody>
-                    </table>
+                            <tbody id="gymMembersTable"></tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
 
             <div class="members-modal" id="gymMemberModal">
                 <div class="members-modal-box">
-                    <h3 id="gymMemberFormTitle">Add New Member</h3>
+                    <div class="members-modal-header">
+                        <h3 id="gymMemberFormTitle">Add New Member</h3>
+                        <button type="button" class="members-modal-close" id="closeGymMemberX" aria-label="Close">✕</button>
+                    </div>
 
                     <form class="members-form" id="gymMemberForm">
 
@@ -635,7 +819,7 @@ window.GymMembers = (function () {
                                 <input
                                     type="tel"
                                     id="memberPhone"
-                                    placeholder="Enter phone number"
+                                    placeholder="Enter 10-digit phone number"
                                     required
                                 >
                             </div>
@@ -752,6 +936,9 @@ window.GymMembers = (function () {
         document.getElementById("cancelGymMember")
             .addEventListener("click", closeForm);
 
+        document.getElementById("closeGymMemberX")
+            .addEventListener("click", closeForm);
+
         document.getElementById("gymMemberForm")
             .addEventListener("submit", saveMember);
 
@@ -866,9 +1053,9 @@ window.GymMembers = (function () {
 
         info.innerHTML = `
             <strong>Selected Plan:</strong> ${escapeHTML(plan.name)}
-            <br>
+            &nbsp;•&nbsp;
             <strong>Duration:</strong> ${Number(plan.durationDays || 0)} Days
-            <br>
+            &nbsp;•&nbsp;
             <strong>Plan Fees:</strong> ${currency(plan.fees)}
         `;
 
@@ -932,7 +1119,7 @@ window.GymMembers = (function () {
         editingMemberId = member ? member.id : null;
 
         document.getElementById("gymMemberFormTitle").textContent =
-            member ? "Edit Member" : "Add New Member";
+            member ? "Edit Member Details" : "Add New Member";
 
         document.getElementById("memberJoiningDate").value =
             member?.joiningDate || today();
@@ -1249,20 +1436,22 @@ window.GymMembers = (function () {
             return `
                 <tr>
                     <td>
-                        <strong>${escapeHTML(member.name)}</strong>
+                        <strong style="color:#202124;">${escapeHTML(member.name)}</strong>
                         <br>
-                        <small>${escapeHTML(member.id || "")}</small>
+                        <span class="member-id-pill">${escapeHTML(member.id || "")}</span>
                     </td>
 
                     <td>${escapeHTML(member.phone || "")}</td>
 
-                    <td>${escapeHTML(member.planName || "Not Assigned")}</td>
+                    <td>
+                        <span class="member-plan-pill">${escapeHTML(member.planName || "Not Assigned")}</span>
+                    </td>
 
                     <td>${escapeHTML(member.joiningDate || "-")}</td>
 
                     <td>${escapeHTML(member.expiryDate || "-")}</td>
 
-                    <td><strong>${currency(member.fees)}</strong></td>
+                    <td><strong style="color:#202124;">${currency(member.fees)}</strong></td>
 
                     <td>
                         <span class="member-status ${status}">
@@ -1270,7 +1459,7 @@ window.GymMembers = (function () {
                         </span>
                     </td>
 
-                    <td>
+                    <td class="member-actions-cell">
                         <button
                             class="member-action whatsapp"
                             data-whatsapp-member="${escapeHTML(member.id)}"
