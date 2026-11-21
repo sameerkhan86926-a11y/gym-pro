@@ -1,6 +1,5 @@
 window.GymSettings = (function () {
     "use strict";
-    const SETTINGS_KEY = "gympro_settings";
 
     function getSettings() {
         return GymDB.getAll("settings") || [];
@@ -62,6 +61,14 @@ window.GymSettings = (function () {
         })[char]);
     }
 
+    function notify(message) {
+        if (typeof window.showToast === "function") {
+            window.showToast(message);
+        } else {
+            alert(message);
+        }
+    }
+
     // APPLY GYM NAME THROUGHOUT THE APPLICATION
     function applyGymName() {
         const profile = getProfile();
@@ -73,10 +80,16 @@ window.GymSettings = (function () {
             brandName.textContent = gymName;
         }
 
-        // Sidebar logo initial
+        // Sidebar logo initial (sirf tab text badle jab SVG icon na ho)
         const brandIcon = document.querySelector(".brand-icon");
-        if (brandIcon) {
+        if (brandIcon && !brandIcon.querySelector("svg")) {
             brandIcon.textContent = gymName.charAt(0).toUpperCase();
+        }
+
+        // Topbar owner name agar set ho
+        const profileStrong = document.querySelector(".profile strong");
+        if (profileStrong && profile.ownerName) {
+            profileStrong.textContent = profile.ownerName;
         }
 
         // Browser tab title
@@ -107,55 +120,62 @@ window.GymSettings = (function () {
 
                 <div class="settings-heading">
                     <div>
-                        <h2>Settings</h2>
-                        <p>Manage your gym profile and application settings.</p>
+                        <h2>System & Gym Settings</h2>
+                        <p>Configure your gym identity, currency and automatic member ID format.</p>
                     </div>
                 </div>
 
                 <section class="settings-card">
-                    <h3>Gym Profile</h3>
-                    <p class="settings-description">
-                        Add your gym's basic information.
-                    </p>
+                    <div class="settings-card-header">
+                        <h3>Gym Business Profile</h3>
+                        <p class="settings-description">
+                            This information appears on your dashboard branding, reports and member receipts.
+                        </p>
+                    </div>
 
                     <form id="gymProfileForm">
                         <div class="settings-grid">
 
                             <div>
-                                <label>Gym Name</label>
+                                <label>Gym Name *</label>
                                 <input type="text" id="settingGymName"
-                                    value="${escapeHTML(profile.gymName)}" required>
+                                    value="${escapeHTML(profile.gymName)}"
+                                    placeholder="e.g. GYM PRO" required>
                             </div>
 
                             <div>
-                                <label>Owner Name</label>
+                                <label>Owner / Administrator Name</label>
                                 <input type="text" id="settingOwnerName"
-                                    value="${escapeHTML(profile.ownerName)}">
+                                    value="${escapeHTML(profile.ownerName)}"
+                                    placeholder="Enter owner name">
                             </div>
 
                             <div>
-                                <label>Phone Number</label>
+                                <label>Contact Phone Number</label>
                                 <input type="tel" id="settingPhone"
-                                    value="${escapeHTML(profile.phone)}">
+                                    value="${escapeHTML(profile.phone)}"
+                                    placeholder="Enter gym contact number">
                             </div>
 
                             <div>
                                 <label>Email Address</label>
                                 <input type="email" id="settingEmail"
-                                    value="${escapeHTML(profile.email)}">
+                                    value="${escapeHTML(profile.email)}"
+                                    placeholder="gym@example.com">
                             </div>
 
                             <div>
-                                <label>Currency</label>
+                                <label>Default Currency</label>
                                 <select id="settingCurrency">
-                                    <option value="INR" ${profile.currency === "INR" ? "selected" : ""}>Indian Rupee (₹)</option>
-                                    <option value="USD" ${profile.currency === "USD" ? "selected" : ""}>US Dollar ($)</option>
+                                    <option value="INR" ${profile.currency === "INR" ? "selected" : ""}>Indian Rupee (₹ INR)</option>
+                                    <option value="USD" ${profile.currency === "USD" ? "selected" : ""}>US Dollar ($ USD)</option>
                                 </select>
                             </div>
 
                             <div class="settings-full">
                                 <label>Gym Address</label>
-                                <textarea id="settingAddress" rows="3">${escapeHTML(profile.address)}</textarea>
+                                <textarea id="settingAddress" rows="3"
+                                    placeholder="Enter full gym branch address...">${escapeHTML(profile.address)}</textarea>
                             </div>
 
                         </div>
@@ -167,19 +187,19 @@ window.GymSettings = (function () {
                 </section>
 
                 <section class="settings-card">
-                    <h3>Member ID Configuration</h3>
-
-                    <p class="settings-description">
-                        Choose the member ID format and starting serial number.
-                        New members will receive IDs automatically.
-                    </p>
+                    <div class="settings-card-header">
+                        <h3>Member ID Auto-Generation</h3>
+                        <p class="settings-description">
+                            Customize the prefix and starting serial number for newly registered members.
+                        </p>
+                    </div>
 
                     <form id="memberIdForm">
 
                         <div class="settings-grid">
 
                             <div>
-                                <label>Member ID Prefix</label>
+                                <label>Member ID Prefix (2–12 characters) *</label>
                                 <input
                                     type="text"
                                     id="settingMemberPrefix"
@@ -191,7 +211,7 @@ window.GymSettings = (function () {
                             </div>
 
                             <div>
-                                <label>Starting Serial Number</label>
+                                <label>Starting Serial Number *</label>
                                 <input
                                     type="number"
                                     id="settingMemberStart"
@@ -204,7 +224,7 @@ window.GymSettings = (function () {
 
                             <div class="settings-full">
                                 <div class="member-id-preview">
-                                    <span>Example Member ID</span>
+                                    <span>Live Next ID Preview</span>
                                     <strong id="memberIdPreview">
                                         ${escapeHTML(idConfig.prefix)}-${escapeHTML(idConfig.startSerial)}
                                     </strong>
@@ -219,94 +239,34 @@ window.GymSettings = (function () {
 
                     </form>
 
-                    <div class="settings-warning">
-                        Existing member IDs will not change. The new format
-                        will be used for newly registered members. If a serial
-                        number already exists, the system will skip it.
+                    <div class="settings-note">
+                        Existing member IDs remain unchanged. Newly added members will automatically use the updated format and skip any serial number already in use.
                     </div>
                 </section>
 
                 <section class="settings-card">
-                    <h3>Data Backup & Restore</h3>
-
-                    <p class="settings-description">
-                        Export your gym records to a JSON backup file.
-                        You can later restore the file in this browser.
-                    </p>
-
-                    <div class="settings-actions">
-
-                        <button id="backupDataBtn" class="settings-primary">
-                            Download Backup
-                        </button>
-
-                        <button id="restoreDataBtn" class="settings-secondary">
-                            Restore Backup
-                        </button>
-
-                        <input type="file" id="restoreFileInput"
-                            accept=".json,application/json"
-                            style="display:none;">
-
+                    <div class="settings-card-header">
+                        <h3>Application Information</h3>
+                        <p class="settings-description">
+                            Software version and environment details.
+                        </p>
                     </div>
 
-                    <div class="settings-warning">
-                        Restoring a backup replaces the existing GYM PRO data
-                        in this browser. Download a backup before restoring.
-                    </div>
-                </section>
-
-                <section class="settings-card">
-                    <h3>Storage Information</h3>
-
-                    <p class="settings-description">
-                        Current data is stored locally in this browser.
-                    </p>
-
-                    <div class="storage-info">
-                        <div>
-                            <span>Members</span>
-                            <strong id="storageMembers">0</strong>
+                    <div class="app-info-list">
+                        <div class="app-info-row">
+                            <span>Application Name</span>
+                            <strong id="applicationName">${escapeHTML(profile.gymName || "GYM PRO")}</strong>
                         </div>
 
-                        <div>
-                            <span>Payments</span>
-                            <strong id="storagePayments">0</strong>
+                        <div class="app-info-row">
+                            <span>Software Version</span>
+                            <strong>1.0.4 (Enterprise Red & White)</strong>
                         </div>
 
-                        <div>
-                            <span>Attendance</span>
-                            <strong id="storageAttendance">0</strong>
+                        <div class="app-info-row">
+                            <span>Database Engine</span>
+                            <strong>Browser LocalStorage (Offline Ready)</strong>
                         </div>
-
-                        <div>
-                            <span>Expenses</span>
-                            <strong id="storageExpenses">0</strong>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="settings-card">
-                    <h3>Application Information</h3>
-
-                    <div class="app-info-row">
-                        <span>Application</span>
-                        <strong id="applicationName">${escapeHTML(profile.gymName || "GYM PRO")}</strong>
-                    </div>
-
-                    <div class="app-info-row">
-                        <span>Version</span>
-                        <strong>1.0.0</strong>
-                    </div>
-
-                    <div class="app-info-row">
-                        <span>Storage</span>
-                        <strong>Browser LocalStorage</strong>
-                    </div>
-
-                    <div class="app-info-row">
-                        <span>Hosting</span>
-                        <strong>GitHub Pages</strong>
                     </div>
                 </section>
 
@@ -315,7 +275,6 @@ window.GymSettings = (function () {
 
         addStyles();
         attachEvents();
-        updateStorageInfo();
         applyGymName();
     }
 
@@ -331,17 +290,6 @@ window.GymSettings = (function () {
 
         document.getElementById("settingMemberStart")
             .addEventListener("input", updateMemberIdPreview);
-
-        document.getElementById("backupDataBtn")
-            .addEventListener("click", downloadBackup);
-
-        document.getElementById("restoreDataBtn")
-            .addEventListener("click", () => {
-                document.getElementById("restoreFileInput").click();
-            });
-
-        document.getElementById("restoreFileInput")
-            .addEventListener("change", restoreBackup);
     }
 
     function updateMemberIdPreview() {
@@ -380,8 +328,8 @@ window.GymSettings = (function () {
             startSerial
         });
 
-        alert("Member ID settings saved successfully.");
         updateMemberIdPreview();
+        notify("Member ID settings saved successfully.");
     }
 
     function saveProfileForm(event) {
@@ -403,100 +351,7 @@ window.GymSettings = (function () {
 
         saveProfile(profile);
         applyGymName();
-
-        alert("Gym profile saved successfully.");
-    }
-
-    function downloadBackup() {
-        try {
-            const backup = GymDB.exportData();
-
-            const fileData = {
-                application: "GYM PRO",
-                version: "1.0.0",
-                backupDate: new Date().toISOString(),
-                data: backup
-            };
-
-            const blob = new Blob(
-                [JSON.stringify(fileData, null, 2)],
-                { type: "application/json" }
-            );
-
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-
-            link.href = url;
-            link.download = "GYM-PRO-Backup-" +
-                new Date().toISOString().slice(0, 10) + ".json";
-
-            link.click();
-            URL.revokeObjectURL(url);
-
-            alert("Backup downloaded successfully.");
-        } catch (error) {
-            console.error(error);
-            alert("Backup could not be created.");
-        }
-    }
-
-    function restoreBackup(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = function () {
-            try {
-                const backup = JSON.parse(reader.result);
-
-                if (backup.application !== "GYM PRO" || !backup.data) {
-                    alert("Invalid GYM PRO backup file.");
-                    return;
-                }
-
-                const confirmed = confirm(
-                    "Restoring this backup will replace existing GYM PRO data in this browser. Continue?"
-                );
-
-                if (!confirmed) return;
-
-                GymDB.importData(backup.data);
-
-                alert("Backup restored. The page will now reload.");
-                window.location.reload();
-
-            } catch (error) {
-                console.error(error);
-                alert("Backup file is invalid or damaged.");
-            } finally {
-                event.target.value = "";
-            }
-        };
-
-        reader.onerror = function () {
-            alert("Unable to read backup file.");
-            event.target.value = "";
-        };
-
-        reader.readAsText(file);
-    }
-
-    function updateStorageInfo() {
-        const collections = [
-            ["members", "storageMembers"],
-            ["payments", "storagePayments"],
-            ["attendance", "storageAttendance"],
-            ["expenses", "storageExpenses"]
-        ];
-
-        collections.forEach(([collection, elementId]) => {
-            const element = document.getElementById(elementId);
-            if (!element) return;
-
-            element.textContent =
-                (GymDB.getAll(collection) || []).length;
-        });
+        notify("Gym profile saved successfully.");
     }
 
     function addStyles() {
@@ -507,60 +362,79 @@ window.GymSettings = (function () {
 
         style.textContent = `
             .gym-settings {
-                color: #f4f0ff;
+                color: #202124;
                 width: 100%;
+                padding: 2px 0 25px;
             }
 
             .settings-heading {
-                margin-bottom: 22px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .settings-heading h2 {
-                margin: 0 0 6px;
-                font-size: 25px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .settings-heading p {
                 margin: 0;
-                color: #aaa0c5;
+                color: #737985;
+                font-size: 11.5px;
             }
 
             .settings-card {
-                background: #171326;
-                border: 1px solid #302548;
-                border-radius: 15px;
-                padding: 22px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 22px 24px;
                 margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+            }
+
+            .settings-card-header {
+                margin-bottom: 18px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #edf0f3;
             }
 
             .settings-card h3 {
-                margin: 0 0 8px;
-                font-size: 18px;
+                margin: 0 0 4px;
+                font-size: 15.5px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .settings-description {
-                color: #aaa0c5;
-                font-size: 13px;
-                line-height: 1.6;
-                margin-bottom: 20px;
+                color: #737985;
+                font-size: 11.5px;
+                line-height: 1.5;
+                margin: 0;
             }
 
             .settings-grid {
                 display: grid;
-                grid-template-columns: repeat(2,minmax(0,1fr));
-                gap: 17px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px;
                 margin-bottom: 20px;
             }
 
             .settings-grid > div {
                 display: flex;
                 flex-direction: column;
-                gap: 8px;
+                gap: 6px;
             }
 
             .settings-grid label {
-                color: #c5b8df;
-                font-size: 13px;
+                color: #454c57;
+                font-size: 11.5px;
+                font-weight: 600;
             }
 
             .settings-grid input,
@@ -568,18 +442,20 @@ window.GymSettings = (function () {
             .settings-grid textarea {
                 box-sizing: border-box;
                 width: 100%;
-                padding: 12px;
-                background: #211b32;
-                color: white;
-                border: 1px solid #403456;
+                padding: 11px 13px;
+                background: #ffffff;
+                color: #202124;
+                border: 1px solid #dfe2e8;
                 border-radius: 9px;
+                font-size: 12.5px;
                 outline: none;
             }
 
             .settings-grid input:focus,
             .settings-grid select:focus,
             .settings-grid textarea:focus {
-                border-color: #a77aff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .settings-full {
@@ -587,101 +463,77 @@ window.GymSettings = (function () {
             }
 
             .member-id-preview {
-                padding: 15px;
-                background: #211b32;
-                border: 1px solid #403456;
+                padding: 14px 16px;
+                background: #fff5f5;
+                border: 1px solid #f7d4d6;
                 border-radius: 10px;
             }
 
             .member-id-preview span {
                 display: block;
-                color: #aaa0c5;
-                font-size: 12px;
-                margin-bottom: 8px;
+                color: #737985;
+                font-size: 11px;
+                font-weight: 600;
+                margin-bottom: 5px;
             }
 
             .member-id-preview strong {
-                color: #c9a8ff;
-                font-size: 24px;
-                letter-spacing: 1px;
-            }
-
-            .gym-settings button {
-                padding: 12px 18px;
-                border: 0;
-                border-radius: 9px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
+                color: #d71920;
+                font-size: 22px;
+                font-weight: 800;
+                letter-spacing: 0.8px;
             }
 
             .settings-primary {
-                background: linear-gradient(135deg,#a77aff,#7544d8);
-                box-shadow: 0 4px 12px #0004;
-            }
-
-            .settings-secondary {
-                background: #302548;
-                border: 1px solid #594477 !important;
-            }
-
-            .settings-actions {
-                display: flex;
-                gap: 12px;
-                flex-wrap: wrap;
-            }
-
-            .settings-warning {
-                margin-top: 18px;
-                padding: 13px;
+                padding: 12px 20px;
+                border: 0;
                 border-radius: 9px;
-                background: #352817;
-                color: #f2ce8c;
-                font-size: 13px;
-                line-height: 1.6;
-            }
-
-            .storage-info {
-                display: grid;
-                grid-template-columns: repeat(4,minmax(0,1fr));
-                gap: 12px;
-            }
-
-            .storage-info div {
-                background: #211b32;
-                padding: 15px;
-                border-radius: 10px;
-            }
-
-            .storage-info span,
-            .storage-info strong {
-                display: block;
-            }
-
-            .storage-info span {
-                color: #b9adcf;
+                color: #ffffff;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                font-weight: 700;
                 font-size: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
             }
 
-            .storage-info strong {
-                font-size: 23px;
-                margin-top: 8px;
+            .settings-primary:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
+                transform: translateY(-1px);
+            }
+
+            .settings-note {
+                margin-top: 16px;
+                padding: 12px 14px;
+                border-radius: 9px;
+                background: #f8f9fb;
+                border: 1px solid #e7e9ee;
+                color: #5f6672;
+                font-size: 11.5px;
+                line-height: 1.6;
             }
 
             .app-info-row {
                 display: flex;
                 justify-content: space-between;
+                align-items: center;
                 gap: 15px;
-                padding: 13px 0;
-                border-bottom: 1px solid #302548;
-                font-size: 13px;
+                padding: 12px 0;
+                border-bottom: 1px solid #edf0f3;
+                font-size: 12px;
+            }
+
+            .app-info-row:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
             }
 
             .app-info-row span {
-                color: #aaa0c5;
+                color: #737985;
             }
 
             .app-info-row strong {
+                color: #202124;
                 text-align: right;
             }
 
@@ -694,12 +546,8 @@ window.GymSettings = (function () {
                     grid-column: auto;
                 }
 
-                .storage-info {
-                    grid-template-columns: repeat(2,minmax(0,1fr));
-                }
-
                 .settings-card {
-                    padding: 16px;
+                    padding: 18px;
                 }
             }
         `;
@@ -707,14 +555,12 @@ window.GymSettings = (function () {
         document.head.appendChild(style);
     }
 
-    // APPLY SAVED NAME WHEN THE APPLICATION LOADS
     if (typeof GymDB !== "undefined") {
         applyGymName();
     }
 
     return {
         render,
-        refresh: updateStorageInfo,
         getProfile,
         getMemberIdConfig,
         applyGymName
