@@ -1400,11 +1400,6 @@ window.GymMembers = (function () {
             return;
         }
 
-        // Purani cycle ke payments aur fees ko separate rakhte hue nayi renewal fee due set karein
-        const paidSoFar = (GymDB.getAll("payments") || [])
-            .filter(p => String(p.memberId) === String(member.id) && p.status !== "void")
-            .reduce((sum, p) => sum + Number(p.amount || 0), 0);
-
         const renewalHistory = Array.isArray(member.renewals) ? member.renewals.slice() : [];
         const nowIso = new Date().toISOString();
 
@@ -1424,7 +1419,7 @@ window.GymMembers = (function () {
             durationDays: Number(plan.durationDays || 0),
             joiningDate: startDate,
             expiryDate: expiryDate,
-            fees: paidSoFar + renewalFees,
+            fees: renewalFees,
             billingFinalFees: null,
             billingOriginalFees: null,
             billingDiscountAmount: null,
