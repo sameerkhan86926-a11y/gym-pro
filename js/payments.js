@@ -50,6 +50,31 @@ window.GymPayments = (function () {
         );
     }
 
+    function getLatestRenewal(member) {
+        const list = Array.isArray(member?.renewals) ? member.renewals : [];
+        return list.length ? list[list.length - 1] : null;
+    }
+
+    // Current billing cycle ke payments (agar renew hua hai toh renewal ke baad wale)
+    function getCurrentCyclePayments(member) {
+        const all = getMemberPayments(member.id);
+        const latestRenewal = getLatestRenewal(member);
+
+        if (!latestRenewal || !latestRenewal.renewedAt) {
+            return all;
+        }
+
+        const renewalTime = new Date(latestRenewal.renewedAt).getTime();
+        if (isNaN(renewalTime)) return all;
+
+        return all.filter(payment => {
+            const pTime = payment.createdAt
+                ? new Date(payment.createdAt).getTime()
+                : new Date(payment.date + "T12:00:00").getTime();
+            return !isNaN(pTime) && pTime >= renewalTime;
+        });
+    }
+
     function getActiveDiscounts(memberId) {
         const current = today();
 
@@ -85,7 +110,7 @@ window.GymPayments = (function () {
     }
 
     function getBilling(member, selectedDiscountId) {
-        const payments = getMemberPayments(member.id);
+        const cyclePayments = getCurrentCyclePayments(member);
 
         if (
             member.billingFinalFees !== undefined &&
@@ -103,7 +128,7 @@ window.GymPayments = (function () {
             };
         }
 
-        const oldPayment = payments.find(payment =>
+        const oldPayment = cyclePayments.find(payment =>
             payment.billingFinalFees !== undefined
         );
 
@@ -121,8 +146,7 @@ window.GymPayments = (function () {
 
         const fees = Number(member.fees || 0);
 
-        // Existing payment records ka purana billing change nahi hoga.
-        if (payments.length > 0) {
+        if (cyclePayments.length > 0) {
             return {
                 fees,
                 discount: 0,
@@ -166,15 +190,19 @@ window.GymPayments = (function () {
         };
     }
 
-    function getMemberPaid(memberId) {
-        return getMemberPayments(memberId).reduce((total, payment) => {
+    function getMemberPaid(member) {
+        const m = typeof member === "string"
+            ? GymDB.find("members", member) || { id: member }
+            : member;
+
+        return getCurrentCyclePayments(m).reduce((total, payment) => {
             return total + Number(payment.amount || 0);
         }, 0);
     }
 
     function getMemberBalance(member, selectedDiscountId) {
         const billing = getBilling(member, selectedDiscountId);
-        const paid = getMemberPaid(member.id);
+        const paid = getMemberPaid(member);
 
         return {
             fees: billing.fees,
@@ -385,6 +413,17 @@ window.GymPayments = (function () {
                 background: #f3f4f6;
                 color: #5f6672;
                 font-size: 10px;
+                font-weight: 700;
+            }
+
+            .payment-renew-tag {
+                display: inline-block;
+                margin-left: 6px;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #edf5ff;
+                color: #2879d0;
+                font-size: 9.5px;
                 font-weight: 700;
             }
 
@@ -1087,7 +1126,6 @@ window.GymPayments = (function () {
         if (stillAvailable) {
             select.value = previousValue;
         } else if (activeDiscounts.length) {
-            // Latest active discount default selected.
             select.value = activeDiscounts[0].id;
         } else {
             select.value = "";
@@ -1144,7 +1182,7 @@ window.GymPayments = (function () {
             Final Payable Fees:
             <strong style="color:#202124;">${currency(balance.finalFees)}</strong><br>
 
-            Total Paid So Far:
+            Total Paid (Current Cycle):
             <strong style="color:#168653;">${currency(balance.paid)}</strong><br>
 
             <span class="pending-line">
@@ -1222,7 +1260,6 @@ window.GymPayments = (function () {
 
         const billing = balance.billing;
 
-        // First payment par billing snapshot save hota hai.
         if (!billing.locked) {
             const updated = GymDB.update("members", member.id, {
                 billingOriginalFees: billing.fees,
@@ -1436,38 +1473,43 @@ window.GymPayments = (function () {
             return;
         }
 
-        table.innerHTML = pendingMembers.map(item => `
-            <tr>
-                <td>
-                    <strong style="color:#202124;">${escapeHTML(item.member.name)}</strong>
-                </td>
+        table.innerHTML = pendingMembers.map(item => {
+            const isRenewed = Boolean(getLatestRenewal(item.member));
 
-                <td>
-                    <span class="payment-id-pill">${escapeHTML(item.member.id)}</span>
-                </td>
+            return `
+                <tr>
+                    <td>
+                        <strong style="color:#202124;">${escapeHTML(item.member.name)}</strong>
+                        ${isRenewed ? `<span class="payment-renew-tag">Renewal</span>` : ""}
+                    </td>
 
-                <td>${currency(item.balance.fees)}</td>
+                    <td>
+                        <span class="payment-id-pill">${escapeHTML(item.member.id)}</span>
+                    </td>
 
-                <td style="color:#168653;font-weight:600;">${currency(item.balance.discount)}</td>
+                    <td>${currency(item.balance.fees)}</td>
 
-                <td><strong>${currency(item.balance.finalFees)}</strong></td>
+                    <td style="color:#168653;font-weight:600;">${currency(item.balance.discount)}</td>
 
-                <td>${currency(item.balance.paid)}</td>
+                    <td><strong>${currency(item.balance.finalFees)}</strong></td>
 
-                <td>
-                    <span class="payment-pending-badge">
-                        ${currency(item.balance.pending)}
-                    </span>
-                </td>
+                    <td>${currency(item.balance.paid)}</td>
 
-                <td>
-                    <button class="payment-action collect"
-                        data-collect-member="${escapeHTML(item.member.id)}">
-                        Collect
-                    </button>
-                </td>
-            </tr>
-        `).join("");
+                    <td>
+                        <span class="payment-pending-badge">
+                            ${currency(item.balance.pending)}
+                        </span>
+                    </td>
+
+                    <td>
+                        <button class="payment-action collect"
+                            data-collect-member="${escapeHTML(item.member.id)}">
+                            Collect
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
 
         table.querySelectorAll("[data-collect-member]").forEach(button => {
             button.addEventListener("click", function () {
