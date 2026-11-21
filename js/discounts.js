@@ -56,6 +56,32 @@ window.GymDiscounts = (function () {
         return getStatus(discount) === "active";
     }
 
+    // Calculate actual ₹ discount given for a discount record
+    function getDiscountRupeeValue(discount, members) {
+        const member = members.find(m => String(m.id) === String(discount.memberId));
+        const fees = Number(
+            member?.billingOriginalFees ??
+            member?.fees ??
+            0
+        );
+
+        if (discount.type === "percentage") {
+            if (fees > 0) {
+                return Math.min(fees, (fees * Number(discount.value || 0)) / 100);
+            }
+            return 0;
+        }
+
+        const fixed = Number(discount.value || 0);
+        return fees > 0 ? Math.min(fees, fixed) : fixed;
+    }
+
+    function getRecordDate(discount) {
+        if (discount.startDate) return discount.startDate;
+        if (discount.createdAt) return String(discount.createdAt).slice(0, 10);
+        return "";
+    }
+
     function render() {
         const root = document.getElementById("modulePlaceholder");
         if (!root) return;
@@ -76,10 +102,11 @@ window.GymDiscounts = (function () {
                     <div class="discount-stat-card">
                         <div class="discount-stat-top">
                             <span>Total Discounts</span>
-                            <div class="discount-stat-dot" style="background:#d71920;"></div>
+                            <div class="discount-stat-dot" style="background:#2879d0;"></div>
                         </div>
                         <strong id="discountTotal">0</strong>
                     </div>
+
                     <div class="discount-stat-card">
                         <div class="discount-stat-top">
                             <span>Active Discounts</span>
@@ -87,12 +114,21 @@ window.GymDiscounts = (function () {
                         </div>
                         <strong id="discountActive">0</strong>
                     </div>
+
                     <div class="discount-stat-card">
                         <div class="discount-stat-top">
                             <span>Expired / Inactive</span>
                             <div class="discount-stat-dot" style="background:#8a909a;"></div>
                         </div>
                         <strong id="discountInactive">0</strong>
+                    </div>
+
+                    <div class="discount-stat-card highlight">
+                        <div class="discount-stat-top">
+                            <span>Total Discount Given</span>
+                            <div class="discount-stat-dot" style="background:#d71920;"></div>
+                        </div>
+                        <strong id="discountTotalAmount" style="color:#d71920;">₹0</strong>
                     </div>
                 </div>
 
@@ -102,28 +138,58 @@ window.GymDiscounts = (function () {
 
                     <div class="discount-toolbar">
 
-                        <input type="search"
-                            id="discountSearch"
-                            placeholder="Search member name, ID or reason...">
+                        <div class="discount-filter-field search-field">
+                            <label for="discountSearch">Search</label>
+                            <input type="search"
+                                id="discountSearch"
+                                placeholder="Search member name, ID or reason...">
+                        </div>
 
-                        <select id="discountMemberFilter">
-                            <option value="all">All Members</option>
-                        </select>
+                        <div class="discount-filter-field">
+                            <label for="discountFromDate">From Date</label>
+                            <input type="date" id="discountFromDate">
+                        </div>
 
-                        <select id="discountTypeFilter">
-                            <option value="all">All Types</option>
-                            <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Amount (₹)</option>
-                        </select>
+                        <div class="discount-filter-field">
+                            <label for="discountToDate">To Date</label>
+                            <input type="date" id="discountToDate">
+                        </div>
 
-                        <select id="discountStatusFilter">
-                            <option value="all">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="expired">Expired</option>
-                            <option value="upcoming">Upcoming</option>
-                        </select>
+                        <div class="discount-filter-field">
+                            <label for="discountMemberFilter">Member</label>
+                            <select id="discountMemberFilter">
+                                <option value="all">All Members</option>
+                            </select>
+                        </div>
 
+                        <div class="discount-filter-field">
+                            <label for="discountTypeFilter">Type</label>
+                            <select id="discountTypeFilter">
+                                <option value="all">All Types</option>
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount (₹)</option>
+                            </select>
+                        </div>
+
+                        <div class="discount-filter-field">
+                            <label for="discountStatusFilter">Status</label>
+                            <select id="discountStatusFilter">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="expired">Expired</option>
+                                <option value="upcoming">Upcoming</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="discount-reset-btn" id="resetDiscountFiltersBtn">
+                            Reset
+                        </button>
+
+                    </div>
+
+                    <div class="discount-filter-summary" id="discountFilterSummary">
+                        Showing 0 discount(s) • Total Discount Value: ₹0
                     </div>
 
                     <div class="discount-table-wrap">
@@ -155,6 +221,12 @@ window.GymDiscounts = (function () {
         document.getElementById("discountSearch")
             .addEventListener("input", renderTable);
 
+        document.getElementById("discountFromDate")
+            .addEventListener("change", renderTable);
+
+        document.getElementById("discountToDate")
+            .addEventListener("change", renderTable);
+
         document.getElementById("discountMemberFilter")
             .addEventListener("change", renderTable);
 
@@ -163,6 +235,18 @@ window.GymDiscounts = (function () {
 
         document.getElementById("discountStatusFilter")
             .addEventListener("change", renderTable);
+
+        document.getElementById("resetDiscountFiltersBtn")
+            .addEventListener("click", () => {
+                document.getElementById("discountSearch").value = "";
+                document.getElementById("discountFromDate").value = "";
+                document.getElementById("discountToDate").value = "";
+                document.getElementById("discountMemberFilter").value = "all";
+                document.getElementById("discountTypeFilter").value = "all";
+                document.getElementById("discountStatusFilter").value = "all";
+                renderTable();
+                showMessage("Discount filters reset.");
+            });
 
         fillMemberFilter();
         renderTable();
@@ -194,6 +278,9 @@ window.GymDiscounts = (function () {
         const search = document.getElementById("discountSearch").value
             .trim().toLowerCase();
 
+        const fromDate = document.getElementById("discountFromDate").value;
+        const toDate = document.getElementById("discountToDate").value;
+
         const memberFilter =
             document.getElementById("discountMemberFilter").value;
 
@@ -202,6 +289,12 @@ window.GymDiscounts = (function () {
 
         const statusFilter =
             document.getElementById("discountStatusFilter").value;
+
+        // Overall Stats Cards
+        const totalRupeeGiven = discounts.reduce(
+            (sum, d) => sum + getDiscountRupeeValue(d, members),
+            0
+        );
 
         document.getElementById("discountTotal").textContent =
             discounts.length;
@@ -212,26 +305,54 @@ window.GymDiscounts = (function () {
         document.getElementById("discountInactive").textContent =
             discounts.filter(d => getStatus(d) !== "active").length;
 
-        const filtered = discounts.filter(discount => {
-            const member = members.find(m => m.id === discount.memberId);
+        document.getElementById("discountTotalAmount").textContent =
+            money(totalRupeeGiven);
 
-            const memberName = member?.name ||
-                discount.memberName || "Member";
+        // Filtered Rows
+        const filtered = (fromDate && toDate && fromDate > toDate)
+            ? []
+            : discounts.filter(discount => {
+                const member = members.find(m => m.id === discount.memberId);
 
-            const text = [
-                memberName,
-                discount.reason,
-                discount.memberId
-            ].join(" ").toLowerCase();
+                const memberName = member?.name ||
+                    discount.memberName || "Member";
 
-            return text.includes(search) &&
-                (memberFilter === "all" ||
-                    discount.memberId === memberFilter) &&
-                (typeFilter === "all" ||
-                    discount.type === typeFilter) &&
-                (statusFilter === "all" ||
-                    getStatus(discount) === statusFilter);
-        });
+                const text = [
+                    memberName,
+                    discount.reason,
+                    discount.memberId
+                ].join(" ").toLowerCase();
+
+                const recordDate = getRecordDate(discount);
+
+                const matchesFrom = !fromDate || (recordDate && recordDate >= fromDate);
+                const matchesTo = !toDate || (recordDate && recordDate <= toDate);
+
+                return text.includes(search) &&
+                    matchesFrom &&
+                    matchesTo &&
+                    (memberFilter === "all" ||
+                        discount.memberId === memberFilter) &&
+                    (typeFilter === "all" ||
+                        discount.type === typeFilter) &&
+                    (statusFilter === "all" ||
+                        getStatus(discount) === statusFilter);
+            }).sort((a, b) =>
+                String(getRecordDate(b)).localeCompare(String(getRecordDate(a)))
+            );
+
+        const filteredRupeeTotal = filtered.reduce(
+            (sum, d) => sum + getDiscountRupeeValue(d, members),
+            0
+        );
+
+        const summaryEl = document.getElementById("discountFilterSummary");
+        if (summaryEl) {
+            summaryEl.innerHTML = `
+                Filtered Total: <strong>${money(filteredRupeeTotal)}</strong>
+                <span>(${filtered.length} discount${filtered.length === 1 ? "" : "s"})</span>
+            `;
+        }
 
         if (!filtered.length) {
             tbody.innerHTML = `
@@ -250,8 +371,10 @@ window.GymDiscounts = (function () {
             const name = member?.name ||
                 discount.memberName || "Member";
 
+            const rupeeVal = getDiscountRupeeValue(discount, members);
+
             const amount = discount.type === "percentage"
-                ? Number(discount.value) + "% OFF"
+                ? Number(discount.value) + "% OFF" + (rupeeVal > 0 ? ` (${money(rupeeVal)})` : "")
                 : money(discount.value) + " OFF";
 
             const status = getStatus(discount);
@@ -777,7 +900,7 @@ window.GymDiscounts = (function () {
 
             .discount-stats {
                 display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: repeat(4, minmax(0, 1fr));
                 gap: 15px;
                 margin-bottom: 20px;
             }
@@ -789,6 +912,11 @@ window.GymDiscounts = (function () {
                 border-radius: 13px;
                 box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
                 transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .discount-stat-card.highlight {
+                background: #fffafa;
+                border-color: #f5c6c8;
             }
 
             .discount-stat-card:hover {
@@ -817,7 +945,7 @@ window.GymDiscounts = (function () {
 
             .discount-stat-card strong {
                 display: block;
-                font-size: 26px;
+                font-size: 25px;
                 font-weight: 800;
                 color: #202124;
                 letter-spacing: -0.6px;
@@ -840,29 +968,88 @@ window.GymDiscounts = (function () {
             .discount-toolbar {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 12px;
-                margin-bottom: 18px;
+                align-items: flex-end;
+                gap: 10px;
+                margin-bottom: 14px;
+            }
+
+            .discount-filter-field {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .discount-filter-field.search-field {
+                flex: 1;
+                min-width: 190px;
+            }
+
+            .discount-filter-field label {
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
             }
 
             .discount-toolbar input,
             .discount-toolbar select {
-                padding: 11px 14px;
+                padding: 10px 12px;
                 border: 1px solid #dfe2e8;
                 border-radius: 9px;
                 background: #f8f9fb;
                 color: #202124;
                 font-size: 12px;
-                min-width: 0;
+                min-width: 130px;
                 outline: none;
             }
 
-            .discount-toolbar input {
-                flex: 1;
-                min-width: 200px;
+            .discount-toolbar input[type="search"] {
+                width: 100%;
             }
 
             .discount-toolbar select {
                 font-weight: 600;
+            }
+
+            .discount-reset-btn {
+                padding: 10px 15px;
+                border-radius: 9px;
+                border: 1px solid #f2bfc1;
+                background: #fff5f5;
+                color: #d71920;
+                font-size: 11.5px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.18s ease;
+                white-space: nowrap;
+            }
+
+            .discount-reset-btn:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
+            }
+
+            .discount-filter-summary {
+                display: inline-block;
+                margin: 0 0 14px;
+                padding: 6px 12px;
+                border-radius: 7px;
+                background: #fff5f5;
+                border: 1px solid #f7d4d6;
+                color: #d71920;
+                font-size: 11.5px;
+                font-weight: 600;
+            }
+
+            .discount-filter-summary strong {
+                font-weight: 800;
+            }
+
+            .discount-filter-summary span {
+                color: #5f6672;
+                margin-left: 4px;
             }
 
             .discount-form-card input,
@@ -1175,6 +1362,12 @@ window.GymDiscounts = (function () {
                 accent-color: #d71920;
             }
 
+            @media(max-width:850px) {
+                .discount-stats {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
             @media(max-width:650px) {
                 .discount-stats {
                     grid-template-columns: 1fr;
@@ -1188,8 +1381,8 @@ window.GymDiscounts = (function () {
                     grid-column: auto;
                 }
 
-                .discount-toolbar {
-                    flex-direction: column;
+                .discount-filter-field {
+                    width: 100%;
                 }
 
                 .discount-heading button {
