@@ -1064,7 +1064,6 @@ window.GymMembers = (function () {
             `;
         });
 
-        // Agar purane trainer ka naam list mein nahi hai toh preserve karein
         if (
             selectedTrainer &&
             !trainers.some(t => t.name === selectedTrainer)
@@ -1333,7 +1332,6 @@ window.GymMembers = (function () {
             </option>
         `).join("");
 
-        // Agar member abhi active hai toh expiry ke agle din se start karein, warna aaj se
         let startDate = today();
         if (member.expiryDate && member.expiryDate >= today()) {
             const nextDay = new Date(member.expiryDate + "T12:00:00");
@@ -1402,10 +1400,23 @@ window.GymMembers = (function () {
             return;
         }
 
-        // Purane paid amount + nayi renewal fees ko total cycle mein add karein aur billing unlock karein
-        const previousPaid = (GymDB.getAll("payments") || [])
+        // Purani cycle ke payments aur fees ko separate rakhte hue nayi renewal fee due set karein
+        const paidSoFar = (GymDB.getAll("payments") || [])
             .filter(p => String(p.memberId) === String(member.id) && p.status !== "void")
             .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+        const renewalHistory = Array.isArray(member.renewals) ? member.renewals.slice() : [];
+        const nowIso = new Date().toISOString();
+
+        renewalHistory.push({
+            id: "REN-" + Date.now(),
+            planId: plan.id,
+            planName: plan.name,
+            startDate: startDate,
+            expiryDate: expiryDate,
+            fees: renewalFees,
+            renewedAt: nowIso
+        });
 
         GymDB.update(MODULE, member.id, {
             planId: plan.id,
@@ -1413,15 +1424,16 @@ window.GymMembers = (function () {
             durationDays: Number(plan.durationDays || 0),
             joiningDate: startDate,
             expiryDate: expiryDate,
-            fees: previousPaid + renewalFees,
+            fees: paidSoFar + renewalFees,
             billingFinalFees: null,
             billingOriginalFees: null,
             billingDiscountAmount: null,
             billingDiscountName: "",
             billingDiscountReason: "",
             billingDiscountId: "",
+            renewals: renewalHistory,
             status: "active",
-            updatedAt: new Date().toISOString()
+            updatedAt: nowIso
         });
 
         closeRenewModal();
@@ -1431,7 +1443,14 @@ window.GymMembers = (function () {
             window.updateGymDashboard();
         }
 
-        showMessage("Membership renewed! Collect fees from Fees & Payments.");
+        showMessage("Membership renewed! Collect " + currency(renewalFees) + " in Fees & Payments.");
+
+        if (
+            confirm("Membership renewed for " + member.name + " (" + currency(renewalFees) + " due).\nOpen Fees & Payments now to collect payment?") &&
+            typeof window.openGymPage === "function"
+        ) {
+            window.openGymPage("payments");
+        }
     }
 
     // ==========================================
