@@ -1,6 +1,6 @@
 /* =====================================
    GYM PRO - LOCAL DATABASE SYSTEM
-   Version 1.0.0
+   Version 1.0.2
 ===================================== */
 
 const GymDB = {
@@ -133,7 +133,7 @@ const GymDB = {
 
     // GENERATE UNIQUE ID
     generateID(collection) {
-        const prefix = collection.slice(0, 3).toUpperCase();
+        const prefix = String(collection || "REC").slice(0, 3).toUpperCase();
 
         return prefix + "-" +
             Date.now().toString().slice(-8) +
@@ -158,21 +158,23 @@ const GymDB = {
 
         return {
             application: "GYM PRO",
-            version: "1.0.0",
+            version: "1.0.2",
             backupDate: new Date().toISOString(),
             data: backup
         };
     },
 
-    // RESTORE DATABASE
+    // RESTORE DATABASE (SUPPORTS BOTH WRAPPED & UNWRAPPED BACKUP OBJECTS)
     importData(backup) {
-        if (
-            !backup ||
-            backup.application !== "GYM PRO" ||
-            !backup.data
-        ) {
+        if (!backup || typeof backup !== "object") {
             return false;
         }
+
+        // Handle full backup wrapper { application: "GYM PRO", data: {...} } OR raw collections object
+        const sourceData =
+            backup.application === "GYM PRO" && backup.data
+                ? backup.data
+                : backup;
 
         const oldData = {};
 
@@ -182,10 +184,16 @@ const GymDB = {
 
         try {
             this.collections.forEach(collection => {
-                const data = backup.data[collection];
+                const data = sourceData[collection];
+
+                // Agar purane backup mein koi nayi collection missing ho toh empty array [] rakhein
+                if (data === undefined) {
+                    this.saveAll(collection, []);
+                    return;
+                }
 
                 if (!Array.isArray(data)) {
-                    throw new Error("Invalid backup data");
+                    throw new Error("Invalid backup data for: " + collection);
                 }
 
                 this.saveAll(collection, data);
@@ -194,7 +202,6 @@ const GymDB = {
             return true;
 
         } catch (error) {
-
             this.collections.forEach(collection => {
                 this.saveAll(collection, oldData[collection]);
             });
@@ -222,6 +229,8 @@ const GymDB = {
     }
 
 };
+
+window.GymDB = GymDB;
 
 // START DATABASE
 GymDB.init();
