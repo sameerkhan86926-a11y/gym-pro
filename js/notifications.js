@@ -39,7 +39,11 @@ window.GymNotifications = (function () {
 
         if (isNaN(d)) return date;
 
-        return d.toLocaleDateString("en-IN");
+        return d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
     }
 
     function getExpiryStatus(expiryDate) {
@@ -57,7 +61,7 @@ window.GymNotifications = (function () {
         if (days < 0) {
             return {
                 type: "expired",
-                label: "Expired",
+                label: "Expired (" + Math.abs(days) + "d ago)",
                 days
             };
         }
@@ -244,34 +248,46 @@ window.GymNotifications = (function () {
 
                 <div class="notification-heading">
                     <div>
-                        <h2>Expiry Management</h2>
-                        <p>Membership expiry reminders and WhatsApp alerts</p>
+                        <h2>Expiry Management & Renewal Alerts</h2>
+                        <p>Track expiring memberships and send instant WhatsApp renewal reminders.</p>
                     </div>
 
-                    <button id="markAllReadBtn">
-                        Mark All Read
+                    <button id="markAllReadBtn" class="notif-primary-btn">
+                        ✓ Mark All Read
                     </button>
                 </div>
 
                 <div class="notification-stats">
 
-                    <div>
-                        <span>Expired Members</span>
-                        <strong id="expiredCount">0</strong>
+                    <div class="notif-stat-card">
+                        <div class="notif-stat-top">
+                            <span>Already Expired</span>
+                            <div class="notif-stat-dot" style="background:#d71920;"></div>
+                        </div>
+                        <strong id="expiredCount" style="color:#d71920;">0</strong>
                     </div>
 
-                    <div>
-                        <span>Expiring Today</span>
+                    <div class="notif-stat-card">
+                        <div class="notif-stat-top">
+                            <span>Expiring Today</span>
+                            <div class="notif-stat-dot" style="background:#d97706;"></div>
+                        </div>
                         <strong id="todayExpiryCount">0</strong>
                     </div>
 
-                    <div>
-                        <span>Next 7 Days</span>
+                    <div class="notif-stat-card">
+                        <div class="notif-stat-top">
+                            <span>Next 7 Days</span>
+                            <div class="notif-stat-dot" style="background:#2879d0;"></div>
+                        </div>
                         <strong id="weekExpiryCount">0</strong>
                     </div>
 
-                    <div>
-                        <span>Unread Alerts</span>
+                    <div class="notif-stat-card">
+                        <div class="notif-stat-top">
+                            <span>Unread Alerts</span>
+                            <div class="notif-stat-dot" style="background:#168653;"></div>
+                        </div>
                         <strong id="unreadCount">0</strong>
                     </div>
 
@@ -279,13 +295,16 @@ window.GymNotifications = (function () {
 
                 <div class="notification-section">
 
-                    <h3>Membership Expiry Alerts</h3>
+                    <div class="notification-section-header">
+                        <h3>Membership Expiry Alerts</h3>
+                        <p>Filter members by expiry window and send direct WhatsApp reminders</p>
+                    </div>
 
                     <div class="expiry-filter">
                         <input
                             type="search"
                             id="expirySearch"
-                            placeholder="Search member name or phone..."
+                            placeholder="Search member name, ID or phone..."
                         >
 
                         <select id="expiryFilter">
@@ -298,15 +317,18 @@ window.GymNotifications = (function () {
                         </select>
                     </div>
 
-                    <div id="expiryAlertsList"></div>
+                    <div id="expiryAlertsList" class="expiry-list-stack"></div>
 
                 </div>
 
                 <div class="notification-section">
 
-                    <h3>Notification History</h3>
+                    <div class="notification-section-header">
+                        <h3>Notification History</h3>
+                        <p>System-generated alert logs</p>
+                    </div>
 
-                    <div id="notificationHistory"></div>
+                    <div id="notificationHistory" class="expiry-list-stack"></div>
 
                 </div>
 
@@ -402,30 +424,24 @@ window.GymNotifications = (function () {
 
                     <div class="expiry-info">
 
-                        <strong>
-                            ${escapeHTML(alert.member.name)}
-                        </strong>
+                        <div class="expiry-member-row">
+                            <strong>${escapeHTML(alert.member.name)}</strong>
+                            <span class="expiry-id-pill">${escapeHTML(alert.member.id)}</span>
+                        </div>
 
-                        <span>
-                            Member ID: ${escapeHTML(alert.member.id)}
-                        </span>
-
-                        <span>
-                            Phone: ${escapeHTML(alert.member.phone || "-")}
-                        </span>
-
-                        <small>
-                            Expiry Date:
-                            ${dateFormat(alert.member.expiryDate)}
-                        </small>
+                        <div class="expiry-meta-row">
+                            <span>Phone: <strong>${escapeHTML(alert.member.phone || "-")}</strong></span>
+                            <span>•</span>
+                            <span>Expiry Date: <strong>${dateFormat(alert.member.expiryDate)}</strong></span>
+                        </div>
 
                     </div>
 
                     <div class="expiry-actions">
 
-                        <div class="expiry-label">
+                        <span class="expiry-label">
                             ${escapeHTML(alert.label)}
-                        </div>
+                        </span>
 
                         ${
                             phone
@@ -443,7 +459,7 @@ window.GymNotifications = (function () {
                                         type="button"
                                         disabled
                                     >
-                                        Number Unavailable
+                                        No Valid Phone
                                     </button>
                                 `
                         }
@@ -470,7 +486,7 @@ window.GymNotifications = (function () {
         if (!notifications.length) {
             container.innerHTML = `
                 <div class="notification-empty">
-                    No notifications yet.
+                    No notification logs yet.
                 </div>
             `;
             return;
@@ -486,15 +502,13 @@ window.GymNotifications = (function () {
 
                 <div>
                     <strong>${escapeHTML(notification.title)}</strong>
-
                     <p>${escapeHTML(notification.message)}</p>
-
                     <small>${dateFormat(notification.date)}</small>
                 </div>
 
                 <div class="history-actions">
 
-                    <span>
+                    <span class="history-badge ${notification.read ? "read" : "unread"}">
                         ${notification.read ? "Read" : "Unread"}
                     </span>
 
@@ -502,7 +516,7 @@ window.GymNotifications = (function () {
                         notification.read
                             ? ""
                             : `
-                                <button data-read-id="${escapeHTML(notification.id)}">
+                                <button class="mark-read-btn" data-read-id="${escapeHTML(notification.id)}">
                                     Mark Read
                                 </button>
                             `
@@ -564,6 +578,10 @@ window.GymNotifications = (function () {
             });
     }
 
+    // ==========================================
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
+    // ==========================================
+
     function addStyles() {
         if (document.getElementById("gymNotificationStyles")) return;
 
@@ -572,228 +590,402 @@ window.GymNotifications = (function () {
 
         style.textContent = `
             .gym-notification-module {
-                color:#f4f0ff;
-                width:100%;
+                color: #202124;
+                width: 100%;
+                padding: 2px 0 25px;
             }
 
             .notification-heading {
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:15px;
-                flex-wrap:wrap;
-                margin-bottom:22px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .notification-heading h2 {
-                margin:0 0 6px;
-                font-size:25px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .notification-heading p {
-                margin:0;
-                color:#aaa0c5;
+                margin: 0;
+                color: #737985;
+                font-size: 11.5px;
             }
 
-            .gym-notification-module button {
-                border:0;
-                border-radius:9px;
-                padding:10px 15px;
-                background:linear-gradient(135deg,#a77aff,#7544d8);
-                color:white;
-                font-weight:600;
-                cursor:pointer;
+            .notif-primary-btn {
+                border: 0;
+                border-radius: 9px;
+                padding: 11px 18px;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
+            }
+
+            .notif-primary-btn:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
+                transform: translateY(-1px);
             }
 
             .notification-stats {
-                display:grid;
-                grid-template-columns:repeat(4,minmax(0,1fr));
-                gap:14px;
-                margin-bottom:22px;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
-            .notification-stats div {
-                padding:18px;
-                background:#1c172b;
-                border:1px solid #382950;
-                border-radius:13px;
+            .notif-stat-card {
+                padding: 18px 20px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
             }
 
-            .notification-stats span {
-                display:block;
-                color:#b9adcf;
-                font-size:13px;
+            .notif-stat-card:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
             }
 
-            .notification-stats strong {
-                display:block;
-                font-size:25px;
-                margin-top:10px;
+            .notif-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
+            }
+
+            .notif-stat-card span {
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .notif-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+
+            .notif-stat-card strong {
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
             }
 
             .notification-section {
-                background:#171326;
-                border:1px solid #302548;
-                border-radius:14px;
-                padding:18px;
-                margin-bottom:20px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
-            .notification-section h3 {
-                margin:0 0 16px;
+            .notification-section-header {
+                margin-bottom: 16px;
+            }
+
+            .notification-section-header h3 {
+                margin: 0 0 3px;
+                font-size: 15px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .notification-section-header p {
+                margin: 0;
+                font-size: 11px;
+                color: #737985;
             }
 
             .expiry-filter {
-                display:flex;
-                flex-wrap:wrap;
-                gap:12px;
-                margin-bottom:15px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 16px;
             }
 
             .expiry-filter input,
             .expiry-filter select {
-                padding:11px;
-                border-radius:9px;
-                border:1px solid #403354;
-                background:#211a32;
-                color:white;
-                min-width:180px;
-                outline:none;
+                padding: 11px 14px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                min-width: 190px;
+                outline: none;
+                transition: all 0.2s ease;
+            }
+
+            .expiry-filter input {
+                flex: 1;
+            }
+
+            .expiry-filter select {
+                font-weight: 600;
+            }
+
+            .expiry-filter input:focus,
+            .expiry-filter select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
+            }
+
+            .expiry-list-stack {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
             }
 
             .expiry-alert,
             .history-item {
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:15px;
-                padding:15px;
-                border-bottom:1px solid #302548;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+                padding: 15px 16px;
+                border-radius: 10px;
+                background: #f8f9fb;
+                border: 1px solid #edf0f3;
+                transition: all 0.18s ease;
             }
 
-            .expiry-info strong,
-            .expiry-info span,
-            .expiry-info small {
-                display:block;
-                margin-bottom:5px;
+            .expiry-alert:hover {
+                background: #fffafa;
+                border-color: #f2bfc1;
             }
 
-            .expiry-info span,
-            .expiry-info small {
-                color:#b9adcf;
-                font-size:13px;
+            .expiry-alert.expired {
+                background: #fff7f7;
+                border-left: 4px solid #d71920;
+            }
+
+            .expiry-alert.today,
+            .expiry-alert.tomorrow {
+                background: #fffaf2;
+                border-left: 4px solid #d97706;
+            }
+
+            .expiry-alert.soon,
+            .expiry-alert.upcoming {
+                border-left: 4px solid #2879d0;
+            }
+
+            .expiry-member-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-bottom: 5px;
+            }
+
+            .expiry-member-row strong {
+                font-size: 13.5px;
+                color: #202124;
+            }
+
+            .expiry-id-pill {
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #ffffff;
+                border: 1px solid #dfe2e8;
+                color: #5f6672;
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            .expiry-meta-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                font-size: 11.5px;
+                color: #737985;
+            }
+
+            .expiry-meta-row strong {
+                color: #454c57;
+                font-weight: 600;
             }
 
             .expiry-actions {
-                display:flex;
-                flex-direction:column;
-                align-items:flex-end;
-                gap:10px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
             }
 
             .expiry-label {
-                color:#d9c7ff;
-                font-size:13px;
-                font-weight:700;
-                text-align:right;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 10.5px;
+                font-weight: 700;
+                background: #edf5ff;
+                color: #2879d0;
+                white-space: nowrap;
             }
 
             .expiry-alert.expired .expiry-label {
-                color:#ff7777;
+                background: #fff0f0;
+                color: #d71920;
             }
 
-            .expiry-alert.today .expiry-label {
-                color:#ffbd66;
-            }
-
-            .expiry-alert.soon .expiry-label,
+            .expiry-alert.today .expiry-label,
             .expiry-alert.tomorrow .expiry-label {
-                color:#f3d16d;
+                background: #fff3e0;
+                color: #c26a00;
             }
 
             .whatsapp-reminder-btn {
-                background:#168b50 !important;
-                padding:9px 13px !important;
-                font-size:12px;
-                white-space:nowrap;
+                border: 0;
+                border-radius: 8px;
+                background: #168653;
+                color: #ffffff;
+                padding: 8px 14px;
+                font-size: 11.5px;
+                font-weight: 700;
+                cursor: pointer;
+                white-space: nowrap;
+                box-shadow: 0 3px 10px rgba(22, 134, 83, 0.18);
+                transition: all 0.18s ease;
             }
 
             .whatsapp-reminder-btn:hover {
-                background:#0d713e !important;
+                background: #116b42;
+                transform: translateY(-1px);
             }
 
             .whatsapp-reminder-btn.disabled {
-                background:#51495e !important;
-                opacity:.6;
-                cursor:not-allowed;
+                background: #e7e9ee;
+                color: #8a909a;
+                box-shadow: none;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .history-item {
+                background: #ffffff;
+            }
+
+            .history-item strong {
+                font-size: 12.5px;
+                color: #202124;
             }
 
             .history-item p {
-                margin:6px 0;
-                color:#c4b9d8;
-                font-size:13px;
+                margin: 4px 0;
+                color: #5f6672;
+                font-size: 11.5px;
             }
 
             .history-item small {
-                color:#9589ad;
+                color: #8a909a;
+                font-size: 10.5px;
             }
 
             .history-item.read {
-                opacity:.65;
+                opacity: 0.7;
+                background: #f8f9fb;
             }
 
             .history-actions {
-                display:flex;
-                align-items:center;
-                gap:10px;
-                flex-wrap:wrap;
-                justify-content:flex-end;
-                color:#b9adcf;
-                font-size:12px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
             }
 
-            .history-actions button {
-                padding:7px 10px;
-                font-size:12px;
+            .history-badge {
+                padding: 4px 9px;
+                border-radius: 20px;
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            .history-badge.unread {
+                background: #fff0f0;
+                color: #d71920;
+            }
+
+            .history-badge.read {
+                background: #f2f4f7;
+                color: #69717e;
+            }
+
+            .mark-read-btn {
+                padding: 6px 11px;
+                border-radius: 7px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #303640;
+                font-size: 11px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.18s ease;
+            }
+
+            .mark-read-btn:hover {
+                background: #fff0f0;
+                border-color: #f2bfc1;
+                color: #d71920;
             }
 
             .notification-empty {
-                padding:25px;
-                text-align:center;
-                color:#aaa0c5;
+                padding: 32px 15px;
+                text-align: center;
+                color: #8a909a;
+                font-size: 12px;
             }
 
-            @media(max-width:700px) {
+            @media(max-width:750px) {
                 .notification-stats {
-                    grid-template-columns:repeat(2,minmax(0,1fr));
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
                 }
 
                 .expiry-filter {
-                    flex-direction:column;
+                    flex-direction: column;
                 }
 
                 .expiry-filter input,
                 .expiry-filter select {
-                    width:100%;
-                    box-sizing:border-box;
+                    width: 100%;
+                    box-sizing: border-box;
                 }
             }
 
-            @media(max-width:450px) {
+            @media(max-width:520px) {
                 .expiry-alert,
                 .history-item {
-                    align-items:flex-start;
-                    flex-direction:column;
+                    align-items: flex-start;
+                    flex-direction: column;
                 }
 
                 .expiry-actions {
-                    align-items:flex-start;
+                    width: 100%;
+                    justify-content: space-between;
                 }
 
-                .expiry-label,
-                .history-actions {
-                    text-align:left;
-                    justify-content:flex-start;
+                .notification-heading button {
+                    width: 100%;
                 }
             }
         `;
