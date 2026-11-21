@@ -32,6 +32,15 @@ window.GymBiometric = (function () {
         GymDB.saveAll("settings", settings);
     }
 
+    function today() {
+        const d = new Date();
+        return [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, "0"),
+            String(d.getDate()).padStart(2, "0")
+        ].join("-");
+    }
+
     function escapeHTML(value) {
         return String(value ?? "").replace(/[&<>"']/g, char => ({
             "&": "&amp;",
@@ -50,11 +59,71 @@ window.GymBiometric = (function () {
         }
     }
 
+    function processFingerprintPunch(memberId) {
+        const members = GymDB.getAll("members") || [];
+        const member = members.find(
+            m => String(m.id).toUpperCase() === String(memberId).trim().toUpperCase() ||
+                 String(m.memberSerial) === String(memberId).trim()
+        );
+
+        if (!member) {
+            return { ok: false, message: "Member ID not found in database." };
+        }
+
+        const status = String(member.status || "").toLowerCase();
+        if (status !== "active" || (member.expiryDate && member.expiryDate < today())) {
+            return {
+                ok: false,
+                message: `Access Denied: ${member.name}'s membership is expired or inactive.`
+            };
+        }
+
+        const attendance = GymDB.getAll("attendance") || [];
+        const openRecord = attendance.find(
+            r => String(r.memberId) === String(member.id) && r.date === today() && !r.checkOut
+        );
+
+        const now = new Date().toISOString();
+
+        if (openRecord) {
+            GymDB.update("attendance", openRecord.id, {
+                ...openRecord,
+                checkOut: now,
+                source: "Biometric",
+                updatedAt: now
+            });
+            if (typeof window.updateGymDashboard === "function") window.updateGymDashboard();
+            return {
+                ok: true,
+                action: "CHECK-OUT",
+                message: `Check-Out recorded for ${member.name} (${member.id})`
+            };
+        } else {
+            GymDB.add("attendance", {
+                id: GymDB.generateID("ATT"),
+                memberId: member.id,
+                memberName: member.name || "",
+                date: today(),
+                checkIn: now,
+                checkOut: "",
+                source: "Biometric",
+                createdAt: now
+            });
+            if (typeof window.updateGymDashboard === "function") window.updateGymDashboard();
+            return {
+                ok: true,
+                action: "CHECK-IN",
+                message: `Check-In recorded for ${member.name} (${member.id})`
+            };
+        }
+    }
+
     function render() {
         const root = document.getElementById("modulePlaceholder");
         if (!root) return;
 
         const cfg = getConfig();
+        const members = GymDB.getAll("members") || [];
 
         root.innerHTML = `
             <div class="gym-biometric-wrap">
@@ -62,11 +131,11 @@ window.GymBiometric = (function () {
                 <div class="bio-header">
                     <div>
                         <h2>Biometric Fingerprint Device</h2>
-                        <p>Configure hardware connection settings for automated member fingerprint check-ins.</p>
+                        <p>Configure hardware connection settings or test live fingerprint punches online.</p>
                     </div>
 
                     <div class="bio-status-pill disconnected" id="bioStatusBadge">
-                        <span class="bio-dot"></span> Hardware Disconnected
+                        <span class="bio-dot"></span> <span id="bioStatusText">Standby / Ready to Test</span>
                     </div>
                 </div>
 
@@ -75,7 +144,7 @@ window.GymBiometric = (function () {
                     <section class="bio-card">
                         <div class="bio-card-header">
                             <h3>Device Connection Configuration</h3>
-                            <p>Enter your biometric scanner IP address and local API bridge details.</p>
+                            <p>Enter your biometric scanner IP address or online Webhook test URL.</p>
                         </div>
 
                         <form id="biometricConfigForm">
@@ -113,10 +182,10 @@ window.GymBiometric = (function () {
                                 </div>
 
                                 <div class="bio-full">
-                                    <label>Local Middleware / Bridge Endpoint URL</label>
+                                    <label>Middleware / Webhook Endpoint URL</label>
                                     <input type="url" id="bioBridgeUrl"
                                         value="${escapeHTML(cfg.bridgeUrl)}"
-                                        placeholder="http://localhost:8080/api/biometric">
+                                        placeholder="https://webhook.site/your-unique-id">
                                 </div>
                             </div>
 
@@ -125,7 +194,7 @@ window.GymBiometric = (function () {
                                     Save Device Settings
                                 </button>
                                 <button type="button" id="testBioConnectionBtn" class="bio-sec-btn">
-                                    Test Device Ping
+                                    Send Live Ping
                                 </button>
                             </div>
                         </form>
@@ -133,24 +202,34 @@ window.GymBiometric = (function () {
 
                     <section class="bio-card">
                         <div class="bio-card-header">
-                            <h3>Integration & Attendance Fallback</h3>
-                            <p>How biometric check-ins sync with GYM PRO.</p>
+                            <h3>Online Fingerprint Punch Simulator</h3>
+                            <p>Test biometric Check-in / Check-out and send live JSON logs to your Webhook URL.</p>
                         </div>
 
-                        <div class="bio-info-box">
-                            <strong>1. Browser Security Note</strong>
-                            <p>Web browsers cannot directly access USB/LAN biometric hardware without a local RD Service or middleware agent running on your gym PC.</p>
-                        </div>
+                        <div class="bio-sim-box">
+                            <label style="display:block;font-size:11.5px;font-weight:600;color:#454c57;margin-bottom:6px;">
+                                Select Member to Scan Finger
+                            </label>
+                            <select id="bioSimMemberSelect" style="width:100%;padding:11px;border-radius:9px;border:1px solid #dfe2e8;background:#ffffff;margin-bottom:12px;font-size:12.5px;">
+                                <option value="">Choose Registered Member...</option>
+                                ${members.map(m => `
+                                    <option value="${escapeHTML(m.id)}">
+                                        ${escapeHTML(m.name)} (${escapeHTML(m.id)})
+                                    </option>
+                                `).join("")}
+                            </select>
 
-                        <div class="bio-info-box">
-                            <strong>2. Member ID Mapping</strong>
-                            <p>Enroll each member on the biometric machine using their exact GYM PRO serial number (e.g. <code>1001</code>) for automatic punch-in sync.</p>
+                            <button type="button" id="simulatePunchBtn" class="bio-primary-btn" style="width:100%;">
+                                Simulate Fingerprint Scan
+                            </button>
+
+                            <div id="bioSimResult" style="display:none;margin-top:12px;padding:11px 13px;border-radius:9px;font-size:12px;font-weight:600;"></div>
                         </div>
 
                         <div class="bio-fallback-box">
-                            <p>Need to mark attendance right now?</p>
+                            <p>View live biometric entries in Attendance:</p>
                             <button type="button" id="goToAttendanceBtn" class="bio-sec-btn" style="width:100%;">
-                                Open Manual Attendance →
+                                Open Attendance Logs →
                             </button>
                         </div>
                     </section>
@@ -176,17 +255,84 @@ window.GymBiometric = (function () {
                 notify("Biometric device settings saved.");
             });
 
+        // REAL HTTP PING TO WEBHOOK / BRIDGE URL
         document.getElementById("testBioConnectionBtn")
-            .addEventListener("click", function () {
+            .addEventListener("click", async function () {
+                const url = document.getElementById("bioBridgeUrl").value.trim();
+                if (!url) {
+                    alert("Please enter an Endpoint URL first.");
+                    return;
+                }
+
                 const btn = this;
                 btn.disabled = true;
-                btn.textContent = "Pinging Device...";
+                btn.textContent = "Sending Ping...";
 
-                setTimeout(() => {
+                try {
+                    await fetch(url, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            event: "DEVICE_PING",
+                            app: "GYM PRO",
+                            brand: document.getElementById("bioBrand").value,
+                            deviceIp: document.getElementById("bioIp").value,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    const badge = document.getElementById("bioStatusBadge");
+                    const text = document.getElementById("bioStatusText");
+                    if (badge && text) {
+                        badge.className = "bio-status-pill connected";
+                        text.textContent = "Ping Sent to Endpoint";
+                    }
+                    notify("Ping sent! Check your Webhook.site tab.");
+                } catch (err) {
+                    notify("Unable to reach endpoint URL.");
+                } finally {
                     btn.disabled = false;
-                    btn.textContent = "Test Device Ping";
-                    notify("No local biometric bridge detected at " + document.getElementById("bioBridgeUrl").value);
-                }, 900);
+                    btn.textContent = "Send Live Ping";
+                }
+            });
+
+        // SIMULATE FINGERPRINT PUNCH + SEND WEBHOOK LOG
+        document.getElementById("simulatePunchBtn")
+            .addEventListener("click", async function () {
+                const memberId = document.getElementById("bioSimMemberSelect").value;
+                const resultBox = document.getElementById("bioSimResult");
+
+                if (!memberId) {
+                    alert("Please select a member first.");
+                    return;
+                }
+
+                const res = processFingerprintPunch(memberId);
+                resultBox.style.display = "block";
+                resultBox.style.background = res.ok ? "#e9f8f0" : "#fff0f0";
+                resultBox.style.color = res.ok ? "#168653" : "#d71920";
+                resultBox.style.border = res.ok ? "1px solid #bfe7d1" : "1px solid #f5c6c8";
+                resultBox.textContent = res.message;
+
+                notify(res.message);
+
+                // Also send punch payload to Webhook URL if configured
+                const url = document.getElementById("bioBridgeUrl").value.trim();
+                if (url && url.startsWith("http")) {
+                    fetch(url, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            event: "BIOMETRIC_PUNCH",
+                            memberId: memberId,
+                            status: res.ok ? res.action : "DENIED",
+                            detail: res.message,
+                            timestamp: new Date().toISOString()
+                        })
+                    }).catch(() => {});
+                }
             });
 
         document.getElementById("goToAttendanceBtn")
@@ -253,16 +399,22 @@ window.GymBiometric = (function () {
                 color: #b8740e;
             }
 
+            .bio-status-pill.connected {
+                background: #e9f8f0;
+                border: 1px solid #bfe7d1;
+                color: #168653;
+            }
+
             .bio-dot {
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
-                background: #d97706;
+                background: currentColor;
             }
 
             .bio-grid-layout {
                 display: grid;
-                grid-template-columns: 1.4fr 1fr;
+                grid-template-columns: 1.35fr 1fr;
                 gap: 18px;
             }
 
@@ -376,35 +528,11 @@ window.GymBiometric = (function () {
                 color: #d71920;
             }
 
-            .bio-info-box {
-                padding: 13px 15px;
+            .bio-sim-box {
+                padding: 16px;
                 border-radius: 10px;
                 background: #f8f9fb;
                 border: 1px solid #edf0f3;
-                margin-bottom: 12px;
-            }
-
-            .bio-info-box strong {
-                display: block;
-                font-size: 12px;
-                color: #202124;
-                margin-bottom: 4px;
-            }
-
-            .bio-info-box p {
-                margin: 0;
-                font-size: 11.5px;
-                color: #5f6672;
-                line-height: 1.55;
-            }
-
-            .bio-info-box code {
-                background: #ffffff;
-                border: 1px solid #dfe2e8;
-                padding: 1px 5px;
-                border-radius: 4px;
-                color: #d71920;
-                font-weight: 700;
             }
 
             .bio-fallback-box {
@@ -440,6 +568,7 @@ window.GymBiometric = (function () {
 
     return {
         render,
-        getConfig
+        getConfig,
+        processFingerprintPunch
     };
 })();
