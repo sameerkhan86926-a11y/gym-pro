@@ -254,13 +254,13 @@ window.GymExpenses = (function () {
                 color: #202124;
                 font-size: 12px;
                 outline: none;
-                min-width: 145px;
+                min-width: 150px;
                 transition: all 0.2s ease;
             }
 
             .expenses-toolbar input[type="search"] {
                 flex: 1;
-                min-width: 200px;
+                min-width: 210px;
             }
 
             .expenses-toolbar select {
@@ -272,6 +272,24 @@ window.GymExpenses = (function () {
                 background: #ffffff;
                 border-color: #d71920;
                 box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
+            }
+
+            .expense-reset-btn {
+                padding: 10px 14px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #5f6672;
+                font-size: 11.5px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.18s ease;
+            }
+
+            .expense-reset-btn:hover {
+                background: #fff4f4;
+                border-color: #f2bfc1;
+                color: #d71920;
             }
 
             .expense-filter-total {
@@ -724,13 +742,7 @@ window.GymExpenses = (function () {
                             placeholder="Search title, category or ID...">
 
                         <input type="date" id="expenseDateFilter"
-                            title="Filter by exact date">
-
-                        <input type="date" id="expenseFromDate"
-                            title="From date">
-
-                        <input type="date" id="expenseToDate"
-                            title="To date">
+                            title="Filter by date">
 
                         <select id="expenseCategoryFilter">
                             <option value="all">All Categories</option>
@@ -749,6 +761,10 @@ window.GymExpenses = (function () {
                                 </option>
                             `).join("")}
                         </select>
+
+                        <button type="button" class="expense-reset-btn" id="resetExpenseFiltersBtn">
+                            Reset
+                        </button>
                     </div>
 
                     <p class="expense-filter-total" id="expenseFilterTotal">
@@ -847,8 +863,6 @@ window.GymExpenses = (function () {
         [
             "expenseSearch",
             "expenseDateFilter",
-            "expenseFromDate",
-            "expenseToDate",
             "expenseCategoryFilter",
             "expenseMethodFilter"
         ].forEach(id => {
@@ -859,6 +873,15 @@ window.GymExpenses = (function () {
                 renderTable
             );
         });
+
+        document.getElementById("resetExpenseFiltersBtn")
+            .addEventListener("click", () => {
+                document.getElementById("expenseSearch").value = "";
+                document.getElementById("expenseDateFilter").value = "";
+                document.getElementById("expenseCategoryFilter").value = "all";
+                document.getElementById("expenseMethodFilter").value = "all";
+                renderTable();
+            });
 
         document.getElementById("expenseReportMonth")
             .addEventListener("change", renderBreakdown);
@@ -1004,15 +1027,8 @@ window.GymExpenses = (function () {
             .value.trim().toLowerCase();
 
         const exactDate = document.getElementById("expenseDateFilter").value;
-        const fromDate = document.getElementById("expenseFromDate").value;
-        const toDate = document.getElementById("expenseToDate").value;
-
         const category = document.getElementById("expenseCategoryFilter").value;
         const method = document.getElementById("expenseMethodFilter").value;
-
-        if (fromDate && toDate && fromDate > toDate) {
-            return [];
-        }
 
         return expenses.filter(item => {
             const matchesSearch =
@@ -1024,12 +1040,6 @@ window.GymExpenses = (function () {
             const matchesExactDate =
                 !exactDate || item.date === exactDate;
 
-            const matchesFrom =
-                !fromDate || item.date >= fromDate;
-
-            const matchesTo =
-                !toDate || item.date <= toDate;
-
             const matchesCategory =
                 category === "all" || item.category === category;
 
@@ -1038,8 +1048,6 @@ window.GymExpenses = (function () {
 
             return matchesSearch &&
                 matchesExactDate &&
-                matchesFrom &&
-                matchesTo &&
                 matchesCategory &&
                 matchesMethod;
         }).sort((a, b) =>
