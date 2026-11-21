@@ -187,6 +187,10 @@ window.GymPayments = (function () {
         };
     }
 
+    // ==========================================
+    // STYLES (PROFESSIONAL RED & WHITE THEME)
+    // ==========================================
+
     function injectStyles() {
         if (document.getElementById("gymPaymentsStyles")) return;
 
@@ -195,257 +199,477 @@ window.GymPayments = (function () {
 
         style.textContent = `
             .payments-wrap {
-                padding:5px 0 25px;
+                padding: 2px 0 25px;
             }
 
             .payments-header {
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                flex-wrap:wrap;
-                gap:15px;
-                margin-bottom:22px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                border-radius: 13px;
+                padding: 20px 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 15px;
+                margin-bottom: 20px;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
             .payments-header h2 {
-                margin:0 0 6px;
+                margin: 0 0 4px;
+                font-size: 18px;
+                font-weight: 800;
+                color: #202124;
             }
 
             .payments-header p {
-                margin:0;
-                opacity:.7;
+                margin: 0;
+                color: #737985;
+                font-size: 11.5px;
             }
 
             .payments-stats {
-                display:grid;
-                grid-template-columns:repeat(3,1fr);
-                gap:15px;
-                margin-bottom:22px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
             .payments-stat {
-                padding:20px;
-                border-radius:14px;
-                background:rgba(255,255,255,.05);
-                border:1px solid rgba(255,255,255,.08);
+                padding: 20px;
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
+                transition: transform 0.2s ease, border-color 0.2s ease;
+            }
+
+            .payments-stat:hover {
+                transform: translateY(-2px);
+                border-color: #efb7b9;
+            }
+
+            .payments-stat-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
             }
 
             .payments-stat span {
-                display:block;
-                opacity:.7;
-                font-size:13px;
-                margin-bottom:9px;
+                color: #69717e;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .payments-stat-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
             }
 
             .payments-stat strong {
-                font-size:24px;
+                display: block;
+                font-size: 26px;
+                font-weight: 800;
+                color: #202124;
+                letter-spacing: -0.6px;
             }
 
             .payments-section {
-                margin-top:25px;
-                padding:18px;
-                border-radius:14px;
-                background:rgba(255,255,255,.035);
-                border:1px solid rgba(255,255,255,.08);
+                margin-top: 20px;
+                padding: 20px;
+                border-radius: 13px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
             }
 
-            .payments-section h3 {
-                margin-top:0;
+            .payments-section-header {
+                margin-bottom: 16px;
+            }
+
+            .payments-section-header h3 {
+                margin: 0 0 3px;
+                font-size: 15px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .payments-section-header p {
+                margin: 0;
+                font-size: 11px;
+                color: #737985;
             }
 
             .payments-toolbar {
-                display:flex;
-                flex-wrap:wrap;
-                gap:12px;
-                margin-bottom:18px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 18px;
             }
 
             .payments-toolbar input,
             .payments-toolbar select {
-                padding:12px;
-                border-radius:9px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                outline:none;
+                padding: 11px 14px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #202124;
+                font-size: 12px;
+                outline: none;
+                transition: all 0.2s ease;
+            }
+
+            .payments-toolbar input[type="search"] {
+                flex: 1;
+                min-width: 210px;
+            }
+
+            .payments-toolbar select {
+                min-width: 150px;
+                font-weight: 600;
+            }
+
+            .payments-toolbar input:focus,
+            .payments-toolbar select:focus {
+                background: #ffffff;
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .payments-table-wrap {
-                overflow-x:auto;
+                overflow-x: auto;
+                border-radius: 10px;
+                border: 1px solid #edf0f3;
             }
 
             .payments-table {
-                width:100%;
-                min-width:800px;
-                border-collapse:collapse;
+                width: 100%;
+                min-width: 820px;
+                border-collapse: collapse;
+                background: #ffffff;
             }
 
             .payments-table th,
             .payments-table td {
-                padding:14px;
-                text-align:left;
-                border-bottom:1px solid rgba(255,255,255,.08);
+                padding: 13px 12px;
+                text-align: left;
+                border-bottom: 1px solid #edf0f3;
             }
 
             .payments-table th {
-                font-size:12px;
-                opacity:.7;
-                text-transform:uppercase;
+                font-size: 10px;
+                font-weight: 700;
+                color: #69717e;
+                background: #f8f9fb;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+            }
+
+            .payments-table td {
+                font-size: 11.5px;
+                color: #454c57;
+                vertical-align: middle;
+            }
+
+            .payments-table tbody tr:hover {
+                background: #fffafa;
+            }
+
+            .payment-id-pill {
+                display: inline-block;
+                padding: 2px 7px;
+                border-radius: 5px;
+                background: #f3f4f6;
+                color: #5f6672;
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            .payment-type-tag {
+                display: inline-block;
+                margin-top: 3px;
+                font-size: 10px;
+                font-weight: 600;
+                color: #8a909a;
+                text-transform: capitalize;
             }
 
             .payment-method-badge {
-                display:inline-block;
-                padding:5px 10px;
-                border-radius:20px;
-                background:rgba(120,90,220,.15);
-                color:#c7adff;
-                font-size:11px;
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                background: #edf5ff;
+                color: #2879d0;
+                font-size: 10.5px;
+                font-weight: 700;
+            }
+
+            .payment-pending-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 6px;
+                background: #fff0f0;
+                color: #d71920;
+                font-size: 11.5px;
+                font-weight: 800;
             }
 
             .payment-action {
-                padding:7px 11px;
-                border:0;
-                border-radius:7px;
-                cursor:pointer;
-                color:white;
-                background:#a93650;
+                padding: 6px 10px;
+                border: 1px solid #f5c6c8;
+                border-radius: 7px;
+                cursor: pointer;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #d71920;
+                background: #fff0f0;
+                transition: all 0.18s ease;
+            }
+
+            .payment-action:hover {
+                background: #d71920;
+                border-color: #d71920;
+                color: #ffffff;
+            }
+
+            .payment-action.collect {
+                background: #e9f8f0;
+                border-color: #bfe7d1;
+                color: #168653;
+            }
+
+            .payment-action.collect:hover {
+                background: #168653;
+                border-color: #168653;
+                color: #ffffff;
             }
 
             .payments-empty {
-                text-align:center;
-                padding:30px 15px;
-                opacity:.65;
+                text-align: center;
+                padding: 34px 15px;
+                color: #8a909a;
+                font-size: 12px;
             }
 
+            /* MODAL */
             .payment-modal {
-                position:fixed;
-                inset:0;
-                z-index:9999;
-                display:none;
-                align-items:center;
-                justify-content:center;
-                padding:15px;
-                background:rgba(0,0,0,.75);
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 15px;
+                background: rgba(15, 20, 30, 0.55);
+                backdrop-filter: blur(3px);
             }
 
             .payment-modal-box {
-                width:100%;
-                max-width:490px;
-                max-height:90vh;
-                overflow-y:auto;
-                padding:24px;
-                border-radius:16px;
-                background:#211a32;
-                border:1px solid rgba(255,255,255,.12);
+                width: 100%;
+                max-width: 510px;
+                max-height: 92vh;
+                overflow-y: auto;
+                padding: 26px;
+                border-radius: 16px;
+                background: #ffffff;
+                border: 1px solid #e7e9ee;
+                box-shadow: 0 20px 50px rgba(15, 20, 30, 0.18);
             }
 
-            .payment-modal-box h3 {
-                margin-top:0;
+            .payment-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding-bottom: 14px;
+                margin-bottom: 14px;
+                border-bottom: 1px solid #edf0f3;
+            }
+
+            .payment-modal-header h3 {
+                margin: 0;
+                font-size: 17px;
+                font-weight: 800;
+                color: #202124;
+            }
+
+            .payment-modal-close {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                border: 1px solid #e7e9ee;
+                background: #f8f9fb;
+                color: #69717e;
+                font-size: 16px;
+                display: grid;
+                place-items: center;
+                cursor: pointer;
+            }
+
+            .payment-modal-close:hover {
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #f2bfc1;
             }
 
             .payment-form label {
-                display:block;
-                margin:14px 0 7px;
-                font-size:13px;
+                display: block;
+                margin: 14px 0 6px;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #454c57;
             }
 
             .payment-form input,
             .payment-form select,
             .payment-form textarea {
-                width:100%;
-                box-sizing:border-box;
-                padding:12px;
-                border-radius:9px;
-                border:1px solid rgba(255,255,255,.13);
-                background:#171324;
-                color:white;
-                outline:none;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 11px 13px;
+                border-radius: 9px;
+                border: 1px solid #dfe2e8;
+                background: #ffffff;
+                color: #202124;
+                font-size: 12.5px;
+                outline: none;
+            }
+
+            .payment-form input:focus,
+            .payment-form select:focus,
+            .payment-form textarea:focus {
+                border-color: #d71920;
+                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
             }
 
             .payment-form textarea {
-                min-height:70px;
-                resize:vertical;
+                min-height: 68px;
+                resize: vertical;
             }
 
             .payment-form-actions {
-                display:flex;
-                gap:10px;
-                margin-top:20px;
+                display: flex;
+                gap: 12px;
+                margin-top: 22px;
+                padding-top: 16px;
+                border-top: 1px solid #edf0f3;
             }
 
             .payment-form-actions button {
-                flex:1;
-                padding:12px;
-                border:0;
-                border-radius:9px;
-                cursor:pointer;
-                color:white;
-                background:linear-gradient(135deg,#a855f7,#6d28d9);
-                font-weight:600;
+                flex: 1;
+                padding: 12px;
+                border: 0;
+                border-radius: 9px;
+                cursor: pointer;
+                color: #ffffff;
+                background: linear-gradient(135deg, #e3262e, #c51019);
+                font-weight: 700;
+                font-size: 12.5px;
+                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
+                transition: all 0.2s ease;
+            }
+
+            .payment-form-actions button:hover {
+                background: linear-gradient(135deg, #c9161e, #a90d15);
             }
 
             .payment-form-actions .cancel {
-                background:#494253;
+                background: #f3f4f6;
+                color: #454c57;
+                border: 1px solid #dfe2e8;
+                box-shadow: none;
+            }
+
+            .payment-form-actions .cancel:hover {
+                background: #e7e9ee;
             }
 
             .payment-balance {
-                margin-top:12px;
-                padding:14px;
-                border-radius:9px;
-                background:rgba(255,255,255,.06);
-                font-size:14px;
-                line-height:1.9;
+                margin-top: 12px;
+                padding: 14px 16px;
+                border-radius: 10px;
+                background: #f8f9fb;
+                border: 1px solid #e7e9ee;
+                color: #303640;
+                font-size: 12px;
+                line-height: 1.85;
             }
 
             .payment-balance .discount-line {
-                color:#8ef0b6;
+                color: #168653;
             }
 
             .payment-balance .pending-line {
-                color:#d4b8ff;
-                font-size:16px;
+                display: inline-block;
+                margin-top: 4px;
+                padding-top: 6px;
+                border-top: 1px dashed #dfe2e8;
+                width: 100%;
+                color: #d71920;
+                font-size: 13.5px;
             }
 
             .payment-type-options {
-                display:grid;
-                grid-template-columns:repeat(3,1fr);
-                gap:8px;
-                margin-top:8px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin-top: 6px;
             }
 
             .payment-type-options button {
-                border:1px solid #574276;
-                background:#302442;
-                color:#ddd;
-                padding:10px 5px;
-                border-radius:8px;
-                cursor:pointer;
+                border: 1px solid #dfe2e8;
+                background: #f8f9fb;
+                color: #454c57;
+                padding: 10px 6px;
+                border-radius: 8px;
+                font-size: 11.5px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.18s ease;
+            }
+
+            .payment-type-options button:hover {
+                background: #fff4f4;
+                border-color: #f2bfc1;
             }
 
             .payment-type-options button.selected {
-                background:linear-gradient(135deg,#a855f7,#6d28d9);
-                color:white;
-                border-color:#a855f7;
+                background: #fff0f0;
+                color: #d71920;
+                border-color: #d71920;
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(215, 25, 32, 0.1);
             }
 
             .payment-discount-note {
-                margin-top:7px;
-                font-size:12px;
-                color:#bba9d8;
-                line-height:1.5;
+                margin-top: 7px;
+                font-size: 11px;
+                color: #737985;
+                line-height: 1.5;
             }
 
             .payment-locked-note {
-                color:#f2d38b;
+                display: block;
+                padding: 8px 10px;
+                border-radius: 7px;
+                background: #fff8eb;
+                border: 1px solid #f7dfad;
+                color: #9a6700;
+                font-weight: 600;
             }
 
             @media(max-width:650px) {
                 .payments-stats {
-                    grid-template-columns:1fr;
+                    grid-template-columns: 1fr;
+                }
+
+                .payments-header .btn {
+                    width: 100%;
                 }
 
                 .payment-modal-box {
-                    padding:17px;
+                    padding: 18px;
                 }
             }
         `;
@@ -464,8 +688,8 @@ window.GymPayments = (function () {
 
                 <div class="payments-header">
                     <div>
-                        <h2>Payments & Fees</h2>
-                        <p>Manage member fees, discounts and installments.</p>
+                        <h2>Fees & Payment Collections</h2>
+                        <p>Record member payments, manage discounts and track pending dues.</p>
                     </div>
 
                     <button class="btn btn-primary" id="addPaymentBtn">
@@ -476,17 +700,26 @@ window.GymPayments = (function () {
                 <div class="payments-stats">
 
                     <div class="payments-stat">
-                        <span>Total Collection</span>
+                        <div class="payments-stat-top">
+                            <span>Total Collection</span>
+                            <div class="payments-stat-dot" style="background:#d71920;"></div>
+                        </div>
                         <strong id="totalPaymentsAmount">₹0</strong>
                     </div>
 
                     <div class="payments-stat">
-                        <span>Today's Collection</span>
+                        <div class="payments-stat-top">
+                            <span>Today's Collection</span>
+                            <div class="payments-stat-dot" style="background:#168653;"></div>
+                        </div>
                         <strong id="todayPaymentsAmount">₹0</strong>
                     </div>
 
                     <div class="payments-stat">
-                        <span>This Month Collection</span>
+                        <div class="payments-stat-top">
+                            <span>This Month Collection</span>
+                            <div class="payments-stat-dot" style="background:#2879d0;"></div>
+                        </div>
                         <strong id="monthPaymentsAmount">₹0</strong>
                     </div>
 
@@ -494,7 +727,10 @@ window.GymPayments = (function () {
 
                 <div class="payments-section">
 
-                    <h3>Payment History</h3>
+                    <div class="payments-section-header">
+                        <h3>Payment History</h3>
+                        <p>Complete log of received member fees and transactions</p>
+                    </div>
 
                     <div class="payments-toolbar">
 
@@ -506,7 +742,7 @@ window.GymPayments = (function () {
                             id="paymentDateFilter">
 
                         <select id="paymentMethodFilter">
-                            <option value="all">All Methods</option>
+                            <option value="all">All Payment Methods</option>
                             <option value="Cash">Cash</option>
                             <option value="UPI">UPI</option>
                             <option value="Bank Transfer">Bank Transfer</option>
@@ -538,7 +774,10 @@ window.GymPayments = (function () {
 
                 <div class="payments-section">
 
-                    <h3>Pending Member Fees</h3>
+                    <div class="payments-section-header">
+                        <h3>Pending Member Fees</h3>
+                        <p>Members with remaining balance due for their active billing cycle</p>
+                    </div>
 
                     <div class="payments-table-wrap">
                         <table class="payments-table">
@@ -552,6 +791,7 @@ window.GymPayments = (function () {
                                     <th>Final Fees</th>
                                     <th>Paid</th>
                                     <th>Pending</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
 
@@ -567,7 +807,10 @@ window.GymPayments = (function () {
 
                 <div class="payment-modal-box">
 
-                    <h3>Receive Member Payment</h3>
+                    <div class="payment-modal-header">
+                        <h3>Receive Member Payment</h3>
+                        <button type="button" class="payment-modal-close" id="closePaymentX" aria-label="Close">✕</button>
+                    </div>
 
                     <form class="payment-form" id="paymentForm">
 
@@ -646,7 +889,7 @@ window.GymPayments = (function () {
                         <label>Notes / Transaction ID</label>
 
                         <textarea id="paymentNotes"
-                            placeholder="Optional details"></textarea>
+                            placeholder="Optional details (e.g. UPI Ref No.)"></textarea>
 
                         <div class="payment-form-actions">
 
@@ -668,9 +911,12 @@ window.GymPayments = (function () {
         `;
 
         document.getElementById("addPaymentBtn")
-            .addEventListener("click", openForm);
+            .addEventListener("click", () => openForm());
 
         document.getElementById("cancelPaymentBtn")
+            .addEventListener("click", closeForm);
+
+        document.getElementById("closePaymentX")
             .addEventListener("click", closeForm);
 
         document.getElementById("paymentForm")
@@ -700,7 +946,7 @@ window.GymPayments = (function () {
         renderTables();
     }
 
-    function openForm() {
+    function openForm(preselectedMemberId = "") {
         const members = getMembers();
         const select = document.getElementById("paymentMember");
 
@@ -733,6 +979,11 @@ window.GymPayments = (function () {
         document.getElementById("paymentAmount").value = "";
 
         document.getElementById("paymentModal").style.display = "flex";
+
+        if (preselectedMemberId) {
+            select.value = preselectedMemberId;
+            updateMemberBalance();
+        }
     }
 
     function closeForm() {
@@ -884,27 +1135,27 @@ window.GymPayments = (function () {
 
         box.innerHTML = `
             Original Membership Fees:
-            <strong>${currency(balance.fees)}</strong><br>
+            <strong style="color:#202124;">${currency(balance.fees)}</strong><br>
 
             <span class="discount-line">
-                Discount: <strong>${discountText}</strong>
+                Discount Applied: <strong>${discountText}</strong>
             </span><br>
 
-            Final Membership Fees:
-            <strong>${currency(balance.finalFees)}</strong><br>
+            Final Payable Fees:
+            <strong style="color:#202124;">${currency(balance.finalFees)}</strong><br>
 
-            Total Paid:
-            <strong>${currency(balance.paid)}</strong><br>
+            Total Paid So Far:
+            <strong style="color:#168653;">${currency(balance.paid)}</strong><br>
 
             <span class="pending-line">
-                Remaining Pending:
+                Remaining Pending Due:
                 <strong>${currency(balance.pending)}</strong>
             </span>
             ${balance.advance > 0
-                ? `<br>Advance Amount: <strong>${currency(balance.advance)}</strong>`
+                ? `<br><span style="color:#2879d0;">Advance Paid: <strong>${currency(balance.advance)}</strong></span>`
                 : ""}
             ${balance.billing.discountReason
-                ? `<br>Discount Reason: ${escapeHTML(balance.billing.discountReason)}`
+                ? `<br><small style="color:#737985;">Discount Reason: ${escapeHTML(balance.billing.discountReason)}</small>`
                 : ""}
         `;
 
@@ -1123,17 +1374,19 @@ window.GymPayments = (function () {
             table.innerHTML = filtered.map(payment => `
                 <tr>
                     <td>
-                        <strong>${escapeHTML(payment.memberName)}</strong>
+                        <strong style="color:#202124;">${escapeHTML(payment.memberName)}</strong>
                     </td>
 
-                    <td>${escapeHTML(payment.memberId)}</td>
+                    <td>
+                        <span class="payment-id-pill">${escapeHTML(payment.memberId)}</span>
+                    </td>
 
                     <td>${escapeHTML(payment.date)}</td>
 
                     <td>
-                        <strong>${currency(payment.amount)}</strong>
+                        <strong style="color:#168653;">${currency(payment.amount)}</strong>
                         <br>
-                        <small>${escapeHTML(payment.paymentType || "payment")}</small>
+                        <span class="payment-type-tag">${escapeHTML(payment.paymentType || "payment")}</span>
                     </td>
 
                     <td>
@@ -1175,7 +1428,7 @@ window.GymPayments = (function () {
         if (!pendingMembers.length) {
             table.innerHTML = `
                 <tr>
-                    <td colspan="7" class="payments-empty">
+                    <td colspan="8" class="payments-empty">
                         No pending member fees found.
                     </td>
                 </tr>
@@ -1186,24 +1439,41 @@ window.GymPayments = (function () {
         table.innerHTML = pendingMembers.map(item => `
             <tr>
                 <td>
-                    <strong>${escapeHTML(item.member.name)}</strong>
+                    <strong style="color:#202124;">${escapeHTML(item.member.name)}</strong>
                 </td>
 
-                <td>${escapeHTML(item.member.id)}</td>
+                <td>
+                    <span class="payment-id-pill">${escapeHTML(item.member.id)}</span>
+                </td>
 
                 <td>${currency(item.balance.fees)}</td>
 
-                <td>${currency(item.balance.discount)}</td>
+                <td style="color:#168653;font-weight:600;">${currency(item.balance.discount)}</td>
 
-                <td>${currency(item.balance.finalFees)}</td>
+                <td><strong>${currency(item.balance.finalFees)}</strong></td>
 
                 <td>${currency(item.balance.paid)}</td>
 
                 <td>
-                    <strong>${currency(item.balance.pending)}</strong>
+                    <span class="payment-pending-badge">
+                        ${currency(item.balance.pending)}
+                    </span>
+                </td>
+
+                <td>
+                    <button class="payment-action collect"
+                        data-collect-member="${escapeHTML(item.member.id)}">
+                        Collect
+                    </button>
                 </td>
             </tr>
         `).join("");
+
+        table.querySelectorAll("[data-collect-member]").forEach(button => {
+            button.addEventListener("click", function () {
+                openForm(this.dataset.collectMember);
+            });
+        });
     }
 
     return {
