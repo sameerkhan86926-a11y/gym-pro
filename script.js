@@ -1,6 +1,6 @@
 /* =====================================
 GYM PRO - MAIN JAVASCRIPT
-Version 1.0.4 (Red & White Enterprise Edition)
+Version 1.0.5 (Red & White Enterprise Edition)
 ===================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -449,8 +449,9 @@ document.addEventListener("DOMContentLoaded", function () {
             trainers: window.GymTrainers,
             expenses: window.GymExpenses,
             reports: window.GymReports,
-            settings: window.GymSettings,
-            backup: window.GymSettings
+            biometric: window.GymBiometric,
+            backup: window.GymBackup,
+            settings: window.GymSettings
         };
 
         const module = modules[pageName];
@@ -462,61 +463,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         return false;
-    }
-
-    // BIOMETRIC PLACEHOLDER (RED & WHITE THEME)
-    function showBiometricPage() {
-        if (!modulePlaceholder) return;
-
-        modulePlaceholder.innerHTML = `
-            <div class="panel" style="padding:45px 24px;text-align:center;max-width:620px;margin:22px auto;">
-                <div style="width:68px;height:68px;border-radius:18px;background:#fff0f0;color:#d71920;display:grid;place-items:center;margin:0 auto 18px;">
-                    <i data-lucide="fingerprint" style="width:34px;height:34px;"></i>
-                </div>
-
-                <h2 style="font-size:20px;font-weight:800;color:#202124;">Biometric Device Integration</h2>
-
-                <p style="color:#737985;font-size:12.5px;margin:12px auto;max-width:460px;line-height:1.7;">
-                    Fingerprint scanner hardware is not connected yet. Connect a supported USB/LAN biometric device and configure its local API bridge to enable auto check-ins.
-                </p>
-
-                <div style="padding:14px 18px;background:#fff8eb;border:1px solid #f7dfad;border-radius:10px;margin:22px auto;max-width:420px;font-size:12px;color:#5c4814;">
-                    <strong>Device Status:</strong>
-                    <span style="color:#d97706;font-weight:700;"> ● Disconnected</span>
-                </div>
-
-                <p style="color:#8a909a;font-size:11.5px;margin-bottom:20px;">
-                    You can continue marking member check-ins manually from the Attendance module.
-                </p>
-
-                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-                    <button type="button" id="biometricAttendanceBtn"
-                        style="padding:11px 20px;border:0;border-radius:9px;background:linear-gradient(135deg,#e3262e,#c51019);color:#ffffff;font-weight:700;font-size:12px;box-shadow:0 4px 12px rgba(215,25,32,0.18);">
-                        Go to Attendance
-                    </button>
-                    <button type="button" id="biometricBack"
-                        style="padding:11px 20px;border:1px solid #dfe2e8;border-radius:9px;background:#ffffff;color:#454c57;font-weight:600;font-size:12px;">
-                        Back to Dashboard
-                    </button>
-                </div>
-            </div>
-        `;
-
-        refreshIcons();
-
-        const backButton = document.getElementById("biometricBack");
-        if (backButton) {
-            backButton.addEventListener("click", function () {
-                openPage("dashboard");
-            });
-        }
-
-        const attButton = document.getElementById("biometricAttendanceBtn");
-        if (attButton) {
-            attButton.addEventListener("click", function () {
-                openPage("attendance");
-            });
-        }
     }
 
     // MODULE NOT AVAILABLE (RED & WHITE THEME)
@@ -588,8 +534,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // LOAD PAGE
         if (pageName === "dashboard") {
             updateDashboard();
-        } else if (pageName === "biometric") {
-            showBiometricPage();
         } else {
             const loaded = loadModule(pageName);
 
@@ -609,7 +553,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // QUICK ADD MEMBER
         if (options.addMember && pageName === "members") {
             setTimeout(function () {
-                const addButton = document.getElementById("addMemberBtn");
+                const addButton =
+                    document.getElementById("addGymMemberBtn") ||
+                    document.getElementById("addMemberBtn");
 
                 if (addButton) {
                     addButton.click();
@@ -682,5 +628,5 @@ document.addEventListener("DOMContentLoaded", function () {
     // INITIALIZE
     openPage("dashboard");
 
-    console.log("GYM PRO v1.0.4 initialized successfully.");
+    console.log("GYM PRO v1.0.5 initialized successfully.");
 });
