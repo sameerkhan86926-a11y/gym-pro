@@ -111,10 +111,7 @@ window.GymBackup = (function () {
             const jsonText = JSON.stringify(fileData, null, 2);
 
             const boundary = "-------gympro_boundary_" + Date.now();
-            const metadata = {
-                name: fileName,
-                mimeType: "application/json"
-            };
+            const metadata = { name: fileName, mimeType: "application/json" };
 
             const multipartBody =
                 "--" + boundary + "\r\n" +
@@ -161,16 +158,13 @@ window.GymBackup = (function () {
             }
 
             const token = await requestGoogleDriveToken(clientId);
-
             const query = encodeURIComponent(
                 "name contains 'GYM-PRO-Backup-' and mimeType = 'application/json' and trashed = false"
             );
 
             const listRes = await fetch(
                 `https://www.googleapis.com/drive/v3/files?q=${query}&orderBy=createdTime%20desc&pageSize=1&fields=files(id,name,createdTime)`,
-                {
-                    headers: { Authorization: "Bearer " + token }
-                }
+                { headers: { Authorization: "Bearer " + token } }
             );
 
             if (!listRes.ok) {
@@ -193,9 +187,7 @@ window.GymBackup = (function () {
 
             const fileRes = await fetch(
                 `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(latestFile.id)}?alt=media`,
-                {
-                    headers: { Authorization: "Bearer " + token }
-                }
+                { headers: { Authorization: "Bearer " + token } }
             );
 
             if (!fileRes.ok) {
@@ -232,7 +224,6 @@ window.GymBackup = (function () {
 
         root.innerHTML = `
             <div class="gym-backup-wrap">
-
                 <div class="backup-header">
                     <div>
                         <h2>Backup & Data Restore</h2>
@@ -245,145 +236,76 @@ window.GymBackup = (function () {
                 </div>
 
                 <div class="backup-stats-grid">
-                    <div class="backup-stat-card">
-                        <span>Members</span>
-                        <strong>${counts.members}</strong>
-                    </div>
-                    <div class="backup-stat-card">
-                        <span>Membership Plans</span>
-                        <strong>${counts.plans}</strong>
-                    </div>
-                    <div class="backup-stat-card">
-                        <span>Payments</span>
-                        <strong>${counts.payments}</strong>
-                    </div>
-                    <div class="backup-stat-card">
-                        <span>Attendance</span>
-                        <strong>${counts.attendance}</strong>
-                    </div>
-                    <div class="backup-stat-card">
-                        <span>Expenses</span>
-                        <strong>${counts.expenses}</strong>
-                    </div>
-                    <div class="backup-stat-card">
-                        <span>Trainers</span>
-                        <strong>${counts.trainers}</strong>
-                    </div>
+                    <div class="backup-stat-card"><span>Members</span><strong>${counts.members}</strong></div>
+                    <div class="backup-stat-card"><span>Membership Plans</span><strong>${counts.plans}</strong></div>
+                    <div class="backup-stat-card"><span>Payments</span><strong>${counts.payments}</strong></div>
+                    <div class="backup-stat-card"><span>Attendance</span><strong>${counts.attendance}</strong></div>
+                    <div class="backup-stat-card"><span>Expenses</span><strong>${counts.expenses}</strong></div>
+                    <div class="backup-stat-card"><span>Trainers</span><strong>${counts.trainers}</strong></div>
                 </div>
 
                 <div class="backup-two-col">
-
                     <section class="backup-card">
                         <div class="backup-card-badge green">LOCAL BACKUP</div>
                         <h3>Download Full Backup (.json)</h3>
-                        <p>
-                            Save a complete <code>.json</code> backup file onto your computer containing members, plans, payments, discounts, attendance, trainers, expenses and settings.
-                        </p>
-
-                        <button type="button" id="backupDataBtn" class="backup-primary-btn">
-                            ↓ Download JSON Backup
-                        </button>
+                        <p>Save a complete <code>.json</code> backup file onto your computer containing all gym records.</p>
+                        <button type="button" id="backupDataBtn" class="backup-primary-btn">↓ Download JSON Backup</button>
                     </section>
 
                     <section class="backup-card">
                         <div class="backup-card-badge blue">LOCAL RESTORE</div>
                         <h3>Restore From Backup File</h3>
-                        <p>
-                            Select a previously downloaded GYM PRO <code>.json</code> backup file to restore your records into this browser.
-                        </p>
-
-                        <button type="button" id="restoreDataBtn" class="backup-secondary-btn">
-                            ↑ Choose Backup File (.json)
-                        </button>
-
-                        <input type="file" id="restoreFileInput"
-                            accept=".json,application/json"
-                            style="display:none;">
-
+                        <p>Select a previously downloaded GYM PRO <code>.json</code> backup file to restore records.</p>
+                        <button type="button" id="restoreDataBtn" class="backup-secondary-btn">↑ Choose Backup File (.json)</button>
+                        <input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none;">
                         <div class="backup-warning">
-                            <strong>Warning:</strong> Restoring a backup replaces all current data in this browser. Download a fresh backup first.
+                            <strong>Warning:</strong> Restoring replaces all current data in this browser.
                         </div>
                     </section>
-
                 </div>
 
-                <!-- ADMIN GOOGLE DRIVE CLOUD BACKUP -->
                 <section class="backup-card drive-card">
                     <div class="backup-card-badge red">ADMIN GOOGLE DRIVE</div>
                     <h3>Connect Admin Google Drive</h3>
-                    <p>
-                        Admin can enter their own Google Cloud OAuth Client ID once to upload and restore backups directly to their Google Drive.
-                    </p>
-
+                    <p>Admin can enter their own Google Cloud OAuth Client ID once to upload and restore backups on Google Drive.</p>
                     <div class="drive-id-row">
-                        <input type="text" id="driveClientIdInput"
-                            value="${escapeHTML(savedClientId)}"
+                        <input type="text" id="driveClientIdInput" value="${escapeHTML(savedClientId)}"
                             placeholder="Paste Google OAuth Client ID (e.g. 1234567890-xxx.apps.googleusercontent.com)">
-                        <button type="button" id="saveDriveIdBtn" class="backup-secondary-btn">
-                            Save Client ID
-                        </button>
+                        <button type="button" id="saveDriveIdBtn" class="backup-secondary-btn">Save Client ID</button>
                     </div>
-
                     <div class="drive-btn-row">
-                        <button type="button" id="driveUploadBtn" class="backup-primary-btn">
-                            ☁ Upload Backup to Drive
-                        </button>
-                        <button type="button" id="driveRestoreBtn" class="backup-secondary-btn">
-                            ☁ Restore Latest From Drive
-                        </button>
-                    </div>
-
-                    <div class="backup-note">
-                        <strong>Admin Setup Tip:</strong> In Google Cloud Console, enable <strong>Google Drive API</strong> and add this site's URL under <strong>Authorized JavaScript origins</strong> for your Web OAuth Client ID.
+                        <button type="button" id="driveUploadBtn" class="backup-primary-btn">☁ Upload Backup to Drive</button>
+                        <button type="button" id="driveRestoreBtn" class="backup-secondary-btn">☁ Restore Latest From Drive</button>
                     </div>
                 </section>
-
             </div>
         `;
 
         addStyles();
 
-        document.getElementById("backupDataBtn")
-            .addEventListener("click", downloadBackup);
-
-        document.getElementById("restoreDataBtn")
-            .addEventListener("click", () => {
-                document.getElementById("restoreFileInput").click();
-            });
-
-        document.getElementById("restoreFileInput")
-            .addEventListener("change", restoreBackup);
-
-        document.getElementById("saveDriveIdBtn")
-            .addEventListener("click", () => {
-                const val = document.getElementById("driveClientIdInput").value.trim();
-                saveSettingRecord("googleDriveClientId", val);
-                driveToken = null;
-                notify("Google Drive Client ID saved.");
-            });
-
-        document.getElementById("driveUploadBtn")
-            .addEventListener("click", uploadBackupToDrive);
-
-        document.getElementById("driveRestoreBtn")
-            .addEventListener("click", restoreBackupFromDrive);
+        document.getElementById("backupDataBtn").addEventListener("click", downloadBackup);
+        document.getElementById("restoreDataBtn").addEventListener("click", () => {
+            document.getElementById("restoreFileInput").click();
+        });
+        document.getElementById("restoreFileInput").addEventListener("change", restoreBackup);
+        document.getElementById("saveDriveIdBtn").addEventListener("click", () => {
+            const val = document.getElementById("driveClientIdInput").value.trim();
+            saveSettingRecord("googleDriveClientId", val);
+            driveToken = null;
+            notify("Google Drive Client ID saved.");
+        });
+        document.getElementById("driveUploadBtn").addEventListener("click", uploadBackupToDrive);
+        document.getElementById("driveRestoreBtn").addEventListener("click", restoreBackupFromDrive);
     }
 
     function downloadBackup() {
         try {
             const fileData = GymDB.exportData();
-
-            const blob = new Blob(
-                [JSON.stringify(fileData, null, 2)],
-                { type: "application/json" }
-            );
-
+            const blob = new Blob([JSON.stringify(fileData, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-
             link.href = url;
             link.download = "GYM-PRO-Backup-" + fileData.backupDate.slice(0, 10) + ".json";
-
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -392,7 +314,6 @@ window.GymBackup = (function () {
             saveSettingRecord("lastBackupDate", fileData.backupDate);
             const label = document.getElementById("lastBackupLabel");
             if (label) label.textContent = getLastBackupDate();
-
             notify("Backup file downloaded successfully.");
         } catch (error) {
             console.error(error);
@@ -403,34 +324,21 @@ window.GymBackup = (function () {
     function restoreBackup(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
-
         reader.onload = function () {
             try {
                 const backup = JSON.parse(reader.result);
-
                 if (backup.application !== "GYM PRO" || !backup.data) {
                     alert("Invalid GYM PRO backup file.");
                     return;
                 }
-
-                const confirmed = confirm(
-                    "Restoring this backup will replace all existing GYM PRO data in this browser. Do you want to continue?"
-                );
-
-                if (!confirmed) return;
-
-                const success = GymDB.importData(backup);
-
-                if (!success) {
-                    alert("Restore failed. Backup file structure is invalid.");
+                if (!confirm("Restoring this backup will replace all existing GYM PRO data in this browser. Continue?")) return;
+                if (!GymDB.importData(backup)) {
+                    alert("Restore failed.");
                     return;
                 }
-
-                alert("Backup restored successfully! The application will now reload.");
+                alert("Backup restored successfully! Page will now reload.");
                 window.location.reload();
-
             } catch (error) {
                 console.error(error);
                 alert("Backup file is invalid or damaged.");
@@ -438,273 +346,45 @@ window.GymBackup = (function () {
                 event.target.value = "";
             }
         };
-
-        reader.onerror = function () {
-            alert("Unable to read backup file.");
-            event.target.value = "";
-        };
-
         reader.readAsText(file);
     }
 
     function addStyles() {
         if (document.getElementById("gymBackupStyles")) return;
-
         const style = document.createElement("style");
         style.id = "gymBackupStyles";
-
         style.textContent = `
-            .gym-backup-wrap {
-                color: #202124;
-                width: 100%;
-                padding: 2px 0 25px;
-            }
-
-            .backup-header {
-                background: #ffffff;
-                border: 1px solid #e7e9ee;
-                border-radius: 13px;
-                padding: 20px 24px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 12px;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
-            }
-
-            .backup-header h2 {
-                margin: 0 0 4px;
-                font-size: 18px;
-                font-weight: 800;
-                color: #202124;
-            }
-
-            .backup-header p {
-                margin: 0;
-                color: #737985;
-                font-size: 11.5px;
-            }
-
-            .backup-meta-pills {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-
-            .backup-last-pill {
-                padding: 7px 12px;
-                border-radius: 8px;
-                background: #f8f9fb;
-                border: 1px solid #e7e9ee;
-                font-size: 11px;
-                color: #5f6672;
-            }
-
-            .backup-stats-grid {
-                display: grid;
-                grid-template-columns: repeat(6, minmax(0, 1fr));
-                gap: 12px;
-                margin-bottom: 20px;
-            }
-
-            .backup-stat-card {
-                background: #ffffff;
-                border: 1px solid #e7e9ee;
-                border-radius: 12px;
-                padding: 16px;
-                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
-            }
-
-            .backup-stat-card span {
-                display: block;
-                font-size: 10.5px;
-                font-weight: 600;
-                color: #69717e;
-                margin-bottom: 8px;
-            }
-
-            .backup-stat-card strong {
-                font-size: 22px;
-                font-weight: 800;
-                color: #202124;
-            }
-
-            .backup-two-col {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 18px;
-            }
-
-            .backup-card {
-                background: #ffffff;
-                border: 1px solid #e7e9ee;
-                border-radius: 13px;
-                padding: 24px;
-                box-shadow: 0 4px 18px rgba(20, 25, 35, 0.045);
-            }
-
-            .drive-card {
-                margin-top: 18px;
-            }
-
-            .drive-id-row {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-                margin-bottom: 14px;
-            }
-
-            .drive-id-row input {
-                flex: 1;
-                min-width: 240px;
-                padding: 11px 13px;
-                border-radius: 9px;
-                border: 1px solid #dfe2e8;
-                background: #ffffff;
-                color: #202124;
-                font-size: 12px;
-                outline: none;
-            }
-
-            .drive-id-row input:focus {
-                border-color: #d71920;
-                box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.08);
-            }
-
-            .drive-btn-row {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-
-            .backup-card-badge {
-                display: inline-block;
-                padding: 4px 9px;
-                border-radius: 6px;
-                font-size: 9.5px;
-                font-weight: 800;
-                letter-spacing: 0.5px;
-                margin-bottom: 12px;
-            }
-
-            .backup-card-badge.green {
-                background: #e9f8f0;
-                color: #168653;
-            }
-
-            .backup-card-badge.blue {
-                background: #edf5ff;
-                color: #2879d0;
-            }
-
-            .backup-card-badge.red {
-                background: #fff0f0;
-                color: #d71920;
-            }
-
-            .backup-card h3 {
-                margin: 0 0 8px;
-                font-size: 16px;
-                font-weight: 800;
-                color: #202124;
-            }
-
-            .backup-card p {
-                margin: 0 0 18px;
-                color: #5f6672;
-                font-size: 12px;
-                line-height: 1.65;
-            }
-
-            .backup-card code {
-                background: #f3f4f6;
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-size: 11px;
-                color: #d71920;
-            }
-
-            .backup-primary-btn {
-                padding: 12px 20px;
-                border: 0;
-                border-radius: 9px;
-                background: linear-gradient(135deg, #e3262e, #c51019);
-                color: #ffffff;
-                font-weight: 700;
-                font-size: 12px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(215, 25, 32, 0.18);
-                transition: all 0.2s ease;
-            }
-
-            .backup-primary-btn:hover {
-                background: linear-gradient(135deg, #c9161e, #a90d15);
-                transform: translateY(-1px);
-            }
-
-            .backup-secondary-btn {
-                padding: 12px 20px;
-                border: 1px solid #dfe2e8;
-                border-radius: 9px;
-                background: #f8f9fb;
-                color: #202124;
-                font-weight: 700;
-                font-size: 12px;
-                cursor: pointer;
-                transition: all 0.18s ease;
-            }
-
-            .backup-secondary-btn:hover {
-                background: #fff4f4;
-                border-color: #f2bfc1;
-                color: #d71920;
-            }
-
-            .backup-warning {
-                margin-top: 18px;
-                padding: 12px 14px;
-                border-radius: 9px;
-                background: #fff8eb;
-                border: 1px solid #f7dfad;
-                color: #7c5812;
-                font-size: 11.5px;
-                line-height: 1.6;
-            }
-
-            .backup-note {
-                margin-top: 16px;
-                padding: 12px 14px;
-                border-radius: 9px;
-                background: #f8f9fb;
-                border: 1px solid #e7e9ee;
-                color: #5f6672;
-                font-size: 11.5px;
-                line-height: 1.6;
-            }
-
-            @media(max-width:900px) {
-                .backup-stats-grid {
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
-                }
-            }
-
-            @media(max-width:650px) {
-                .backup-stats-grid {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-                .backup-two-col {
-                    grid-template-columns: 1fr;
-                }
-            }
+            .gym-backup-wrap { color:#202124; width:100%; padding:2px 0 25px; }
+            .backup-header { background:#fff; border:1px solid #e7e9ee; border-radius:13px; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; box-shadow:0 4px 18px rgba(20,25,35,0.045); }
+            .backup-header h2 { margin:0 0 4px; font-size:18px; font-weight:800; color:#202124; }
+            .backup-header p { margin:0; color:#737985; font-size:11.5px; }
+            .backup-meta-pills { display:flex; gap:8px; flex-wrap:wrap; }
+            .backup-last-pill { padding:7px 12px; border-radius:8px; background:#f8f9fb; border:1px solid #e7e9ee; font-size:11px; color:#5f6672; }
+            .backup-stats-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
+            .backup-stat-card { background:#fff; border:1px solid #e7e9ee; border-radius:12px; padding:16px; box-shadow:0 4px 18px rgba(20,25,35,0.045); }
+            .backup-stat-card span { display:block; font-size:10.5px; font-weight:600; color:#69717e; margin-bottom:8px; }
+            .backup-stat-card strong { font-size:22px; font-weight:800; color:#202124; }
+            .backup-two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+            .backup-card { background:#fff; border:1px solid #e7e9ee; border-radius:13px; padding:24px; box-shadow:0 4px 18px rgba(20,25,35,0.045); }
+            .drive-card { margin-top:18px; }
+            .drive-id-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+            .drive-id-row input { flex:1; min-width:240px; padding:11px 13px; border-radius:9px; border:1px solid #dfe2e8; background:#fff; color:#202124; font-size:12px; outline:none; }
+            .drive-id-row input:focus { border-color:#d71920; }
+            .drive-btn-row { display:flex; gap:10px; flex-wrap:wrap; }
+            .backup-card-badge { display:inline-block; padding:4px 9px; border-radius:6px; font-size:9.5px; font-weight:800; letter-spacing:0.5px; margin-bottom:12px; }
+            .backup-card-badge.green { background:#e9f8f0; color:#168653; }
+            .backup-card-badge.blue { background:#edf5ff; color:#2879d0; }
+            .backup-card-badge.red { background:#fff0f0; color:#d71920; }
+            .backup-card h3 { margin:0 0 8px; font-size:16px; font-weight:800; color:#202124; }
+            .backup-card p { margin:0 0 18px; color:#5f6672; font-size:12px; line-height:1.65; }
+            .backup-primary-btn { padding:12px 20px; border:0; border-radius:9px; background:linear-gradient(135deg,#e3262e,#c51019); color:#fff; font-weight:700; font-size:12px; cursor:pointer; }
+            .backup-secondary-btn { padding:12px 20px; border:1px solid #dfe2e8; border-radius:9px; background:#f8f9fb; color:#202124; font-weight:700; font-size:12px; cursor:pointer; }
+            .backup-warning { margin-top:18px; padding:12px 14px; border-radius:9px; background:#fff8eb; border:1px solid #f7dfad; color:#7c5812; font-size:11.5px; }
+            @media(max-width:900px) { .backup-stats-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+            @media(max-width:650px) { .backup-stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .backup-two-col { grid-template-columns:1fr; } }
         `;
-
         document.head.appendChild(style);
     }
 
-    return {
-        render,
-        refresh: render
-    };
+    return { render, refresh: render };
 })();
